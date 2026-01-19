@@ -48,6 +48,19 @@
     </div>
   </div>
 
+  <!-- Workout Detail Modal -->
+  <div id="workout-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modal-title">훈련 상세 가이드</h2>
+            <button class="close-btn" onclick="closeWorkoutModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="modal-body">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+  </div>
+
   <header class="app-header">
     <div class="logo">
       <span class="logo-icon">🏊</span>
@@ -180,9 +193,19 @@
 
         <div class="result-card">
           <h3>분석 리포트</h3>
+          
+          <!-- Lane Selector -->
+          <div class="lane-selector">
+              <span class="lane-label">레인 선택:</span>
+              <div class="lane-tabs" id="lane-tabs">
+                  <!-- JS Populated (1-8) -->
+              </div>
+          </div>
+
           <div class="video-meta">
             <span class="badge" id="res-badge-pool">--</span>
             <span class="badge" id="res-badge-event">--</span>
+            <span class="badge lane-badge" id="res-badge-lane">Lane 1</span>
           </div>
 
           <div class="metrics-grid" id="default-metrics">
@@ -201,6 +224,12 @@
               <span class="value" id="res-efficiency">--</span>
               <span class="unit">점</span>
             </div>
+          </div>
+
+          <!-- AI Coaching Solution -->
+          <div class="ai-solution-card" id="ai-solution">
+              <h4>💡 AI 코칭 솔루션</h4>
+              <p id="ai-solution-text">데이터 분석 중...</p>
           </div>
 
           <table class="splits-table">

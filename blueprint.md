@@ -20,8 +20,14 @@ A web-based Swimming Coach application designed to help users improve their swim
 - [x] Create "Video Analysis" section with file upload UI.
 - [x] Implement simulated video processing logic to display metrics (Breakout, Strokes, Breaths, Splits).
 
-### Goal: Advanced Video Analysis
-- [ ] Add UI for selecting Pool Length (25m/50m) and Event Type (Single/IM/Relay).
+### Goal: Advanced Coaching & Analysis
+- [ ] Implement "Multi-lane Selection" in analysis results (Lane 1-8).
+- [ ] Add "AI Coaching Solution" card providing actionable advice based on metrics.
+- [ ] Create detailed "Workout Guide Modal" with specific sets/drills when clicking the daily plan.
+
+### History
+#### Goal: Advanced Video Analysis
+- [x] Add UI for selecting Pool Length (25m/50m) and Event Type (Single/IM/Relay).
 - [ ] Implement specialized analysis logic for IM (Stroke transitions) and Relays (Split times, Relay Takeover).
 - [ ] Display detailed split tables corresponding to the selected event.
 

@@ -47,6 +47,80 @@ a {
   color: inherit;
 }
 
+/* Modal Styling */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+}
+
+.modal-content {
+    background: white;
+    width: 100%;
+    max-width: 600px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #edf2f7;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    color: var(--color-primary-dark);
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--color-text-muted);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+.workout-section {
+    margin-bottom: 1.5rem;
+}
+.workout-section h4 {
+    color: var(--color-primary);
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 0.25rem;
+}
+.workout-item {
+    margin-bottom: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+}
+.set-dist {
+    font-weight: 700;
+    min-width: 60px;
+}
+
 /* Onboarding Overlay */
 .onboarding-overlay {
     position: fixed;
@@ -284,6 +358,7 @@ a {
   box-shadow: var(--shadow-sm);
   transition: transform 0.2s;
   border: 1px solid rgba(0,0,0,0.05);
+  cursor: pointer; /* Indicating clickable for modal */
 }
 
 .feature-card:hover {
@@ -488,6 +563,61 @@ input:focus, textarea:focus, select:focus {
     box-shadow: var(--shadow-sm);
 }
 
+/* Lane Selector */
+.lane-selector {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+}
+.lane-label {
+    font-weight: 600;
+    white-space: nowrap;
+}
+.lane-tabs {
+    display: flex;
+    gap: 0.5rem;
+}
+.lane-tab {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+.lane-tab.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* AI Solution Card */
+.ai-solution-card {
+    background: #fffaf0; /* Light Orange */
+    border: 1px solid #fbd38d;
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+.ai-solution-card h4 {
+    color: #c05621;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.ai-solution-card p {
+    color: #744210;
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
 /* Upload Zone */
 .upload-zone {
     border: 2px dashed #cbd5e0;
@@ -541,6 +671,7 @@ input:focus, textarea:focus, select:focus {
     display: flex;
     gap: 0.5rem;
     justify-content: center;
+    flex-wrap: wrap;
 }
 .video-meta .badge {
     background: var(--color-primary);
@@ -549,6 +680,9 @@ input:focus, textarea:focus, select:focus {
     border-radius: 999px;
     font-size: 0.875rem;
     font-weight: 600;
+}
+.video-meta .lane-badge {
+    background: var(--color-accent);
 }
 
 .metrics-grid {
