@@ -1,6 +1,65 @@
-console.log('Daily Swimming Coach App Initialized');
+console.log('일일 스위밍 코치 앱 초기화됨');
 
-// --- 1. Mobile Menu ---
+// --- 0. Global State & Initialization ---
+const LEVEL_KEY = 'swim_user_level';
+const WORKOUT_KEY = 'swim_workouts';
+const RECORDS_KEY = 'swim_competition_records';
+
+document.addEventListener('DOMContentLoaded', () => {
+    checkUserLevel();
+    loadWorkouts();
+    loadRecords();
+    generateDailyPlan();
+});
+
+
+// --- 1. User Level Onboarding ---
+const onboardingOverlay = document.getElementById('onboarding-overlay');
+const userLevelBadge = document.getElementById('user-level-badge');
+
+function checkUserLevel() {
+    const level = localStorage.getItem(LEVEL_KEY);
+    if (!level) {
+        // Show Onboarding
+        if (onboardingOverlay) onboardingOverlay.classList.add('active');
+    } else {
+        updateLevelBadge(level);
+    }
+}
+
+// Global scope to be called from HTML
+window.selectLevel = function(level) {
+    localStorage.setItem(LEVEL_KEY, level);
+    if (onboardingOverlay) onboardingOverlay.classList.remove('active');
+    updateLevelBadge(level);
+    generateDailyPlan(); // Regenerate plan based on new level
+    alert('레벨이 설정되었습니다!');
+};
+
+window.resetLevel = function() {
+    localStorage.removeItem(LEVEL_KEY);
+    location.reload();
+};
+
+function updateLevelBadge(level) {
+    if (!userLevelBadge) return;
+    
+    const levelNames = {
+        'beginner': '초급 (Beginner)',
+        'intermediate': '중급 (Intermediate)',
+        'advanced': '상급 (Advanced)',
+        'masters': '마스터즈 (Masters)',
+        'elite': '선수 (Elite)'
+    };
+    
+    userLevelBadge.textContent = levelNames[level] || '레벨 미설정';
+    userLevelBadge.classList.remove('pending');
+    userLevelBadge.style.backgroundColor = '#e6fffa';
+    userLevelBadge.style.color = '#2c7a7b';
+}
+
+
+// --- 2. Mobile Menu ---
 const menuBtn = document.querySelector('.mobile-menu-btn');
 const nav = document.querySelector('.main-nav');
 
@@ -42,14 +101,13 @@ if (menuBtn && nav) {
   });
 }
 
-// --- 2. Data Persistence (LocalStorage) ---
-
+// --- 3. Workout Logger ---
 const workoutForm = document.getElementById('swim-log-form');
 const recentActivityList = document.getElementById('recent-activity-list');
 const totalDistanceDisplay = document.getElementById('total-distance-display');
 
 function loadWorkouts() {
-    const workouts = JSON.parse(localStorage.getItem('swim_workouts')) || [];
+    const workouts = JSON.parse(localStorage.getItem(WORKOUT_KEY)) || [];
     renderActivityList(workouts);
     updateTotalDistance(workouts);
 }
@@ -59,11 +117,10 @@ function renderActivityList(workouts) {
     recentActivityList.innerHTML = '';
     
     if (workouts.length === 0) {
-        recentActivityList.innerHTML = '<li class="empty-state">No swims logged yet.</li>';
+        recentActivityList.innerHTML = '<li class="empty-state">아직 기록된 훈련이 없습니다.</li>';
         return;
     }
 
-    // Show last 3 workouts
     const recent = workouts.slice(-3).reverse();
     recent.forEach(w => {
         const li = document.createElement('li');
@@ -92,59 +149,83 @@ if (workoutForm) {
         if (!date || !distance) return;
 
         const newWorkout = { date, distance, duration, notes, id: Date.now() };
-        const workouts = JSON.parse(localStorage.getItem('swim_workouts')) || [];
+        const workouts = JSON.parse(localStorage.getItem(WORKOUT_KEY)) || [];
         workouts.push(newWorkout);
-        localStorage.setItem('swim_workouts', JSON.stringify(workouts));
+        localStorage.setItem(WORKOUT_KEY, JSON.stringify(workouts));
 
         loadWorkouts();
-        // Update plan immediately after logging new data
         generateDailyPlan();
-        
         workoutForm.reset();
-        alert('Workout logged successfully!');
+        alert('오늘의 훈련이 기록되었습니다!');
     });
 }
 
-// --- 3. Personal Records (PR) ---
-const prForm = document.getElementById('pr-form');
-const prInputs = document.querySelectorAll('.pr-input');
+// --- 4. Competition Records (Detailed) ---
+const compForm = document.getElementById('competition-form');
+const recordsList = document.getElementById('records-list');
 const prDisplay = document.getElementById('pr-display');
 
-function loadPRs() {
-    const prs = JSON.parse(localStorage.getItem('swim_prs')) || {};
-    prInputs.forEach(input => {
-        const event = input.dataset.event;
-        if (prs[event]) input.value = prs[event];
-    });
-    
-    if (prDisplay && prs['100free']) {
-        prDisplay.textContent = prs['100free'];
+function loadRecords() {
+    const records = JSON.parse(localStorage.getItem(RECORDS_KEY)) || [];
+    records.sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort by date desc
+
+    if (recordsList) {
+        recordsList.innerHTML = '';
+        if (records.length === 0) {
+            recordsList.innerHTML = '<li class="empty-state">등록된 대회 기록이 없습니다.</li>';
+        } else {
+            records.forEach(rec => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div class="rec-meta">
+                        <span class="rec-event">${rec.event}</span>
+                        <span class="rec-name">${rec.name} (${rec.date})</span>
+                    </div>
+                    <span class="rec-time">${rec.time}</span>
+                `;
+                recordsList.appendChild(li);
+            });
+        }
+    }
+
+    // Update Dashboard PR Display (Find best free record as example)
+    if (prDisplay && records.length > 0) {
+        // Find most recent record
+        const recent = records[0];
+        prDisplay.textContent = `${recent.event}: ${recent.time}`;
     }
 }
 
-if (prForm) {
-    prForm.addEventListener('submit', (e) => {
+if (compForm) {
+    compForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const prs = {};
-        prInputs.forEach(input => {
-            if (input.value) prs[input.dataset.event] = input.value;
-        });
-        localStorage.setItem('swim_prs', JSON.stringify(prs));
-        loadPRs();
-        generateDailyPlan(); // Update plan based on new PRs
-        alert('Records updated!');
+        const name = document.getElementById('comp-name').value;
+        const date = document.getElementById('comp-date').value;
+        const event = document.getElementById('comp-event').value;
+        const time = document.getElementById('comp-time').value;
+
+        const newRecord = { id: Date.now(), name, date, event, time };
+        const records = JSON.parse(localStorage.getItem(RECORDS_KEY)) || [];
+        records.push(newRecord);
+        localStorage.setItem(RECORDS_KEY, JSON.stringify(records));
+
+        loadRecords();
+        generateDailyPlan();
+        compForm.reset();
+        alert('대회 기록이 추가되었습니다!');
     });
 }
 
-// --- 4. Smart Daily Schedule Generation ---
+
+// --- 5. Smart Daily Schedule (Level Based) ---
 function generateDailyPlan() {
     const planText = document.getElementById('daily-plan-text');
     if (!planText) return;
 
-    const workouts = JSON.parse(localStorage.getItem('swim_workouts')) || [];
-    const prs = JSON.parse(localStorage.getItem('swim_prs')) || {};
+    const level = localStorage.getItem(LEVEL_KEY);
+    const workouts = JSON.parse(localStorage.getItem(WORKOUT_KEY)) || [];
     
-    // Calculate Average Recent Volume (Last 3 sessions)
+    // Calculate Volume
     let avgDist = 0;
     if (workouts.length > 0) {
         const recent = workouts.slice(-3);
@@ -154,64 +235,57 @@ function generateDailyPlan() {
 
     let plan = "";
     let focus = "";
-    
-    // Logic Table
-    if (avgDist === 0) {
-        plan = "Welcome Swim (800m)";
-        focus = "Easy warmup to establish baseline.";
-    } else if (avgDist < 1000) {
-        plan = "Technical Drill Set (1200m)";
-        focus = "Focus on body position & rotation.";
-    } else if (avgDist < 2500) {
-        plan = "Aerobic Endurance (2000m)";
-        focus = "Maintain consistent pace.";
-        if (prs['100free']) {
-            focus = `Main Set: 10x100m @ Pace (based on ${prs['100free']})`;
-        }
-    } else {
-        plan = "Threshold Power (3000m+)";
-        focus = "High intensity intervals.";
-        if (prs['100free']) {
-             focus = `Target: Sprint sets beating ${prs['100free']}`;
-        }
+
+    // Strategy: Combine Level + Recent Volume
+    if (!level || level === 'beginner') {
+        plan = "기초 다지기 (800m - 1200m)";
+        focus = "호흡 패턴 안정화 및 킥 밸런스 훈련";
+    } else if (level === 'intermediate') {
+        plan = "유산소 지구력 (1500m - 2000m)";
+        focus = "스트로크 당 거리(DPS) 늘리기 및 턴 연습";
+    } else if (level === 'advanced') {
+        plan = "역치 향상 훈련 (2500m+)";
+        focus = "인터벌 훈련 (10x100m @ 1:30) 및 페이스 조절";
+    } else if (level === 'masters') {
+        plan = "대회 실전 시뮬레이션 (3000m+)";
+        focus = "스타트, 브레이크아웃, 피니시 집중 훈련";
+    } else if (level === 'elite') {
+        plan = "고강도 파워 트레이닝 (5000m+)";
+        focus = "젖산 내성 훈련 및 한계 돌파";
     }
 
-    planText.innerHTML = `<strong>${plan}</strong><br><span style="font-size:0.9em; color:#718096">${focus}</span>`;
+    // Dynamic Override based on low volume
+    if (workouts.length > 0 && avgDist < 500 && level !== 'beginner') {
+        focus += "<br>(최근 운동량이 부족합니다. 가벼운 웜업부터 시작하세요.)";
+    }
+
+    planText.innerHTML = `<strong>${plan}</strong><br><span style="font-size:0.9rem; color:#718096">${focus}</span>`;
 }
 
-// --- 5. Video Analysis (Click & Drag-n-Drop) ---
+// --- 6. Video Analysis (Click & Drag-n-Drop) ---
 const uploadZone = document.getElementById('upload-zone');
 const fileInput = document.getElementById('video-upload');
 const analysisResults = document.getElementById('analysis-results');
 const loader = document.getElementById('analysis-loader');
 const splitsBody = document.getElementById('splits-body');
 
-// UI Elements for Data
 const resBreakout = document.getElementById('res-breakout');
 const resDps = document.getElementById('res-dps');
 const resTime = document.getElementById('res-time');
 
 if (uploadZone && fileInput) {
-    // A. Click to Upload
     uploadZone.addEventListener('click', () => fileInput.click());
 
     fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-            handleFile(e.target.files[0]);
-        }
+        if (e.target.files.length > 0) handleFile(e.target.files[0]);
     });
 
-    // B. Drag & Drop Support
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         uploadZone.addEventListener(eventName, preventDefaults, false);
     });
 
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
+    function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
 
-    // Visual feedback
     ['dragenter', 'dragover'].forEach(eventName => {
         uploadZone.addEventListener(eventName, () => uploadZone.style.borderColor = '#006994', false);
     });
@@ -220,48 +294,36 @@ if (uploadZone && fileInput) {
         uploadZone.addEventListener(eventName, () => uploadZone.style.borderColor = '#cbd5e0', false);
     });
 
-    // Handle Drop
     uploadZone.addEventListener('drop', (e) => {
         const dt = e.dataTransfer;
-        const files = dt.files;
-        if (files.length > 0) {
-            handleFile(files[0]);
-        }
+        if (dt.files.length > 0) handleFile(dt.files[0]);
     });
 }
 
 function handleFile(file) {
-    // 500MB Limit
-    const maxSize = 500 * 1024 * 1024;
-    
-    // Check type
+    const maxSize = 500 * 1024 * 1024; // 500MB
     if (!file.type.startsWith('video/')) {
-        alert('Please upload a valid video file.');
+        alert('동영상 파일만 업로드 가능합니다.');
         return;
     }
-
-    // Check size
     if (file.size > maxSize) {
-        alert('File is too large. Max size is 500MB.');
+        alert('파일 크기가 너무 큽니다. (최대 500MB)');
         return;
     }
-
     startAnalysisSimulation(file);
 }
 
 function startAnalysisSimulation(file) {
-    // 1. UI Reset
     uploadZone.classList.add('hidden');
     analysisResults.classList.remove('hidden');
     loader.classList.remove('hidden');
     document.querySelector('.result-card').classList.add('hidden');
 
-    // 2. Simulate Delay (Network/Processing)
     setTimeout(() => {
         loader.classList.add('hidden');
         document.querySelector('.result-card').classList.remove('hidden');
         generateMockData();
-    }, 2500); // 2.5s simulated delay
+    }, 2500);
 }
 
 function generateMockData() {
@@ -274,9 +336,9 @@ function generateMockData() {
     resDps.textContent = dps;
 
     const segments = [
-        { name: 'Breakout (0-15m)', strokes: 6, breaths: 1, time: breakoutTime },
-        { name: 'Mid-Swim (15-35m)', strokes: 18, breaths: 6, time: (parseFloat(totalTime) * 0.4).toFixed(2) },
-        { name: 'Finish (35-50m)', strokes: 14, breaths: 4, time: (parseFloat(totalTime) - parseFloat(breakoutTime) - (parseFloat(totalTime) * 0.4)).toFixed(2) }
+        { name: '브레이크아웃 (0-15m)', strokes: 6, breaths: 1, time: breakoutTime },
+        { name: '중반 가속 (15-35m)', strokes: 18, breaths: 6, time: (parseFloat(totalTime) * 0.4).toFixed(2) },
+        { name: '피니시 스퍼트 (35-50m)', strokes: 14, breaths: 4, time: (parseFloat(totalTime) - parseFloat(breakoutTime) - (parseFloat(totalTime) * 0.4)).toFixed(2) }
     ];
 
     splitsBody.innerHTML = segments.map(seg => `
@@ -284,14 +346,7 @@ function generateMockData() {
             <td>${seg.name}</td>
             <td>${seg.strokes}</td>
             <td>${seg.breaths}</td>
-            <td>${seg.time}s</td>
+            <td>${seg.time}초</td>
         </tr>
     `).join('');
 }
-
-// --- Initialize ---
-document.addEventListener('DOMContentLoaded', () => {
-    loadWorkouts();
-    loadPRs();
-    generateDailyPlan();
-});

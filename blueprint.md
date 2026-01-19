@@ -20,7 +20,14 @@ A web-based Swimming Coach application designed to help users improve their swim
 - [x] Create "Video Analysis" section with file upload UI.
 - [x] Implement simulated video processing logic to display metrics (Breakout, Strokes, Breaths, Splits).
 
-### Goal: Enhance Features
+### Goal: Localization & Advanced User Management
+- [x] Translate entire UI to Korean.
+- [x] Implement "User Level Onboarding" screen (Beginner to Elite) with visual cards.
+- [x] Update "Profile/Records" to support detailed competition logging (Event Name, Date, Result).
+- [x] Customize Daily Plan based on selected user level.
+
+### History
+#### Goal: Enhance Features
 - [x] Increase video upload limit text and logic to 500MB.
 - [x] Implement "Smart Schedule Algorithm" to generate daily plans based on stored PRs and recent volume.
 - [x] Update Dashboard UI to display the dynamic plan.
