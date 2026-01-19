@@ -20,6 +20,12 @@ A web-based Swimming Coach application designed to help users improve their swim
 - [x] Create "Video Analysis" section with file upload UI.
 - [x] Implement simulated video processing logic to display metrics (Breakout, Strokes, Breaths, Splits).
 
+### Goal: Community & Social Features
+- [ ] Fix Critical Bug: Navigation broken due to plan generation error.
+- [ ] Implement "Swim Club" system (Join Club).
+- [ ] Create "Team Leaderboard" to compare user records with (simulated) club members.
+- [ ] Add Club tab to Navigation.
+
 ### Goal: User Profile & Persistence
 - [x] Update Onboarding to collect Nickname + Level.
 - [x] Persist User Profile (Nickname, Level) in LocalStorage as a single object.

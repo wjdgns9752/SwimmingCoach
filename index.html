@@ -80,6 +80,7 @@
         <li><a href="#" data-page="dashboard" class="nav-link active">대시보드</a></li>
         <li><a href="#" data-page="logger" class="nav-link">훈련 일지</a></li>
         <li><a href="#" data-page="analysis" class="nav-link">AI 분석</a></li>
+        <li><a href="#" data-page="club" class="nav-link">클럽</a></li>
         <li><a href="#" data-page="profile" class="nav-link">내 기록</a></li>
       </ul>
     </nav>
@@ -271,6 +272,44 @@
       </div>
     </section>
 
+    <!-- PAGE: CLUB -->
+    <section id="club-page" class="page-section hidden">
+      <div class="page-header">
+        <h2>🏊 소속 클럽</h2>
+        <p>팀원들과 기록을 공유하고 경쟁하세요.</p>
+      </div>
+
+      <!-- State 1: No Club Selected -->
+      <div id="club-selection-view">
+          <div class="club-list" id="club-list">
+              <!-- JS Populated -->
+          </div>
+      </div>
+
+      <!-- State 2: Club Dashboard -->
+      <div id="club-dashboard-view" class="hidden">
+          <div class="club-header-card">
+              <div class="club-info">
+                  <span class="club-icon-large" id="my-club-icon">🦈</span>
+                  <div>
+                      <h3 id="my-club-name">Club Name</h3>
+                      <p id="my-club-desc">Club Description</p>
+                  </div>
+              </div>
+              <button onclick="leaveClub()" class="small-text-btn text-danger">팀 탈퇴</button>
+          </div>
+
+          <div class="features">
+              <div class="feature-card">
+                  <h3>🏆 팀 랭킹 (자유형 50m)</h3>
+                  <ul class="leaderboard-list" id="team-leaderboard">
+                      <!-- JS Populated -->
+                  </ul>
+              </div>
+          </div>
+      </div>
+    </section>
+
     <!-- PAGE: PROFILE -->
     <section id="profile-page" class="page-section hidden">
       <div class="page-header">
@@ -359,6 +398,10 @@
     <a href="#" data-page="analysis" class="nav-item">
       <span class="nav-icon">📷</span>
       <span class="nav-text">분석</span>
+    </a>
+    <a href="#" data-page="club" class="nav-item">
+      <span class="nav-icon">🤝</span>
+      <span class="nav-text">클럽</span>
     </a>
     <a href="#" data-page="profile" class="nav-item">
       <span class="nav-icon">👤</span>
