@@ -58,22 +58,22 @@ window.navigateTo = function(pageId) {
 const onboardingOverlay = document.getElementById('onboarding-overlay');
 const userLevelBadge = document.getElementById('user-level-badge');
 const greetingText = document.getElementById('user-greeting');
+const dashboardGoalText = document.getElementById('dashboard-goal');
 const profileNicknameInput = document.getElementById('profile-nickname');
 const profileLevelSelect = document.getElementById('profile-level');
+const profileGoalSelect = document.getElementById('profile-goal');
 
 function checkUserProfile() {
-    // Migrate old level key if exists
     const oldLevel = localStorage.getItem(OLD_LEVEL_KEY);
     let profile = JSON.parse(localStorage.getItem(PROFILE_KEY));
 
     if (oldLevel && !profile) {
-        profile = { nickname: '수영인', level: oldLevel };
+        profile = { nickname: '수영인', level: oldLevel, goal: 'endurance' };
         localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
         localStorage.removeItem(OLD_LEVEL_KEY);
     }
 
-    if (!profile || !profile.nickname || !profile.level) {
-        // Show Onboarding
+    if (!profile || !profile.nickname) {
         if (onboardingOverlay) onboardingOverlay.classList.add('active');
     } else {
         applyUserProfile(profile);
@@ -81,53 +81,46 @@ function checkUserProfile() {
 }
 
 function applyUserProfile(profile) {
-    // 1. Update Greeting
     if (greetingText) greetingText.textContent = `안녕하세요, ${profile.nickname}님! 🏊`;
     
-    // 2. Update Badge
-    updateLevelBadge(profile.level);
-    
-    // 3. Generate Plan
-    generateDailyPlan(profile.level);
+    const goalNames = {
+        'endurance': '지구력 향상', 'speed': '스피드/기록', 'technique': '자세 교정',
+        'diet': '다이어트', 'competition': '대회 준비'
+    };
+    if (dashboardGoalText) dashboardGoalText.textContent = `목표: ${goalNames[profile.goal || 'endurance']}`;
 
-    // 4. Update Profile Page Inputs
+    updateLevelBadge(profile.level);
+    generateDailyPlan(profile.level, profile.goal);
+
     if (profileNicknameInput) profileNicknameInput.value = profile.nickname;
     if (profileLevelSelect) profileLevelSelect.value = profile.level;
+    if (profileGoalSelect) profileGoalSelect.value = profile.goal || 'endurance';
 }
 
-// Called from Onboarding HTML
 window.completeOnboarding = function(level) {
     const nicknameInput = document.getElementById('onboard-nickname');
     const nickname = nicknameInput.value.trim();
+    if (!nickname) { alert('닉네임을 입력해주세요!'); nicknameInput.focus(); return; }
 
-    if (!nickname) {
-        alert('닉네임을 입력해주세요!');
-        nicknameInput.focus();
-        return;
-    }
-
-    const profile = { nickname, level };
+    const profile = { nickname, level, goal: 'endurance' }; // Default goal
     localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
     
     if (onboardingOverlay) onboardingOverlay.classList.remove('active');
     applyUserProfile(profile);
-    alert(`${nickname}님, 환영합니다!`);
+    alert(`${nickname}님, 환영합니다! 프로필에서 목표를 상세하게 설정해보세요.`);
 };
 
-// Called from Profile Page
 window.saveProfileChanges = function() {
     const nickname = profileNicknameInput.value.trim();
     const level = profileLevelSelect.value;
+    const goal = profileGoalSelect.value;
 
-    if (!nickname) {
-        alert('닉네임을 입력해주세요.');
-        return;
-    }
+    if (!nickname) { alert('닉네임을 입력해주세요.'); return; }
 
-    const profile = { nickname, level };
+    const profile = { nickname, level, goal };
     localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
     applyUserProfile(profile);
-    alert('프로필이 수정되었습니다.');
+    alert('프로필 및 목표가 수정되었습니다.');
 };
 
 function updateLevelBadge(level) {
@@ -139,8 +132,82 @@ function updateLevelBadge(level) {
     userLevelBadge.textContent = levelNames[level] || '레벨 미설정';
 }
 
+// ... (Workout Logger & Record Code unchanged) ...
 
-// --- Workout Logger & Others (No changes to logic, just context) ---
+function generateDailyPlan(level = 'beginner', goal = 'endurance') {
+    const planText = document.getElementById('daily-plan-text');
+    if (!planText) return;
+
+    // Base distances by level
+    const baseDist = { 'beginner': 800, 'intermediate': 1500, 'advanced': 2500, 'masters': 3000, 'elite': 4500 };
+    let dist = baseDist[level];
+
+    let plan = { title: "", desc: "", warmup: [], drill: [], main: [], cooldown: [] };
+
+    // --- Logic based on GOAL first, then adjusted by Level ---
+    
+    if (goal === 'technique') {
+        plan.title = "자세 교정 및 효율성 (Drill Focus)";
+        plan.desc = "스트로크 수를 줄이고 물 잡는 감각(Catch)을 익히는 훈련";
+        dist = Math.floor(dist * 0.8); // Less distance, more focus
+        
+        plan.warmup = [{dist: `${Math.floor(dist*0.2)}m`, desc: '천천히 수영하며 몸 풀기'}];
+        plan.drill = [
+            {dist: `${Math.floor(dist*0.3)}m`, desc: '스컬링, 한팔 접영, 주먹 쥐고 수영 (각 50m 반복)'},
+            {dist: `${Math.floor(dist*0.1)}m`, desc: '킥판 잡고 자세 집중 발차기'}
+        ];
+        plan.main = [{dist: `${Math.floor(dist*0.3)}m`, desc: `50m x ${Math.floor((dist*0.3)/50)} (스트로크 수 세기)`}];
+        plan.cooldown = [{dist: `${Math.floor(dist*0.1)}m`, desc: '이지 스윔'}];
+
+    } else if (goal === 'speed') {
+        plan.title = "스피드 & 파워 (Sprint & Interval)";
+        plan.desc = "빠른 템포와 짧은 휴식으로 심박수를 올리는 훈련";
+        
+        plan.warmup = [{dist: `${Math.floor(dist*0.2)}m`, desc: '기본 웜업 + 짧은 대시 4회'}];
+        plan.drill = [{dist: `${Math.floor(dist*0.1)}m`, desc: '스타트 및 턴 동작 연습'}];
+        plan.main = [
+            {dist: `${Math.floor(dist*0.2)}m`, desc: `25m x ${Math.floor((dist*0.2)/25)} (All-out, 휴식 40초)`},
+            {dist: `${Math.floor(dist*0.3)}m`, desc: `50m x ${Math.floor((dist*0.3)/50)} (목표 기록 페이스, 휴식 1분)`}
+        ];
+        plan.cooldown = [{dist: `${Math.floor(dist*0.2)}m`, desc: '충분한 회복 수영'}];
+
+    } else if (goal === 'endurance') {
+        plan.title = "유산소 지구력 (Aerobic)";
+        plan.desc = "일정한 페이스로 끊김 없이 오래 수영하는 훈련";
+        dist = Math.floor(dist * 1.2); // More distance
+        
+        plan.warmup = [{dist: `${Math.floor(dist*0.15)}m`, desc: '가벼운 조깅 페이스 수영'}];
+        plan.drill = []; // Less drills
+        plan.main = [
+            {dist: `${Math.floor(dist*0.7)}m`, desc: `LSD (Long Slow Distance) - 멈추지 않고 계속 수영`}
+        ];
+        if (level !== 'beginner') {
+             plan.main = [{dist: `${Math.floor(dist*0.7)}m`, desc: `400m / 800m / 400m 피라미드 세트`}];
+        }
+        plan.cooldown = [{dist: `${Math.floor(dist*0.15)}m`, desc: '스트레칭 위주 쿨다운'}];
+
+    } else if (goal === 'diet') {
+        plan.title = "체지방 연소 (High Burn)";
+        plan.desc = "쉬는 시간을 줄여 칼로리 소모를 극대화";
+        
+        plan.warmup = [{dist: `${Math.floor(dist*0.2)}m`, desc: '자유형 콤비'}];
+        plan.drill = [{dist: `${Math.floor(dist*0.2)}m`, desc: '킥판 발차기 (하체 집중)'}];
+        plan.main = [{dist: `${Math.floor(dist*0.5)}m`, desc: `100m x ${Math.floor((dist*0.5)/100)} @ 휴식 15초 (빠르게 돌기)`}];
+        plan.cooldown = [{dist: `${Math.floor(dist*0.1)}m`, desc: '걷기'}];
+
+    } else if (goal === 'competition') {
+        plan.title = "대회 실전 대비 (Race Pace)";
+        plan.desc = "실제 대회 종목의 구간별 페이스 분배 연습";
+        
+        plan.warmup = [{dist: `${Math.floor(dist*0.25)}m`, desc: '웜업 + 다이빙 스타트 2회'}];
+        plan.drill = [{dist: `${Math.floor(dist*0.15)}m`, desc: '브레이크아웃(잠영) 15m 연습'}];
+        plan.main = [{dist: `${Math.floor(dist*0.4)}m`, desc: `Broken Swim (목표 거리를 나누어 대회 페이스로)`}];
+        plan.cooldown = [{dist: `${Math.floor(dist*0.2)}m`, desc: '젖산 제거 회복'}];
+    }
+
+    currentDailyPlan = plan; // Save for modal
+    planText.innerHTML = `<strong>[${level.toUpperCase()}] ${plan.title}</strong><br><span style="font-size:0.9rem; color:#718096">${plan.desc}</span>`;
+}
 window.addDistance = function(amount) {
     const input = document.getElementById('distance');
     if(input) input.value = (parseInt(input.value)||0) + amount;

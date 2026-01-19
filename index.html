@@ -91,18 +91,19 @@
     <section id="dashboard-page" class="page-section active">
       <div class="hero-mini">
         <h1 id="user-greeting">오늘도 물살을 가를 준비 되셨나요?</h1>
+        <p id="dashboard-goal" class="hero-sub">목표: 설정되지 않음</p>
       </div>
 
       <div class="features">
         <div class="feature-card main-plan-card">
           <div class="card-header">
               <div class="icon">📝</div>
-              <h3>오늘의 추천 훈련</h3>
+              <h3>오늘의 맞춤 훈련</h3>
           </div>
           <p id="daily-plan-text">데이터 로딩 중...</p>
           <div class="card-footer">
               <span class="status-badge" id="user-level-badge">레벨 확인 중</span>
-              <span class="tap-hint">터치하여 상세 보기 &rarr;</span>
+              <span class="tap-hint">터치하여 상세 가이드 보기 &rarr;</span>
           </div>
         </div>
 
@@ -277,7 +278,7 @@
       </div>
 
       <div class="form-card" style="margin-bottom: 1.5rem;">
-          <h3>👤 프로필 설정</h3>
+          <h3>👤 프로필 및 목표 설정</h3>
           <div class="input-group">
               <label style="min-width: 60px;">닉네임</label>
               <input type="text" id="profile-nickname" placeholder="닉네임">
@@ -290,6 +291,16 @@
                   <option value="advanced">상급 (Advanced)</option>
                   <option value="masters">마스터즈 (Masters)</option>
                   <option value="elite">선수 (Elite)</option>
+              </select>
+          </div>
+          <div class="input-group" style="margin-top: 1rem;">
+              <label style="min-width: 60px;">목표</label>
+              <select id="profile-goal" class="form-select">
+                  <option value="endurance">지구력 향상 (오래 수영하기)</option>
+                  <option value="speed">스피드/기록 단축</option>
+                  <option value="technique">자세 교정 및 효율성</option>
+                  <option value="diet">다이어트 / 체력 증진</option>
+                  <option value="competition">대회 준비 (실전 모드)</option>
               </select>
           </div>
           <button onclick="saveProfileChanges()" class="secondary-btn" style="margin-top: 1rem;">변경사항 저장</button>
