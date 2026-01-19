@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="description" content="수영 훈련과 자세 교정을 위한 나만의 일일 코치">
   <title>일일 스위밍 코치</title>
-  <link href='/style.css' rel='stylesheet'>
+  <link href='style.css' rel='stylesheet'>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
@@ -68,22 +68,31 @@
     </div>
   </div>
 
-  <!-- App Header (Desktop Only / Logo Area) -->
+  <!-- App Header -->
   <header class="app-header">
     <div class="logo">
       <span class="logo-icon">🏊</span>
-      <span class="logo-text">스위밍코치</span>
+      <span class="logo-text" data-i18n="appTitle">스위밍코치</span>
     </div>
-    <!-- Desktop Nav -->
-    <nav class="desktop-nav">
-      <ul>
-        <li><a href="#" data-page="dashboard" class="nav-link active">대시보드</a></li>
-        <li><a href="#" data-page="logger" class="nav-link">훈련 일지</a></li>
-        <li><a href="#" data-page="analysis" class="nav-link">AI 분석</a></li>
-        <li><a href="#" data-page="club" class="nav-link">클럽</a></li>
-        <li><a href="#" data-page="profile" class="nav-link">내 기록</a></li>
-      </ul>
-    </nav>
+    
+    <div style="display:flex; align-items:center; gap: 1rem;">
+        <nav class="desktop-nav">
+          <ul>
+            <li><a href="#" data-page="dashboard" class="nav-link active" data-i18n="navDashboard">대시보드</a></li>
+            <li><a href="#" data-page="logger" class="nav-link" data-i18n="navLogger">훈련 일지</a></li>
+            <li><a href="#" data-page="analysis" class="nav-link" data-i18n="navAnalysis">AI 분석</a></li>
+            <li><a href="#" data-page="club" class="nav-link" data-i18n="navClub">클럽</a></li>
+            <li><a href="#" data-page="profile" class="nav-link" data-i18n="navProfile">내 기록</a></li>
+          </ul>
+        </nav>
+        
+        <select id="language-selector" class="lang-select">
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="jp">🇯🇵 日本語</option>
+            <option value="cn">🇨🇳 中文</option>
+        </select>
+    </div>
   </header>
 
   <main class="app-container">
@@ -91,7 +100,7 @@
     <!-- PAGE: DASHBOARD -->
     <section id="dashboard-page" class="page-section active">
       <div class="hero-mini">
-        <h1 id="user-greeting">오늘도 물살을 가를 준비 되셨나요?</h1>
+        <h1 id="user-greeting" data-i18n="greeting">오늘도 물살을 가를 준비 되셨나요?</h1>
         <p id="dashboard-goal" class="hero-sub">목표: 설정되지 않음</p>
       </div>
 
@@ -99,34 +108,27 @@
         <div class="feature-card main-plan-card">
           <div class="card-header">
               <div class="icon">📝</div>
-              <h3>오늘의 맞춤 훈련</h3>
+              <h3 data-i18n="dailyPlanTitle">오늘의 맞춤 훈련</h3>
           </div>
           <p id="daily-plan-text">데이터 로딩 중...</p>
           <div class="card-footer">
-              <span class="status-badge" id="user-level-badge">레벨 확인 중</span>
-              <span class="tap-hint">터치하여 상세 가이드 보기 &rarr;</span>
+              <span class="status-badge" id="user-level-badge">Level</span>
+              <span class="tap-hint" onclick="openTerminologyModal()" style="cursor:pointer; text-decoration:underline; margin-right:10px;" data-i18n="termHint">훈련 용어 설명 보기</span>
+              <span class="tap-hint" data-i18n="tapDetails">터치하여 상세 가이드 &rarr;</span>
           </div>
         </div>
 
         <div class="feature-card">
           <div class="icon">📅</div>
-          <h3>이번 주 누적 거리</h3>
+          <h3 data-i18n="weeklyDistTitle">이번 주 누적 거리</h3>
           <p id="total-distance-display" class="big-number">0 m</p>
         </div>
         
         <div class="feature-card">
           <div class="icon">🏆</div>
-          <h3>최근 대회 기록</h3>
-          <p id="pr-display" class="big-number-sm">기록 없음</p>
-          <button class="link-btn" onclick="navigateTo('profile')">기록 추가하기</button>
-        </div>
-
-        <div class="feature-card">
-          <div class="icon">📈</div>
-          <h3>최근 활동</h3>
-          <ul id="recent-activity-list" class="activity-list">
-              <li class="empty-state">아직 기록된 훈련이 없습니다.</li>
-          </ul>
+          <h3 data-i18n="recentCompTitle">최근 대회 기록</h3>
+          <p id="pr-display" class="big-number-sm">None</p>
+          <button class="link-btn" onclick="navigateTo('profile')" data-i18n="btnAddRecord">기록 추가하기</button>
         </div>
       </div>
     </section>
@@ -134,26 +136,23 @@
     <!-- PAGE: LOGGER -->
     <section id="logger-page" class="page-section hidden">
       <div class="page-header">
-        <h2>훈련 일지 작성</h2>
-        <p>오늘의 수영을 기록하고 성장을 확인하세요.</p>
+        <h2 data-i18n="loggerTitle">훈련 일지 작성</h2>
       </div>
       
       <form id="swim-log-form" class="logger-form">
-        <!-- Date & Time -->
         <div class="form-card">
-            <h3>📅 날짜 및 시간</h3>
+            <h3 data-i18n="dateLabel">📅 날짜 및 시간</h3>
             <div class="input-group">
                 <input type="date" id="date" required>
                 <div class="duration-input">
-                    <input type="number" id="duration" placeholder="45" required min="0">
-                    <span class="unit">분 동안</span>
+                    <input type="number" id="duration" placeholder="45" required min="0" style="margin-top:0.5rem">
+                    <span class="unit">Min</span>
                 </div>
             </div>
         </div>
 
-        <!-- Distance -->
         <div class="form-card">
-            <h3>🏊 수영 거리</h3>
+            <h3 data-i18n="distLabel">🏊 수영 거리</h3>
             <div class="distance-input-wrapper">
                 <input type="number" id="distance" placeholder="1500" required min="0" step="50">
                 <span class="unit-large">m</span>
@@ -165,35 +164,28 @@
             </div>
         </div>
 
-        <!-- Mood / Feeling -->
         <div class="form-card">
-            <h3>Condition (오늘의 기분)</h3>
+            <h3>Condition</h3>
             <div class="mood-selector">
                 <input type="radio" name="mood" id="mood-good" value="good" hidden checked>
-                <label for="mood-good" class="mood-btn">🤩<br>최고</label>
+                <label for="mood-good" class="mood-btn">🤩<br>Good</label>
 
                 <input type="radio" name="mood" id="mood-soso" value="soso" hidden>
-                <label for="mood-soso" class="mood-btn">🙂<br>보통</label>
+                <label for="mood-soso" class="mood-btn">🙂<br>So-so</label>
 
                 <input type="radio" name="mood" id="mood-bad" value="bad" hidden>
-                <label for="mood-bad" class="mood-btn">😫<br>힘듦</label>
+                <label for="mood-bad" class="mood-btn">😫<br>Bad</label>
             </div>
         </div>
 
-        <!-- Notes -->
-        <div class="form-card">
-            <h3>메모</h3>
-            <textarea id="notes" rows="3" placeholder="자세, 페이스 등 특이사항을 적어주세요."></textarea>
-        </div>
-
-        <button type="submit" class="floating-submit-btn">기록 저장하기</button>
+        <button type="submit" class="floating-submit-btn" data-i18n="btnSave">기록 저장하기</button>
       </form>
     </section>
 
     <!-- PAGE: ANALYSIS -->
     <section id="analysis-page" class="page-section hidden">
       <div class="page-header">
-        <h2>AI 영법 정밀 분석</h2>
+        <h2 data-i18n="navAnalysis">AI 영법 정밀 분석</h2>
         <p>수영 영상을 업로드하여 자세를 교정받으세요.</p>
       </div>
 
@@ -217,7 +209,7 @@
         <input type="file" id="video-upload" accept="video/*" hidden>
         <div class="upload-content">
           <span class="upload-icon">📹</span>
-          <h3>동영상 업로드</h3>
+          <h3 data-i18n="uploadTitle">동영상 업로드</h3>
           <p>터치 또는 드래그 (Max 500MB)</p>
         </div>
       </div>
@@ -275,21 +267,17 @@
     <!-- PAGE: CLUB -->
     <section id="club-page" class="page-section hidden">
       <div class="page-header">
-        <h2>🏊 소속 클럽</h2>
+        <h2 data-i18n="navClub">소속 클럽</h2>
         <p>팀원들과 기록을 공유하고 경쟁하세요.</p>
       </div>
 
-      <!-- State 1: No Club Selected -->
       <div id="club-selection-view">
           <div class="page-header-actions">
               <button onclick="openCreateClubModal()" class="secondary-btn small-btn">+ 클럽 만들기</button>
           </div>
-          <div class="club-list" id="club-list">
-              <!-- JS Populated -->
-          </div>
+          <div class="club-list" id="club-list"></div>
       </div>
 
-      <!-- State 2: Club Dashboard -->
       <div id="club-dashboard-view" class="hidden">
           <div class="club-header-card">
               <div class="club-info">
@@ -310,19 +298,15 @@
               </div>
           </div>
 
-          <!-- Tab: Ranking -->
           <div id="club-tab-ranking" class="club-tab-content">
               <div class="features">
                   <div class="feature-card">
                       <h3>🏆 팀 랭킹 (자유형 50m)</h3>
-                      <ul class="leaderboard-list" id="team-leaderboard">
-                          <!-- JS Populated -->
-                      </ul>
+                      <ul class="leaderboard-list" id="team-leaderboard"></ul>
                   </div>
               </div>
           </div>
 
-          <!-- Tab: Board (New) -->
           <div id="club-tab-board" class="club-tab-content hidden">
               <div class="feature-card">
                   <div class="board-header">
@@ -330,13 +314,12 @@
                       <button class="small-text-btn" onclick="postToBoard()">✏️ 기록 공유하기</button>
                   </div>
                   <div class="feed-list" id="club-feed">
-                      <!-- JS Populated -->
                       <div class="feed-item">
                           <div class="feed-head">
                               <span class="feed-user">김물개</span>
                               <span class="feed-time">2시간 전</span>
                           </div>
-                          <p class="feed-content">오늘 자유형 1500m 완주했습니다! 힘들네요 💦</p>
+                          <p class="feed-content">오늘 자유형 1500m 완주했습니다! 힘드네요 💦</p>
                       </div>
                   </div>
               </div>
@@ -393,41 +376,70 @@
     <!-- PAGE: PROFILE -->
     <section id="profile-page" class="page-section hidden">
       <div class="page-header">
-        <h2>내 정보 관리</h2>
+        <h2 data-i18n="profileTitle">내 정보 관리</h2>
       </div>
 
       <div class="form-card" style="margin-bottom: 1.5rem;">
-          <h3>👤 프로필 및 목표 설정</h3>
+          <h3 data-i18n="profileHeader">👤 프로필 및 신체 정보</h3>
+          
           <div class="input-group">
-              <label style="min-width: 60px;">닉네임</label>
+              <label data-i18n="labelNickname">닉네임</label>
               <input type="text" id="profile-nickname" placeholder="닉네임">
           </div>
-          <div class="input-group" style="margin-top: 1rem;">
-              <label style="min-width: 60px;">레벨</label>
+
+          <div class="form-row">
+              <div class="form-group half">
+                  <label data-i18n="labelAge">나이</label>
+                  <input type="number" id="profile-age" placeholder="25">
+              </div>
+              <div class="form-group half">
+                  <label data-i18n="labelGender">성별</label>
+                  <select id="profile-gender">
+                      <option value="m" data-i18n="genderMale">남성</option>
+                      <option value="f" data-i18n="genderFemale">여성</option>
+                  </select>
+              </div>
+          </div>
+
+          <div class="input-group">
+              <label data-i18n="labelLevel">수영 레벨</label>
               <select id="profile-level" class="form-select">
-                  <option value="beginner">초급 (Beginner)</option>
-                  <option value="intermediate">중급 (Intermediate)</option>
-                  <option value="advanced">상급 (Advanced)</option>
-                  <option value="masters">마스터즈 (Masters)</option>
-                  <option value="elite">선수 (Elite)</option>
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
+                  <option value="masters">Masters</option>
+                  <option value="elite">Elite</option>
               </select>
           </div>
-          <div class="input-group" style="margin-top: 1rem;">
-              <label style="min-width: 60px;">목표</label>
+          
+          <div class="input-group">
+              <label data-i18n="labelGoal">훈련 목표</label>
               <select id="profile-goal" class="form-select">
-                  <option value="endurance">지구력 향상 (오래 수영하기)</option>
-                  <option value="speed">스피드/기록 단축</option>
-                  <option value="technique">자세 교정 및 효율성</option>
-                  <option value="diet">다이어트 / 체력 증진</option>
-                  <option value="competition">대회 준비 (실전 모드)</option>
+                  <option value="endurance" data-i18n="goalEndurance">지구력</option>
+                  <option value="speed" data-i18n="goalSpeed">스피드</option>
+                  <option value="technique" data-i18n="goalTechnique">자세 교정</option>
+                  <option value="diet" data-i18n="goalDiet">다이어트</option>
+                  <option value="competition" data-i18n="goalComp">대회 준비</option>
               </select>
           </div>
-          <button onclick="saveProfileChanges()" class="secondary-btn" style="margin-top: 1rem;">변경사항 저장</button>
+
+          <h4 style="margin-top:1.5rem; margin-bottom:0.5rem;" data-i18n="recordsHeader">🏊‍♂️ 기준 기록 (50m)</h4>
+          <div class="input-group">
+              <label>자유형 (Free)</label>
+              <input type="text" id="record-free" placeholder="00:30.00">
+          </div>
+          <div class="input-group">
+              <label>평영 (Breast)</label>
+              <input type="text" id="record-breast" placeholder="00:40.00">
+          </div>
+
+          <button onclick="saveProfileChanges()" class="secondary-btn" style="margin-top: 1rem;" data-i18n="btnUpdate">변경사항 저장</button>
       </div>
 
+      <!-- Competition Form (Preserved) -->
       <form id="competition-form" class="logger-form">
          <div class="form-card">
-             <h3>🏆 새 대회 기록 추가</h3>
+             <h3 data-i18n="recentCompTitle">🏆 새 대회 기록 추가</h3>
              <div class="form-group">
                 <label>대회/측정명</label>
                 <input type="text" id="comp-name" placeholder="예: 3월 정기 측정" required>
@@ -453,7 +465,7 @@
                      <option value="개인혼영 200m">개인혼영 200m</option>
                  </select>
              </div>
-             <button type="submit" class="primary-btn">저장하기</button>
+             <button type="submit" class="primary-btn" data-i18n="btnSave">저장하기</button>
          </div>
       </form>
 
@@ -465,27 +477,59 @@
 
   </main>
 
+  <!-- Terminology Modal -->
+  <div id="term-modal" class="modal-overlay hidden">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h2 data-i18n="termTitle">훈련 용어 가이드</h2>
+              <button class="close-btn" onclick="closeTermModal()">&times;</button>
+          </div>
+          <div class="term-grid">
+              <div class="term-card">
+                  <div class="term-title">EN1 (Endurance 1)</div>
+                  <div class="term-desc" data-i18n="descEN1">기초 지구력. 편안한 호흡으로 오래 수영할 수 있는 강도. (최대 심박수 60-70%)</div>
+              </div>
+              <div class="term-card">
+                  <div class="term-title">EN2 (Endurance 2)</div>
+                  <div class="term-desc" data-i18n="descEN2">유산소 역치. 약간 숨이 차지만 페이스를 유지할 수 있는 강도. (최대 심박수 70-80%)</div>
+              </div>
+              <div class="term-card">
+                  <div class="term-title">EN3 (VO2 Max)</div>
+                  <div class="term-desc" data-i18n="descEN3">최대 산소 섭취량. 숨이 많이 차고 지속하기 힘든 강도. (최대 심박수 80-90%)</div>
+              </div>
+              <div class="term-card">
+                  <div class="term-title">SP1 (Sprint 1)</div>
+                  <div class="term-desc" data-i18n="descSP1">젖산 내성. 최고 속도로 짧은 거리를 반복하며 젖산을 견디는 훈련.</div>
+              </div>
+              <div class="term-card">
+                  <div class="term-title">Drill</div>
+                  <div class="term-desc" data-i18n="descDrill">자세 교정을 위한 부분 동작 연습.</div>
+              </div>
+          </div>
+      </div>
+  </div>
+
   <!-- Mobile Bottom Navigation -->
   <nav class="mobile-bottom-nav">
     <a href="#" data-page="dashboard" class="nav-item active">
       <span class="nav-icon">🏠</span>
-      <span class="nav-text">홈</span>
+      <span class="nav-text" data-i18n="navDashboard">홈</span>
     </a>
     <a href="#" data-page="logger" class="nav-item">
       <span class="nav-icon">✏️</span>
-      <span class="nav-text">일지</span>
+      <span class="nav-text" data-i18n="navLogger">일지</span>
     </a>
     <a href="#" data-page="analysis" class="nav-item">
       <span class="nav-icon">📷</span>
-      <span class="nav-text">분석</span>
+      <span class="nav-text" data-i18n="navAnalysis">분석</span>
     </a>
     <a href="#" data-page="club" class="nav-item">
       <span class="nav-icon">🤝</span>
-      <span class="nav-text">클럽</span>
+      <span class="nav-text" data-i18n="navClub">클럽</span>
     </a>
     <a href="#" data-page="profile" class="nav-item">
       <span class="nav-icon">👤</span>
-      <span class="nav-text">기록</span>
+      <span class="nav-text" data-i18n="navProfile">기록</span>
     </a>
   </nav>
 

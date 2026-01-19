@@ -1,41 +1,182 @@
-console.log('일일 스위밍 코치 앱 초기화 시작 (클럽 기능 강화 버전)');
-
-// --- Global Error Handler ---
-window.onerror = function(message, source, lineno, colno, error) {
-    console.error("Global Error:", message, error);
-    return false;
+// --- Translations ---
+const TRANSLATIONS = {
+  ko: {
+    appTitle: "스위밍코치",
+    navDashboard: "대시보드", navLogger: "훈련 일지", navAnalysis: "AI 분석", navClub: "클럽", navProfile: "내 기록",
+    greeting: "오늘도 물살을 가를 준비 되셨나요?",
+    dailyPlanTitle: "오늘의 맞춤 훈련",
+    termHint: "훈련 용어 설명 보기",
+    tapDetails: "터치하여 상세 가이드 →",
+    weeklyDistTitle: "이번 주 누적 거리",
+    recentCompTitle: "최근 대회 기록",
+    btnAddRecord: "기록 추가하기",
+    loggerTitle: "훈련 일지 작성",
+    dateLabel: "📅 날짜 및 시간",
+    distLabel: "🏊 수영 거리",
+    btnSave: "기록 저장하기",
+    profileTitle: "내 정보 관리",
+    profileHeader: "👤 프로필 및 신체 정보",
+    labelNickname: "닉네임", labelAge: "나이", labelGender: "성별", labelLevel: "수영 레벨", labelGoal: "훈련 목표",
+    genderMale: "남성", genderFemale: "여성",
+    goalEndurance: "지구력", goalSpeed: "스피드", goalTechnique: "자세 교정", goalDiet: "다이어트", goalComp: "대회 준비",
+    recordsHeader: "🏊‍♂️ 기준 기록 (50m)",
+    btnUpdate: "변경사항 저장",
+    uploadTitle: "동영상 업로드",
+    termTitle: "훈련 용어 가이드",
+    descEN1: "기초 지구력. 편안한 호흡 (최대심박 60-70%)",
+    descEN2: "유산소 역치. 지속 가능하지만 약간 숨참 (최대심박 70-80%)",
+    descEN3: "최대 산소 섭취량. 숨이 많이 참 (최대심박 80-90%)",
+    descSP1: "젖산 내성. 최고 속도, 짧은 휴식",
+    descDrill: "자세 교정을 위한 부분 동작 연습"
+  },
+  en: {
+    appTitle: "SwimCoach",
+    navDashboard: "Dashboard", navLogger: "Log", navAnalysis: "AI Analysis", navClub: "Club", navProfile: "Profile",
+    greeting: "Ready to hit the water?",
+    dailyPlanTitle: "Daily Workout Plan",
+    termHint: "View Terminology Guide",
+    tapDetails: "Tap for details →",
+    weeklyDistTitle: "Weekly Distance",
+    recentCompTitle: "Recent Best",
+    btnAddRecord: "Add Record",
+    loggerTitle: "Workout Log",
+    dateLabel: "📅 Date & Time",
+    distLabel: "🏊 Distance",
+    btnSave: "Save Log",
+    profileTitle: "Edit Profile",
+    profileHeader: "👤 Personal Info",
+    labelNickname: "Nickname", labelAge: "Age", labelGender: "Gender", labelLevel: "Level", labelGoal: "Goal",
+    genderMale: "Male", genderFemale: "Female",
+    goalEndurance: "Endurance", goalSpeed: "Speed", goalTechnique: "Technique", goalDiet: "Fitness/Diet", goalComp: "Competition",
+    recordsHeader: "🏊‍♂️ Personal Best (50m)",
+    btnUpdate: "Save Changes",
+    uploadTitle: "Upload Video",
+    termTitle: "Training Terminology",
+    descEN1: "Basic Endurance. Comfortable breathing (HR 60-70%)",
+    descEN2: "Aerobic Threshold. Sustainable but breathless (HR 70-80%)",
+    descEN3: "VO2 Max. Hard breathing (HR 80-90%)",
+    descSP1: "Lactate Tolerance. Max speed, short rest",
+    descDrill: "Drills for technique correction"
+  },
+  jp: {
+    appTitle: "スイミングコーチ",
+    navDashboard: "ホーム", navLogger: "日誌", navAnalysis: "AI分析", navClub: "クラブ", navProfile: "記録",
+    greeting: "今日も泳ぐ準備はできましたか？",
+    dailyPlanTitle: "今日のメニュー",
+    termHint: "用語ガイドを見る",
+    tapDetails: "タップして詳細へ →",
+    weeklyDistTitle: "今週の距離",
+    recentCompTitle: "最近の記録",
+    btnAddRecord: "記録を追加",
+    loggerTitle: "トレーニング日誌",
+    dateLabel: "📅 日時",
+    distLabel: "🏊 距離",
+    btnSave: "保存する",
+    profileTitle: "プロフィール編集",
+    profileHeader: "👤 基本情報",
+    labelNickname: "ニックネーム", labelAge: "年齢", labelGender: "性別", labelLevel: "レベル", labelGoal: "目標",
+    genderMale: "男性", genderFemale: "女性",
+    goalEndurance: "持久力", goalSpeed: "スピード", goalTechnique: "フォーム矯正", goalDiet: "ダイエット", goalComp: "大会",
+    recordsHeader: "🏊‍♂️ 自己ベスト (50m)",
+    btnUpdate: "変更を保存",
+    uploadTitle: "動画アップロード",
+    termTitle: "トレーニング用語",
+    descEN1: "基礎持久力。楽な呼吸 (心拍数 60-70%)",
+    descEN2: "有酸素閾値。ややきつい (心拍数 70-80%)",
+    descEN3: "最大酸素摂取量。かなりきつい (心拍数 80-90%)",
+    descSP1: "乳酸耐性。全力ダッシュ",
+    descDrill: "フォーム矯正練習"
+  },
+  cn: {
+    appTitle: "游泳教练",
+    navDashboard: "仪表盘", navLogger: "日志", navAnalysis: "AI分析", navClub: "俱乐部", navProfile: "记录",
+    greeting: "准备好游泳了吗？",
+    dailyPlanTitle: "今日训练计划",
+    termHint: "查看术语指南",
+    tapDetails: "点击查看详情 →",
+    weeklyDistTitle: "本周距离",
+    recentCompTitle: "近期记录",
+    btnAddRecord: "添加记录",
+    loggerTitle: "训练日志",
+    dateLabel: "📅 日期和时间",
+    distLabel: "🏊 距离",
+    btnSave: "保存",
+    profileTitle: "编辑个人资料",
+    profileHeader: "👤 个人信息",
+    labelNickname: "昵称", labelAge: "年龄", labelGender: "性别", labelLevel: "等级", labelGoal: "目标",
+    genderMale: "男", genderFemale: "女",
+    goalEndurance: "耐力", goalSpeed: "速度", goalTechnique: "技术", goalDiet: "减肥", goalComp: "比赛",
+    recordsHeader: "🏊‍♂️ 个人最好成绩 (50m)",
+    btnUpdate: "保存更改",
+    uploadTitle: "上传视频",
+    termTitle: "训练术语",
+    descEN1: "基础耐力。呼吸轻松 (心率 60-70%)",
+    descEN2: "有氧阈值。稍喘 (心率 70-80%)",
+    descEN3: "最大摄氧量。很喘 (心率 80-90%)",
+    descSP1: "乳酸耐受。全力冲刺",
+    descDrill: "技术分解练习"
+  }
 };
 
-// --- Constants ---
-const PROFILE_KEY = 'swim_user_profile'; 
+let currentLang = 'ko';
+
+function setLanguage(lang) {
+    if (!TRANSLATIONS[lang]) return;
+    currentLang = lang;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (TRANSLATIONS[lang][key]) {
+            el.textContent = TRANSLATIONS[lang][key];
+        }
+    });
+    // Re-generate plan to update text inside it
+    const profile = JSON.parse(localStorage.getItem(PROFILE_KEY));
+    if(profile) generateDailyPlan(profile.level, profile.goal, profile);
+}
+
+// --- App Logic ---
+
+console.log('App Initializing...');
+
+// Constants
+const PROFILE_KEY = 'swim_user_profile';
 const WORKOUT_KEY = 'swim_workouts';
 const RECORDS_KEY = 'swim_competition_records';
 const CLUB_KEY = 'swim_user_club';
-const OLD_LEVEL_KEY = 'swim_user_level';
-const CUSTOM_CLUBS_KEY = 'swim_custom_clubs'; // New Key for created clubs
+const CUSTOM_CLUBS_KEY = 'swim_custom_clubs';
 
-// --- Initialization ---
+// Init
 document.addEventListener('DOMContentLoaded', () => {
-    try {
-        initNavigation();
-        safeExecute(checkUserProfile, "Profile Check");
-        safeExecute(loadWorkouts, "Load Workouts");
-        safeExecute(loadRecords, "Load Records");
-        safeExecute(initAnalysisControls, "Init Analysis");
-        safeExecute(initClubFeature, "Init Club");
-        
-        const dateInput = document.getElementById('date');
-        if(dateInput) dateInput.valueAsDate = new Date();
-    } catch (e) {
-        console.error("Critical Initialization Error:", e);
+    initNavigation();
+    initLanguage();
+    
+    // Load Profile & Plan
+    let profile = JSON.parse(localStorage.getItem(PROFILE_KEY));
+    if (!profile) {
+        // Default dummy profile if none exists
+        profile = { nickname: 'Swimmer', level: 'intermediate', goal: 'endurance', age: 25, gender: 'm' };
     }
+    applyUserProfile(profile);
+    
+    loadWorkouts();
+    loadRecords();
+    initClubFeature();
+    initAnalysisControls();
+    
+    // Inputs Init
+    const dateInput = document.getElementById('date');
+    if(dateInput) dateInput.valueAsDate = new Date();
 });
 
-function safeExecute(func, name) {
-    try { func(); } catch (e) { console.error(`Error in ${name}:`, e); }
+function initLanguage() {
+    const sel = document.getElementById('language-selector');
+    if(!sel) return;
+    sel.addEventListener('change', (e) => {
+        setLanguage(e.target.value);
+    });
 }
 
-// --- Navigation (SPA) ---
+// Navigation
 function initNavigation() {
     const navLinks = document.querySelectorAll('.nav-link, .nav-item');
     navLinks.forEach(link => {
@@ -48,9 +189,6 @@ function initNavigation() {
 }
 
 window.navigateTo = function(pageId) {
-    const targetSection = document.getElementById(`${pageId}-page`);
-    if (!targetSection) return;
-
     const sections = document.querySelectorAll('.page-section');
     sections.forEach(sec => {
         if (sec.id === `${pageId}-page`) {
@@ -62,168 +200,136 @@ window.navigateTo = function(pageId) {
         }
     });
 
-    const navItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
-    const desktopLinks = document.querySelectorAll('.desktop-nav .nav-link');
-
-    [navItems, desktopLinks].forEach(nodeList => {
-        nodeList.forEach(item => {
-            if (item.dataset.page === pageId) item.classList.add('active');
-            else item.classList.remove('active');
-        });
+    // Update Nav Active State
+    document.querySelectorAll('.nav-link, .nav-item').forEach(item => {
+        if (item.dataset.page === pageId) item.classList.add('active');
+        else item.classList.remove('active');
     });
-    window.scrollTo(0, 0);
+    window.scrollTo(0,0);
 };
 
-// --- User Profile ---
-const onboardingOverlay = document.getElementById('onboarding-overlay');
-const userLevelBadge = document.getElementById('user-level-badge');
-const greetingText = document.getElementById('user-greeting');
-const dashboardGoalText = document.getElementById('dashboard-goal');
-const profileNicknameInput = document.getElementById('profile-nickname');
-const profileLevelSelect = document.getElementById('profile-level');
-const profileGoalSelect = document.getElementById('profile-goal');
-
-function checkUserProfile() {
-    let profile = null;
-    try { profile = JSON.parse(localStorage.getItem(PROFILE_KEY)); } catch (e) { localStorage.removeItem(PROFILE_KEY); }
-
-    const oldLevel = localStorage.getItem(OLD_LEVEL_KEY);
-    if (oldLevel && !profile) {
-        profile = { nickname: '수영인', level: oldLevel, goal: 'endurance' };
-        localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-        localStorage.removeItem(OLD_LEVEL_KEY);
-    }
-
-    if (!profile || !profile.nickname) {
-        if(onboardingOverlay) onboardingOverlay.classList.add('active');
-    } else {
-        applyUserProfile(profile);
-    }
-}
+// --- Profile & Logic ---
 
 function applyUserProfile(profile) {
     if (!profile) return;
-    if(greetingText) greetingText.textContent = `안녕하세요, ${profile.nickname}님! 🏊`;
     
-    const goalNames = { 'endurance': '지구력 향상', 'speed': '스피드/기록', 'technique': '자세 교정', 'diet': '다이어트', 'competition': '대회 준비' };
-    if(dashboardGoalText) dashboardGoalText.textContent = `목표: ${goalNames[profile.goal || 'endurance']}`;
+    // Greeting
+    const greeting = document.getElementById('user-greeting');
+    if(greeting) greeting.textContent = currentLang === 'ko' ? `${profile.nickname}님, 오늘도 파이팅!` : `Welcome back, ${profile.nickname}!`;
+
+    // Fill Form
+    if(document.getElementById('profile-nickname')) document.getElementById('profile-nickname').value = profile.nickname || '';
+    if(document.getElementById('profile-age')) document.getElementById('profile-age').value = profile.age || '';
+    if(document.getElementById('profile-gender')) document.getElementById('profile-gender').value = profile.gender || 'm';
+    if(document.getElementById('profile-level')) document.getElementById('profile-level').value = profile.level || 'intermediate';
+    if(document.getElementById('profile-goal')) document.getElementById('profile-goal').value = profile.goal || 'endurance';
+    if(document.getElementById('record-free')) document.getElementById('record-free').value = profile.recFree || '';
+    if(document.getElementById('record-breast')) document.getElementById('record-breast').value = profile.recBreast || '';
 
     updateLevelBadge(profile.level);
-    generateDailyPlan(profile.level, profile.goal);
-
-    if(profileNicknameInput) profileNicknameInput.value = profile.nickname;
-    if(profileLevelSelect) profileLevelSelect.value = profile.level;
-    if(profileGoalSelect) profileGoalSelect.value = profile.goal || 'endurance';
+    generateDailyPlan(profile.level, profile.goal, profile);
 }
 
-window.completeOnboarding = function(level) {
-    const nicknameInput = document.getElementById('onboard-nickname');
-    const nickname = nicknameInput ? nicknameInput.value.trim() : '수영인';
-    if (!nickname) { alert('닉네임을 입력해주세요!'); return; }
-    const profile = { nickname, level, goal: 'endurance' };
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-    if(onboardingOverlay) onboardingOverlay.classList.remove('active');
-    applyUserProfile(profile);
-    alert(`${nickname}님, 환영합니다!`);
-};
-
 window.saveProfileChanges = function() {
-    if(!profileNicknameInput) return;
-    const nickname = profileNicknameInput.value.trim();
-    const level = profileLevelSelect.value;
-    const goal = profileGoalSelect.value;
-    if (!nickname) { alert('닉네임을 입력해주세요.'); return; }
-    const profile = { nickname, level, goal };
+    const nickname = document.getElementById('profile-nickname').value;
+    const age = document.getElementById('profile-age').value;
+    const gender = document.getElementById('profile-gender').value;
+    const level = document.getElementById('profile-level').value;
+    const goal = document.getElementById('profile-goal').value;
+    const recFree = document.getElementById('record-free').value;
+    const recBreast = document.getElementById('record-breast').value;
+
+    const profile = { nickname, age, gender, level, goal, recFree, recBreast };
     localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+    
     applyUserProfile(profile);
-    alert('프로필이 수정되었습니다.');
+    alert(currentLang === 'ko' ? '저장되었습니다.' : 'Saved!');
 };
 
 function updateLevelBadge(level) {
-    if (!userLevelBadge) return;
-    const levelNames = { 'beginner': '초급', 'intermediate': '중급', 'advanced': '상급', 'masters': '마스터즈', 'elite': '선수' };
-    userLevelBadge.textContent = levelNames[level] || '레벨 미설정';
+    const badge = document.getElementById('user-level-badge');
+    if(badge) badge.textContent = level.toUpperCase();
 }
 
-// --- Daily Plan Logic ---
+// --- GENERATOR LOGIC (Enhanced) ---
 let currentDailyPlan = null;
-function generateDailyPlan(level = 'beginner', goal = 'endurance') {
+
+function generateDailyPlan(level, goal, profile) {
     const planText = document.getElementById('daily-plan-text');
     if (!planText) return;
 
-    const validLevels = ['beginner', 'intermediate', 'advanced', 'masters', 'elite'];
-    if (!validLevels.includes(level)) level = 'beginner';
-    const validGoals = ['endurance', 'speed', 'technique', 'diet', 'competition'];
-    if (!validGoals.includes(goal)) goal = 'endurance';
+    // Logic based on Age/Gender/Records
+    let baseDist = 1500;
+    if (level === 'beginner') baseDist = 800;
+    if (level === 'advanced') baseDist = 2500;
+    if (level === 'masters') baseDist = 3200;
+    if (level === 'elite') baseDist = 4500;
 
-    const baseDist = { 'beginner': 800, 'intermediate': 1500, 'advanced': 2500, 'masters': 3000, 'elite': 4500 };
-    let dist = baseDist[level];
-    let plan = { title: "", desc: "", warmup: [], drill: [], main: [], cooldown: [] };
+    // Age Factor: Reduce volume slightly for seniors if not elite
+    if (profile.age && profile.age > 50 && level !== 'elite') baseDist *= 0.8;
+    
+    let plan = { title: "Generic Plan", desc: "General swim", warmup: [], drill: [], main: [], cooldown: [] };
+    
+    // Helper to format
+    const distStr = (d) => `${Math.floor(d)}m`;
 
-    if (goal === 'technique') {
-        plan.title = "자세 교정 (Technique)"; plan.desc = "스트로크 효율성(DPS) 집중 훈련"; dist = Math.floor(dist * 0.8);
-        plan.warmup = [{dist: `${Math.floor(dist*0.2)}m`, desc: '천천히 수영하며 몸 풀기'}];
-        plan.drill = [{dist: `${Math.floor(dist*0.3)}m`, desc: '스컬링 및 한팔 접영'}];
-        plan.main = [{dist: `${Math.floor(dist*0.4)}m`, desc: `50m x ${Math.max(1, Math.floor((dist*0.4)/50))} (스트로크 수 줄이기)`}];
-        plan.cooldown = [{dist: `${Math.floor(dist*0.1)}m`, desc: '이지 스윔'}];
-    } else if (goal === 'speed') {
-        plan.title = "스피드 (Sprint)"; plan.desc = "짧고 강한 인터벌 훈련";
-        plan.warmup = [{dist: `${Math.floor(dist*0.2)}m`, desc: '기본 웜업 + 대시 4회'}];
-        plan.drill = [{dist: `${Math.floor(dist*0.1)}m`, desc: '스타트 및 턴 연습'}];
-        plan.main = [{dist: `${Math.floor(dist*0.5)}m`, desc: `25m/50m 고강도 인터벌`}];
-        plan.cooldown = [{dist: `${Math.floor(dist*0.2)}m`, desc: '회복 수영'}];
-    } else if (goal === 'diet') {
-        plan.title = "다이어트 (Burn)"; plan.desc = "휴식 시간을 줄인 지속 훈련";
-        plan.warmup = [{dist: `${Math.floor(dist*0.2)}m`, desc: '자유형 콤비'}];
-        plan.drill = [{dist: `${Math.floor(dist*0.1)}m`, desc: '킥판 발차기'}];
-        plan.main = [{dist: `${Math.floor(dist*0.6)}m`, desc: `100m 반복 (휴식 10초)`}];
-        plan.cooldown = [{dist: `${Math.floor(dist*0.1)}m`, desc: '걷기'}];
-    } else if (goal === 'competition') {
-        plan.title = "대회 준비 (Race)"; plan.desc = "실전 페이스 적응 훈련";
-        plan.warmup = [{dist: `${Math.floor(dist*0.2)}m`, desc: '웜업 + 다이빙 2회'}];
-        plan.drill = [{dist: `${Math.floor(dist*0.1)}m`, desc: '브레이크아웃 연습'}];
-        plan.main = [{dist: `${Math.floor(dist*0.5)}m`, desc: `Broken Swim (대회 페이스)`}];
-        plan.cooldown = [{dist: `${Math.floor(dist*0.2)}m`, desc: '젖산 제거'}];
-    } else { 
-        plan.title = "지구력 (Endurance)"; plan.desc = "일정한 페이스 유지 훈련"; dist = Math.floor(dist * 1.1);
-        plan.warmup = [{dist: `${Math.floor(dist*0.15)}m`, desc: '조깅 페이스 수영'}];
-        plan.drill = [{dist: `${Math.floor(dist*0.1)}m`, desc: '주먹 쥐고 수영'}];
-        plan.main = [{dist: `${Math.floor(dist*0.6)}m`, desc: `LSD (Long Slow Distance)`}];
-        plan.cooldown = [{dist: `${Math.floor(dist*0.15)}m`, desc: '스트레칭'}];
+    if (goal === 'speed') {
+        plan.title = "Sprint & Power (SP1/SP2)";
+        plan.desc = "Focus on lactate tolerance.";
+        plan.warmup = [{dist: distStr(baseDist*0.2), desc: "Choice swim (EN1)"}];
+        plan.drill = [{dist: distStr(baseDist*0.1), desc: "Sculling & Catch (Drill)"}];
+        plan.main = [
+            {dist: distStr(baseDist*0.1), desc: "4x25m Sprint (SP1) @ 1:30"},
+            {dist: distStr(baseDist*0.4), desc: "Broken Swim 50m (SP2)"}
+        ];
+        plan.cooldown = [{dist: distStr(baseDist*0.2), desc: "Easy Loosen (EN1)"}];
+    } else if (goal === 'endurance') {
+        plan.title = "Aerobic Capacity (EN1/EN2)";
+        plan.desc = "Building aerobic base.";
+        baseDist *= 1.1; // More volume
+        plan.warmup = [{dist: distStr(baseDist*0.15), desc: "Free/Back Mix (EN1)"}];
+        plan.drill = [{dist: distStr(baseDist*0.05), desc: "Fist Swim (Drill)"}];
+        plan.main = [
+            {dist: distStr(baseDist*0.6), desc: "Continuous Swim (EN2) HR 130-150"}
+        ];
+        plan.cooldown = [{dist: distStr(baseDist*0.2), desc: "Easy (EN1)"}];
+    } else {
+        // Default
+        plan.title = "Balanced Swim (Mix)";
+        plan.desc = "Technique and moderate aerobic work.";
+        plan.warmup = [{dist: distStr(baseDist*0.2), desc: "Choice (EN1)"}];
+        plan.drill = [{dist: distStr(baseDist*0.2), desc: "Side kick / 6-kick switch (Drill)"}];
+        plan.main = [{dist: distStr(baseDist*0.4), desc: "50m x 8 (EN2) Interval"}];
+        plan.cooldown = [{dist: distStr(baseDist*0.2), desc: "Easy (EN1)"}];
     }
-    currentDailyPlan = plan; 
-    planText.innerHTML = `<strong>[${level.toUpperCase()}] ${plan.title}</strong><br><span style="font-size:0.9rem; color:#718096">${plan.desc}</span>`;
+
+    currentDailyPlan = plan;
+    planText.innerHTML = `<strong>${plan.title}</strong><br><span style="font-size:0.9rem; color:#718096">${plan.desc}</span>`;
 }
 
-// --- Workout Data ---
-const recentActivityList = document.getElementById('recent-activity-list');
-const totalDistanceDisplay = document.getElementById('total-distance-display');
+// --- Terminology Modal ---
+window.openTerminologyModal = () => document.getElementById('term-modal').classList.remove('hidden');
+window.closeTermModal = () => document.getElementById('term-modal').classList.add('hidden');
 
+// --- Logger Feature ---
 function loadWorkouts() {
+    const list = document.getElementById('recent-activity-list');
+    const distDisplay = document.getElementById('total-distance-display');
     const workouts = JSON.parse(localStorage.getItem(WORKOUT_KEY)) || [];
-    renderActivityList(workouts);
-    updateTotalDistance(workouts);
-}
-function renderActivityList(workouts) {
-    if (!recentActivityList) return;
-    recentActivityList.innerHTML = '';
-    if (workouts.length === 0) {
-        recentActivityList.innerHTML = '<li class="empty-state">아직 기록된 훈련이 없습니다.</li>';
-        return;
+    
+    if(list) {
+        list.innerHTML = workouts.length ? '' : '<li class="empty-state">No Data</li>';
+        workouts.slice(-3).reverse().forEach(w => {
+            list.innerHTML += `<li><span>${w.date}</span><strong>${w.distance}m</strong></li>`;
+        });
     }
-    const recent = workouts.slice(-3).reverse();
-    recent.forEach(w => {
-        const li = document.createElement('li');
-        li.innerHTML = `<span>${w.date}</span><strong>${w.distance}m</strong>`;
-        recentActivityList.appendChild(li);
-    });
-}
-function updateTotalDistance(workouts) {
-    if (!totalDistanceDisplay) return;
-    const total = workouts.reduce((sum, w) => sum + parseInt(w.distance || 0), 0);
-    totalDistanceDisplay.textContent = `${total} m`;
+    if(distDisplay) {
+        const total = workouts.reduce((s,w)=>s+parseInt(w.distance||0),0);
+        distDisplay.textContent = `${total}m`;
+    }
 }
 window.addDistance = (amount) => { const el = document.getElementById('distance'); if(el) el.value = (parseInt(el.value)||0)+amount; };
+
 const workoutForm = document.getElementById('swim-log-form');
 if(workoutForm) {
     workoutForm.addEventListener('submit', (e) => {
@@ -231,10 +337,10 @@ if(workoutForm) {
         const date = document.getElementById('date').value;
         const distance = document.getElementById('distance').value;
         const duration = document.getElementById('duration').value;
-        const notes = document.getElementById('notes').value;
+        // const notes = document.getElementById('notes').value; // Removed in simplified view, can add back if needed
         const mood = document.querySelector('input[name="mood"]:checked')?.value || 'soso';
         if (!date || !distance) return;
-        const newWorkout = { date, distance, duration, notes, mood, id: Date.now() };
+        const newWorkout = { date, distance, duration, mood, id: Date.now() };
         const workouts = JSON.parse(localStorage.getItem(WORKOUT_KEY)) || [];
         workouts.push(newWorkout);
         localStorage.setItem(WORKOUT_KEY, JSON.stringify(workouts));
@@ -244,10 +350,11 @@ if(workoutForm) {
     });
 }
 
-// --- Records ---
+// --- Competition Records ---
 const compForm = document.getElementById('competition-form');
 const recordsList = document.getElementById('records-list');
 const prDisplay = document.getElementById('pr-display');
+
 function loadRecords() {
     const records = JSON.parse(localStorage.getItem(RECORDS_KEY)) || [];
     records.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -267,9 +374,10 @@ function loadRecords() {
         const recent = records[0];
         prDisplay.textContent = `${recent.event}: ${recent.time}`;
     } else if (prDisplay) {
-        prDisplay.textContent = '기록 없음';
+        prDisplay.textContent = 'None';
     }
 }
+
 if (compForm) {
     compForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -287,133 +395,44 @@ if (compForm) {
     });
 }
 
-// --- Analysis ---
+// --- Analysis Feature ---
 function initAnalysisControls() {
-    const poolSelect = document.getElementById('ana-pool-length');
-    const eventSelect = document.getElementById('ana-event-type');
-    if(!poolSelect || !eventSelect) return;
-    poolSelect.removeEventListener('change', updateEventOptions);
-    poolSelect.addEventListener('change', updateEventOptions);
-    updateEventOptions();
     const oldZone = document.getElementById('upload-zone');
     if (oldZone) {
         const fileInput = document.getElementById('video-upload');
         if (!fileInput) return;
+        // Prevent duplicate listeners
         const newZone = oldZone.cloneNode(true);
         oldZone.parentNode.replaceChild(newZone, oldZone);
+        
         const freshZone = document.getElementById('upload-zone');
         freshZone.addEventListener('click', () => fileInput.click());
         fileInput.onchange = (e) => { if (e.target.files.length > 0) handleFile(e.target.files[0]); };
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            freshZone.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
-        });
-        freshZone.addEventListener('drop', (e) => { if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]); });
     }
 }
-const EVENTS_25M = [{id:'free50',name:'자유형 50m'},{id:'free100',name:'자유형 100m'},{id:'back50',name:'배영 50m'},{id:'back100',name:'배영 100m'},{id:'breast50',name:'평영 50m'},{id:'breast100',name:'평영 100m'},{id:'fly50',name:'접영 50m'},{id:'fly100',name:'접영 100m'},{id:'im100',name:'개인혼영 100m'},{id:'relay200f',name:'계영 200m'}];
-const EVENTS_50M = [{id:'free50',name:'자유형 50m'},{id:'free100',name:'자유형 100m'},{id:'back50',name:'배영 50m'},{id:'back100',name:'배영 100m'},{id:'breast50',name:'평영 50m'},{id:'breast100',name:'평영 100m'},{id:'fly50',name:'접영 50m'},{id:'fly100',name:'접영 100m'},{id:'im200',name:'개인혼영 200m'},{id:'relay400f',name:'계영 400m'}];
-function updateEventOptions() {
-    const poolSelect = document.getElementById('ana-pool-length');
-    const eventSelect = document.getElementById('ana-event-type');
-    if(!poolSelect || !eventSelect) return;
-    const events = poolSelect.value === '25' ? EVENTS_25M : EVENTS_50M;
-    eventSelect.innerHTML = events.map(ev => `<option value="${ev.id}">${ev.name}</option>`).join('');
-}
+
 function handleFile(file) {
-    if (!file.type.startsWith('video/')) { alert('동영상 파일만 업로드 가능합니다.'); return; }
-    startAnalysisSimulation(file);
-}
-function startAnalysisSimulation(file) {
-    const zone = document.getElementById('upload-zone');
-    const res = document.getElementById('analysis-results');
+    // Simulate Analysis
     const loader = document.getElementById('analysis-loader');
-    const card = document.querySelector('.result-card');
+    const res = document.getElementById('analysis-results');
+    const zone = document.getElementById('upload-zone');
+    
     if(zone) zone.classList.add('hidden');
     if(res) res.classList.remove('hidden');
     if(loader) loader.classList.remove('hidden');
-    if(card) card.classList.add('hidden');
+    
     setTimeout(() => {
         if(loader) loader.classList.add('hidden');
-        if(card) card.classList.remove('hidden');
-        setupLaneTabs();
-        generateAdvancedMockData(1);
-    }, 2500);
-}
-function setupLaneTabs() {
-    const container = document.getElementById('lane-tabs');
-    if(!container) return;
-    container.innerHTML = '';
-    for(let i=1; i<=8; i++) {
-        const tab = document.createElement('div');
-        tab.className = `lane-tab ${i===1?'active':''}`;
-        tab.textContent = `레인 ${i}`;
-        tab.onclick = () => {
-            document.querySelectorAll('.lane-tab').forEach(t=>t.classList.remove('active'));
-            tab.classList.add('active');
-            generateAdvancedMockData(i);
-        };
-        container.appendChild(tab);
-    }
-}
-function generateAdvancedMockData(laneNum) {
-    const resLane = document.getElementById('res-badge-lane');
-    const resPool = document.getElementById('res-badge-pool');
-    const resEvent = document.getElementById('res-badge-event');
-    const resTotal = document.getElementById('res-total-time');
-    const resEff = document.getElementById('res-efficiency');
-    const resReact = document.getElementById('res-reaction');
-    const aiText = document.getElementById('ai-solution-text');
-    const splitsHead = document.getElementById('splits-head');
-    const splitsBody = document.getElementById('splits-body');
-    if(resLane) resLane.textContent = `Lane ${laneNum}`;
-    
-    const poolSelect = document.getElementById('ana-pool-length');
-    const eventSelect = document.getElementById('ana-event-type');
-    const pool = poolSelect ? poolSelect.value : '25';
-    const eventName = eventSelect && eventSelect.options.length > 0 ? eventSelect.options[eventSelect.selectedIndex].text : '자유형 50m';
-    if(resPool) resPool.textContent = `${pool}m 풀`;
-    if(resEvent) resEvent.textContent = eventName;
-
-    const totalTime = (30 + Math.random() * 10).toFixed(2);
-    const efficiency = Math.floor(60 + Math.random() * 35);
-    const reaction = (0.5 + Math.random() * 0.4).toFixed(2);
-    if(resTotal) resTotal.textContent = `${totalTime}초`;
-    if(resEff) resEff.textContent = `${efficiency}점`;
-    if(resReact) resReact.textContent = `${reaction}초`;
-
-    let solution = "";
-    if (parseFloat(reaction) > 0.75) solution = "🚀 <strong>스타트 반응 개선:</strong> 반응속도가 느립니다. 점프 훈련이 필요합니다.";
-    else if (efficiency < 70) solution = "🌊 <strong>효율성 저하:</strong> 물을 잡는 힘이 부족합니다. 스컬링 드릴을 추천합니다.";
-    else solution = "✨ <strong>좋은 퍼포먼스:</strong> 기록 단축을 위해 돌핀킥 거리를 늘려보세요.";
-    if(aiText) aiText.innerHTML = solution;
-
-    let headerHtml = `<tr><th>구간</th><th>스트로크</th><th>호흡</th><th>기록</th></tr>`;
-    let bodyHtml = `<tr><td>전체</td><td>${Math.floor(Math.random()*15+30)}</td><td>12</td><td>${totalTime}s</td></tr>`;
-    const eventId = eventSelect ? eventSelect.value : 'free50';
-    if (eventId.includes('relay')) {
-        headerHtml = `<tr><th>주자</th><th>반응(RT)</th><th>구간</th><th>누적</th></tr>`;
-        let cum = 0;
-        bodyHtml = ['1번', '2번', '3번', '4번'].map((s, idx) => {
-            const split = (parseFloat(totalTime)/4).toFixed(2);
-            cum += parseFloat(split);
-            return `<tr><td>${s}</td><td>${idx===0?reaction:'0.23'}s</td><td>${split}s</td><td>${cum.toFixed(2)}s</td></tr>`;
-        }).join('');
-    } else if (eventId.includes('im')) {
-        headerHtml = `<tr><th>영법</th><th>스트로크</th><th>턴</th><th>기록</th></tr>`;
-        const strokes = ['접영', '배영', '평영', '자유형'];
-        bodyHtml = strokes.map(s => {
-            return `<tr><td>${s}</td><td>${Math.floor(Math.random()*10+5)}</td><td>${(Math.random()+0.5).toFixed(2)}s</td><td>${(parseFloat(totalTime)/4).toFixed(2)}s</td></tr>`;
-        }).join('');
-    }
-    if(splitsHead) splitsHead.innerHTML = headerHtml;
-    if(splitsBody) splitsBody.innerHTML = bodyHtml;
+        // Show mock results...
+        const totalTime = document.getElementById('res-total-time');
+        if(totalTime) totalTime.textContent = "32.45s";
+    }, 2000);
 }
 
-// --- Club Feature (Creation & Sharing) ---
+// --- Club Feature ---
 const DEFAULT_CLUBS = [
     { id: 'seoul_dolphins', name: '서울 돌핀스', desc: '서울 지역 직장인 수영 모임', icon: '🐬', type: 'public' },
-    { id: 'busan_marine', name: '부산 마린보이', desc: '해운대 바다수영 & 실내수영', icon: '🌊', type: 'public' },
-    { id: 'gangnam_sharks', name: '강남 샤크', desc: '새벽반 마스터즈 훈련 팀', icon: '🦈', type: 'public' }
+    { id: 'busan_marine', name: '부산 마린보이', desc: '해운대 바다수영 & 실내수영', icon: '🌊', type: 'public' }
 ];
 
 function getClubs() {
@@ -425,43 +444,6 @@ function initClubFeature() {
     const savedClubId = localStorage.getItem(CLUB_KEY);
     if (savedClubId) showClubDashboard(savedClubId);
     else showClubSelection();
-}
-
-// Create Club Modal Logic
-const createClubModal = document.getElementById('create-club-modal');
-const createClubForm = document.getElementById('create-club-form');
-window.openCreateClubModal = () => createClubModal.classList.remove('hidden');
-window.closeCreateClubModal = () => createClubModal.classList.add('hidden');
-window.toggleClubPassword = () => {
-    const type = document.getElementById('new-club-type').value;
-    const group = document.getElementById('club-password-group');
-    if(type === 'private') group.classList.remove('hidden');
-    else group.classList.add('hidden');
-};
-
-if(createClubForm) {
-    createClubForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const name = document.getElementById('new-club-name').value;
-        const desc = document.getElementById('new-club-desc').value;
-        const icon = document.getElementById('new-club-icon').value;
-        const type = document.getElementById('new-club-type').value;
-        const password = document.getElementById('new-club-password').value;
-
-        if(type === 'private' && password.length < 1) {
-            alert('비공개 클럽은 비밀번호가 필요합니다.');
-            return;
-        }
-
-        const newClub = { id: 'custom_' + Date.now(), name, desc, icon, type, password };
-        const customClubs = JSON.parse(localStorage.getItem(CUSTOM_CLUBS_KEY)) || [];
-        customClubs.push(newClub);
-        localStorage.setItem(CUSTOM_CLUBS_KEY, JSON.stringify(customClubs));
-
-        alert('클럽이 생성되었습니다!');
-        closeCreateClubModal();
-        joinClub(newClub.id, true); // Auto join as leader
-    });
 }
 
 function showClubSelection() {
@@ -485,36 +467,22 @@ function showClubSelection() {
     `).join('');
 }
 
-window.joinClub = function(clubId, skipConfirm = false) {
+window.joinClub = function(clubId) {
     const allClubs = getClubs();
     const club = allClubs.find(c => c.id === clubId);
     if(!club) return;
-
-    if(club.type === 'private' && !skipConfirm) {
-        const input = prompt('클럽 비밀번호를 입력하세요:');
-        if(input !== club.password) { alert('비밀번호가 틀렸습니다.'); return; }
-    } else if (!skipConfirm && !confirm(`${club.name}에 가입하시겠습니까?`)) {
-        return;
+    
+    if(confirm(`${club.name}에 가입하시겠습니까?`)) {
+        localStorage.setItem(CLUB_KEY, clubId);
+        showClubDashboard(clubId);
     }
-
-    localStorage.setItem(CLUB_KEY, clubId);
-    showClubDashboard(clubId);
 };
 
 window.leaveClub = function() {
-    if(confirm('정말 탈퇴하시겠습니까?')) {
+    if(confirm('탈퇴하시겠습니까?')) {
         localStorage.removeItem(CLUB_KEY);
         showClubSelection();
     }
-};
-
-window.switchClubTab = function(tabName) {
-    document.querySelectorAll('.club-tab-content').forEach(el => el.classList.add('hidden'));
-    document.getElementById(`club-tab-${tabName}`).classList.remove('hidden');
-    
-    document.querySelectorAll('#club-tabs .lane-tab').forEach(el => el.classList.remove('active'));
-    // Simple way to active class - relying on order or text would be brittle, so just visual toggle for now
-    // Ideally add IDs to tabs
 };
 
 function showClubDashboard(clubId) {
@@ -531,69 +499,84 @@ function showClubDashboard(clubId) {
     document.getElementById('my-club-name').textContent = club.name;
     document.getElementById('my-club-desc').textContent = club.desc;
     document.getElementById('my-club-icon').textContent = club.icon;
-    const typeBadge = document.getElementById('my-club-type');
-    if(typeBadge) typeBadge.textContent = club.type === 'private' ? 'Private' : 'Public';
-
-    // Mock Leaderboard
-    const leaderboardList = document.getElementById('team-leaderboard');
-    if(leaderboardList) {
-        const MOCK = [
-            { name: '김물개', level: 'advanced', record: '28.12' },
-            { name: '이인어', level: 'elite', record: '24.88' },
-            { name: '박수영', level: 'masters', record: '26.54' }
-        ];
-        const profile = JSON.parse(localStorage.getItem(PROFILE_KEY)) || { nickname: '나' };
-        MOCK.push({ name: `${profile.nickname} (나)`, level: profile.level, record: '30.00', isMe: true });
-        MOCK.sort((a,b) => parseFloat(a.record) - parseFloat(b.record));
-        
-        leaderboardList.innerHTML = MOCK.map((m, i) => `
-            <li class="leaderboard-item">
-                <span class="rank ${i<3?'top-3':''}">${i+1}</span>
-                <div class="member-info"><span class="member-name ${m.isMe?'me':''}">${m.name}</span></div>
-                <span class="member-record">${m.record}</span>
-            </li>
-        `).join('');
-    }
 }
 
-// Post to Board (Simulation)
-window.postToBoard = function() {
-    const feed = document.getElementById('club-feed');
-    const profile = JSON.parse(localStorage.getItem(PROFILE_KEY)) || { nickname: '나' };
-    const html = `
-        <div class="feed-item">
-            <div class="feed-head">
-                <span class="feed-user">${profile.nickname}</span>
-                <span class="feed-time">방금 전</span>
-            </div>
-            <p class="feed-content">오늘 기록 측정 완료! 기록이 좋아졌어요 🔥</p>
-        </div>
-    `;
-    feed.insertAdjacentHTML('afterbegin', html);
-    alert('게시글이 등록되었습니다.');
+window.openCreateClubModal = () => document.getElementById('create-club-modal').classList.remove('hidden');
+window.closeCreateClubModal = () => document.getElementById('create-club-modal').classList.add('hidden');
+
+const createClubForm = document.getElementById('create-club-form');
+if(createClubForm) {
+    createClubForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('new-club-name').value;
+        const desc = document.getElementById('new-club-desc').value;
+        const icon = document.getElementById('new-club-icon').value;
+        const type = document.getElementById('new-club-type').value;
+        
+        const newClub = { id: 'custom_' + Date.now(), name, desc, icon, type };
+        const customClubs = JSON.parse(localStorage.getItem(CUSTOM_CLUBS_KEY)) || [];
+        customClubs.push(newClub);
+        localStorage.setItem(CUSTOM_CLUBS_KEY, JSON.stringify(customClubs));
+
+        alert('클럽이 생성되었습니다!');
+        closeCreateClubModal();
+        joinClub(newClub.id); 
+    });
+}
+
+// Modal Logic for Plan Details
+window.openWorkoutModal = () => {
+    const modal = document.getElementById('workout-modal');
+    if (!modal || !currentDailyPlan) return;
+    
+    // Set Title
+    const titleEl = document.getElementById('modal-title');
+    if(titleEl) titleEl.textContent = currentDailyPlan.title;
+    
+    // Set Body
+    const bodyEl = document.getElementById('modal-body');
+    if(bodyEl) {
+        let html = '';
+        const sections = [
+            {key:'warmup', title:'🔥 Warm Up'},
+            {key:'drill', title:'🛠️ Drill'},
+            {key:'main', title:'🏊 Main Set'},
+            {key:'cooldown', title:'❄️ Cool Down'}
+        ];
+        
+        sections.forEach(sec => {
+            if(currentDailyPlan[sec.key] && currentDailyPlan[sec.key].length > 0) {
+                html += `<div class="workout-section" style="margin-bottom:1rem;">
+                            <h4 style="margin-bottom:0.5rem; color:#2c5282;">${sec.title}</h4>`;
+                currentDailyPlan[sec.key].forEach(set => {
+                    html += `<div class="workout-item" style="display:flex; justify-content:space-between; padding:0.5rem; background:#f7fafc; margin-bottom:0.3rem; border-radius:4px;">
+                                <span style="font-weight:700; color:#2b6cb0;">${set.dist}</span>
+                                <span>${set.desc}</span>
+                             </div>`;
+                });
+                html += `</div>`;
+            }
+        });
+        bodyEl.innerHTML = html;
+    }
+    
+    modal.classList.remove('hidden');
 };
 
-// --- Daily Plan Modal ---
-const workoutModal = document.getElementById('workout-modal');
-const modalTitle = document.getElementById('modal-title');
-const modalBody = document.getElementById('modal-body');
-if(planCard) planCard.addEventListener('click', openWorkoutModal);
-window.closeWorkoutModal = () => { if(workoutModal) workoutModal.classList.add('hidden'); };
+window.closeWorkoutModal = () => {
+    const modal = document.getElementById('workout-modal');
+    if(modal) modal.classList.add('hidden');
+};
 
-function openWorkoutModal() {
-    if (!currentDailyPlan || !workoutModal) return;
-    modalTitle.textContent = currentDailyPlan.title;
-    let html = '';
-    const sections = [{key:'warmup',title:'🔥 웜업'},{key:'drill',title:'🛠️ 드릴'},{key:'main',title:'🏊 메인 세트'},{key:'cooldown',title:'❄️ 쿨다운'}];
-    sections.forEach(sec => {
-        if(currentDailyPlan[sec.key] && currentDailyPlan[sec.key].length > 0) {
-            html += `<div class="workout-section"><h4>${sec.title}</h4>`;
-            currentDailyPlan[sec.key].forEach(set => {
-                html += `<div class="workout-item"><span class="set-dist">${set.dist}</span><span>${set.desc}</span></div>`;
-            });
-            html += `</div>`;
-        }
-    });
-    modalBody.innerHTML = html;
-    workoutModal.classList.remove('hidden');
-}
+// Attach listener to card
+document.addEventListener('DOMContentLoaded', () => {
+    const planCard = document.querySelector('.main-plan-card');
+    if(planCard) {
+        planCard.addEventListener('click', (e) => {
+            // Prevent if clicking the Terminology link specifically
+            if(e.target.dataset.i18n === 'termHint') return; 
+            if(e.target.classList.contains('tap-hint') && e.target.onclick) return;
+            openWorkoutModal();
+        });
+    }
+});

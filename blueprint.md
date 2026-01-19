@@ -25,8 +25,8 @@ A web-based Swimming Coach application designed to help users improve their swim
 - [x] Implement "Swim Club" system (Join Club).
 - [x] Create "Team Leaderboard" to compare user records with (simulated) club members.
 - [x] Add Club tab to Navigation.
-- [ ] Allow users to Create Clubs (Public/Private with Password).
-- [ ] Implement Club Board/Feed for sharing records among members.
+- [x] Allow users to Create Clubs (Public/Private with Password).
+- [x] Implement Club Board/Feed for sharing records among members.
 
 ### Goal: User Profile & Persistence
 - [x] Update Onboarding to collect Nickname + Level.
