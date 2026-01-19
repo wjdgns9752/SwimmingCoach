@@ -18,9 +18,9 @@
     </div>
     <nav class="main-nav">
       <ul>
-        <li><a href="#dashboard" class="active">Dashboard</a></li>
-        <li><a href="#workouts">Workouts</a></li>
-        <li><a href="#techniques">Techniques</a></li>
+        <li><a href="#dashboard">Dashboard</a></li>
+        <li><a href="#logger">Log Swim</a></li>
+        <li><a href="#analysis">AI Analysis</a></li>
         <li><a href="#profile">Profile</a></li>
       </ul>
     </nav>
@@ -28,39 +28,154 @@
   </header>
 
   <main>
+    <!-- Hero Section -->
     <section class="hero">
       <div class="hero-content">
         <h1>Master Your Stroke Today</h1>
-        <p>Your personalized daily swimming plans and technique guides.</p>
-        <button class="cta-button">Start Today's Workout</button>
+        <p>Track your swims, analyze your technique, and break your personal records.</p>
+        <a href="#analysis" class="cta-button">Analyze My Swim</a>
       </div>
       <div class="hero-visual">
-        <!-- CSS-based visual placeholder -->
         <div class="water-ripple"></div>
       </div>
     </section>
 
-    <section class="features" id="dashboard">
+    <!-- Dashboard / Stats -->
+    <section id="dashboard" class="features">
       <div class="feature-card">
         <div class="icon">📅</div>
-        <h3>Today's Plan</h3>
-        <p>1500m Endurance Set</p>
-        <span class="status-badge pending">Pending</span>
+        <h3>Total Distance</h3>
+        <p id="total-distance-display">0 m</p>
+        <span class="status-badge pending">This Week</span>
       </div>
       
       <div class="feature-card">
-        <div class="icon">⚡</div>
-        <h3>Focus Area</h3>
-        <p>High Elbow Catch</p>
-        <a href="#" class="link-btn">View Drill &rarr;</a>
+        <div class="icon">🏆</div>
+        <h3>Best 100m Free</h3>
+        <p id="pr-display">--:--</p>
+        <a href="#profile" class="link-btn">Update PR &rarr;</a>
       </div>
 
       <div class="feature-card">
         <div class="icon">📈</div>
-        <h3>Weekly Progress</h3>
-        <p>4.5km / 10km Goal</p>
-        <div class="progress-bar"><div class="fill" style="width: 45%"></div></div>
+        <h3>Recent Activity</h3>
+        <ul id="recent-activity-list" class="activity-list">
+            <!-- JS will populate this -->
+            <li class="empty-state">No swims logged yet.</li>
+        </ul>
       </div>
+    </section>
+
+    <!-- Workout Logger Section -->
+    <section id="logger" class="section-container">
+      <div class="section-header">
+        <h2>🏊 Log Today's Swim</h2>
+        <p>Keep track of your daily volume and effort.</p>
+      </div>
+      <form id="swim-log-form" class="app-form">
+        <div class="form-group">
+          <label for="date">Date</label>
+          <input type="date" id="date" required>
+        </div>
+        <div class="form-group">
+          <label for="distance">Distance (m)</label>
+          <input type="number" id="distance" placeholder="e.g. 1500" required min="0">
+        </div>
+        <div class="form-group">
+          <label for="duration">Duration (minutes)</label>
+          <input type="number" id="duration" placeholder="e.g. 45" required min="0">
+        </div>
+        <div class="form-group">
+          <label for="notes">Notes</label>
+          <textarea id="notes" rows="3" placeholder="How did you feel?"></textarea>
+        </div>
+        <button type="submit" class="primary-btn">Save Workout</button>
+      </form>
+    </section>
+
+    <!-- AI Video Analysis Section -->
+    <section id="analysis" class="section-container alternate-bg">
+      <div class="section-header">
+        <h2>🤖 AI Technique Analysis</h2>
+        <p>Upload your 25m or 50m swim video. We'll measure your breakout, strokes, and efficiency.</p>
+      </div>
+      
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="video-upload" accept="video/*" hidden>
+        <div class="upload-content">
+          <span class="upload-icon">📹</span>
+          <h3>Click to Upload or Drag Video</h3>
+          <p>Supports MP4, MOV (Max 50MB)</p>
+        </div>
+      </div>
+
+      <!-- Analysis Results (Hidden by default) -->
+      <div id="analysis-results" class="analysis-results hidden">
+        <div class="loading-overlay hidden" id="analysis-loader">
+          <div class="spinner"></div>
+          <p>Analyzing stroke mechanics...</p>
+        </div>
+
+        <div class="result-card">
+          <h3>Analysis Report</h3>
+          <div class="video-meta">
+            <span class="badge">Freestyle</span>
+            <span class="badge">50m Pool</span>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-item">
+              <span class="label">Breakout Time</span>
+              <span class="value" id="res-breakout">--</span>
+              <span class="unit">sec</span>
+            </div>
+            <div class="metric-item">
+              <span class="label">Avg DPS</span>
+              <span class="value" id="res-dps">--</span>
+              <span class="unit">m/stroke</span>
+            </div>
+            <div class="metric-item">
+              <span class="label">Total Time</span>
+              <span class="value" id="res-time">--</span>
+              <span class="unit">sec</span>
+            </div>
+          </div>
+
+          <table class="splits-table">
+            <thead>
+              <tr>
+                <th>Segment</th>
+                <th>Strokes</th>
+                <th>Breaths</th>
+                <th>Split Time</th>
+              </tr>
+            </thead>
+            <tbody id="splits-body">
+              <!-- JS Populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Profile / PR Section -->
+    <section id="profile" class="section-container">
+      <div class="section-header">
+        <h2>🏅 Personal Records</h2>
+      </div>
+      <form id="pr-form" class="app-form">
+         <div class="form-row">
+            <div class="form-group">
+                <label>50m Free</label>
+                <input type="text" placeholder="00:00.00" class="pr-input" data-event="50free">
+            </div>
+            <div class="form-group">
+                <label>100m Free</label>
+                <input type="text" placeholder="00:00.00" class="pr-input" data-event="100free">
+            </div>
+         </div>
+         <button type="submit" class="secondary-btn">Update Records</button>
+      </form>
     </section>
   </main>
 

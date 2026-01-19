@@ -9,13 +9,20 @@ A web-based Swimming Coach application designed to help users improve their swim
 
 ## Current Implementation Plan
 ### Goal: Create Daily Swimming Coach Base
-- [ ] Update `index.html` with semantic structure (Header, Hero, Features).
-- [ ] Create `style.css` with swimming-themed color palette and responsive layout.
-- [ ] Implement basic interactivity in `main.js`.
-- [ ] Ensure mobile responsiveness.
+- [x] Update `index.html` with semantic structure (Header, Hero, Features).
+- [x] Create `style.css` with swimming-themed color palette and responsive layout.
+- [x] Implement basic interactivity in `main.js`.
+- [x] Ensure mobile responsiveness.
+
+### Goal: Implement Core Features (Tracker & Analysis)
+- [ ] Implement "Workout Logger" (Distance, Time, Mood) with LocalStorage persistence.
+- [ ] Implement "Personal Records (PR)" section.
+- [ ] Create "Video Analysis" section with file upload UI.
+- [ ] Implement simulated video processing logic to display metrics (Breakout, Strokes, Breaths, Splits).
 
 ### History
-#### Goal: Connect to GitHub
-- [x] Initialize Git repository (Pre-existing).
-- [x] Add remote origin `https://github.com/wjdgns9752/SwimmingCoach.git`.
-- [x] Push initial code to remote.
+#### Goal: Create Daily Swimming Coach Base
+- [x] Update `index.html` with semantic structure (Header, Hero, Features).
+- [x] Create `style.css` with swimming-themed color palette and responsive layout.
+- [x] Implement basic interactivity in `main.js`.
+- [x] Ensure mobile responsiveness.
