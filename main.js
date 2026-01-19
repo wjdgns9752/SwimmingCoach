@@ -69,8 +69,9 @@ const PROFILE_KEY = 'swim_user_profile';
 const WORKOUT_KEY = 'swim_workouts';
 const RECORDS_KEY = 'swim_competition_records';
 const CLUB_KEY = 'swim_user_club';
-const CUSTOM_CLUBS_KEY = 'swim_custom_clubs';
+const CUSTOM_CLUBS_KEY = 'swim_custom_clubs_v2'; // Changed to reset lists
 const CLUB_POSTS_KEY = 'swim_club_posts';
+const CLUB_NOTICES_KEY = 'swim_club_notices';
 
 // Drill Database
 const DRILL_DB = {
@@ -373,11 +374,14 @@ function handleAnalysis(file) {
 }
 
 // --- Club Feature ---
+const DEFAULT_CLUBS = []; // Cleared per user request
+
 function initClubFeature() {
     const saved = localStorage.getItem(CLUB_KEY);
     if (saved) showClubDashboard(saved);
     else showClubSelection();
     updateDashboardClubCard();
+    initAdminFeatures();
 
     const createForm = document.getElementById('create-club-form');
     if(createForm) {
@@ -387,13 +391,16 @@ function initClubFeature() {
             let icon = document.getElementById('new-club-icon-emoji').value;
             if(fileInput.files[0]) icon = await readFileAsDataURL(fileInput.files[0]);
             
+            const profile = JSON.parse(localStorage.getItem(PROFILE_KEY)) || { nickname: 'Anonymous' };
+
             const newClub = {
                 id: 'custom_' + Date.now(),
                 name: document.getElementById('new-club-name').value,
                 desc: document.getElementById('new-club-desc').value,
                 type: document.getElementById('new-club-type').value,
                 password: document.getElementById('new-club-password').value,
-                icon: icon
+                icon: icon,
+                admins: [profile.nickname] // Set creator as admin
             };
             const custom = JSON.parse(localStorage.getItem(CUSTOM_CLUBS_KEY)) || [];
             custom.push(newClub);
@@ -426,11 +433,7 @@ function initClubFeature() {
 }
 
 function getClubs() {
-    const defaults = [
-        { id: 'seoul_dolphins', name: '서울 돌핀스', desc: '직장인 수영 모임', icon: '🐬', type: 'public' },
-        { id: 'busan_marine', name: '부산 마린보이', desc: '바다수영 & 실내수영', icon: '🌊', type: 'public' }
-    ];
-    return [...defaults, ...(JSON.parse(localStorage.getItem(CUSTOM_CLUBS_KEY)) || [])];
+    return [...DEFAULT_CLUBS, ...(JSON.parse(localStorage.getItem(CUSTOM_CLUBS_KEY)) || [])];
 }
 
 function showClubSelection() {
@@ -469,7 +472,6 @@ window.switchClubTab = function(tabName) {
     const target = document.getElementById(`club-tab-${tabName}`);
     if(target) target.classList.remove('hidden');
     
-    // Update active tab style (simple text check)
     document.querySelectorAll('#club-tabs .lane-tab').forEach(el => {
         if(el.textContent.includes(tabName === 'ranking' ? '랭킹' : tabName === 'board' ? '게시판' : '멤버')) {
             el.classList.add('active');
@@ -495,15 +497,107 @@ function showClubDashboard(id) {
     if(club.icon.startsWith('data:image')) icon.innerHTML = `<img src="${club.icon}" class="club-logo-img-large">`;
     else icon.textContent = club.icon;
     
+    // Admin Check
+    const profile = JSON.parse(localStorage.getItem(PROFILE_KEY)) || { nickname: '' };
+    const isAdmin = (club.admins || []).includes(profile.nickname);
+    const adminBtn = document.getElementById('club-admin-btn');
+    if(adminBtn) {
+        if(isAdmin) adminBtn.classList.remove('hidden');
+        else adminBtn.classList.add('hidden');
+    }
+
     loadClubPosts(id);
     loadClubMembers();
     loadClubLeaderboard();
+    loadClubNotices(id);
 }
+
+// --- Admin Features ---
+window.openAdminModal = () => document.getElementById('admin-modal').classList.remove('hidden');
+window.closeAdminModal = () => document.getElementById('admin-modal').classList.add('hidden');
+
+window.switchAdminTab = (tab) => {
+    document.getElementById('admin-tab-notice').classList.add('hidden');
+    document.getElementById('admin-tab-staff').classList.add('hidden');
+    document.getElementById(`admin-tab-${tab}`).classList.remove('hidden');
+    if(tab === 'staff') loadAdminStaffList();
+};
+
+function initAdminFeatures() {
+    const noticeForm = document.getElementById('admin-notice-form');
+    if(noticeForm) {
+        noticeForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = document.getElementById('notice-title').value;
+            const content = document.getElementById('notice-content').value;
+            const clubId = localStorage.getItem(CLUB_KEY);
+            const profile = JSON.parse(localStorage.getItem(PROFILE_KEY));
+            
+            if(!clubId || !title || !content) return;
+            
+            const notice = {
+                id: Date.now(),
+                title, content,
+                date: new Date().toISOString(),
+                author: profile.nickname
+            };
+            
+            const allNotices = JSON.parse(localStorage.getItem(CLUB_NOTICES_KEY)) || {};
+            if(!allNotices[clubId]) allNotices[clubId] = [];
+            allNotices[clubId].unshift(notice);
+            localStorage.setItem(CLUB_NOTICES_KEY, JSON.stringify(allNotices));
+            
+            alert('공지가 등록되었습니다.');
+            document.getElementById('notice-title').value = '';
+            document.getElementById('notice-content').value = '';
+            closeAdminModal();
+            loadClubNotices(clubId);
+        });
+    }
+}
+
+function loadClubNotices(clubId) {
+    const section = document.getElementById('club-notice-section');
+    const list = document.getElementById('club-notice-list');
+    if(!section || !list) return;
+    
+    const notices = (JSON.parse(localStorage.getItem(CLUB_NOTICES_KEY)) || {})[clubId] || [];
+    
+    if(notices.length === 0) {
+        section.classList.add('hidden');
+        return;
+    }
+    
+    section.classList.remove('hidden');
+    list.innerHTML = notices.map(n => `
+        <li class="notice-item">
+            <span class="notice-title">${n.title}</span>
+            <span class="notice-meta">${new Date(n.date).toLocaleDateString()} • ${n.author}</span>
+            <p style="margin-top:0.2rem; color:#4a5568;">${n.content}</p>
+        </li>
+    `).join('');
+}
+
+function loadAdminStaffList() {
+    const list = document.getElementById('admin-member-list');
+    if(!list) return;
+    list.innerHTML = `
+        <li>
+            <span>나 (Admin)</span>
+            <span class="status-badge">관리자</span>
+        </li>
+        <li>
+            <span>김물개</span>
+            <button class="small-text-btn" onclick="alert('기능 준비중입니다.')">관리자 임명</button>
+        </li>
+    `;
+}
+
+// ... existing helper functions (loadClubMembers, loadClubLeaderboard, updateDashboardClubCard, etc.) ...
 
 function loadClubMembers() {
     const list = document.getElementById('club-member-list');
     if(!list) return;
-    // Mock members + Current User
     const profile = JSON.parse(localStorage.getItem(PROFILE_KEY)) || { nickname: '나' };
     const members = [
         { name: profile.nickname, level: profile.level, isMe: true },
@@ -511,7 +605,6 @@ function loadClubMembers() {
         { name: '박수영', level: 'intermediate' },
         { name: '이인어', level: 'elite' }
     ];
-    
     list.innerHTML = members.map(m => `
         <li>
             <div style="display:flex; align-items:center; gap:0.5rem;">
@@ -526,30 +619,18 @@ function loadClubMembers() {
 function loadClubLeaderboard() {
     const list = document.getElementById('team-leaderboard');
     if(!list) return;
-    
-    // Get User Best Record
     const records = JSON.parse(localStorage.getItem(RECORDS_KEY)) || [];
-    // Find best free 50m
     const myBest = records.filter(r => r.event.includes('자유형 50m') || r.event.includes('Free 50m'))
                           .sort((a,b) => parseFloat(a.time) - parseFloat(b.time))[0];
-                          
     const profile = JSON.parse(localStorage.getItem(PROFILE_KEY)) || { nickname: '나' };
-    
     let ranking = [
         { name: '이인어', time: 24.50 },
         { name: '김물개', time: 28.12 },
         { name: '박수영', time: 32.40 }
     ];
-    
-    if(myBest) {
-        ranking.push({ name: profile.nickname, time: parseFloat(myBest.time), isMe: true });
-    } else {
-        // Add user with no record for visibility
-        ranking.push({ name: profile.nickname, time: 999, isMe: true, noRecord: true });
-    }
-    
+    if(myBest) ranking.push({ name: profile.nickname, time: parseFloat(myBest.time), isMe: true });
+    else ranking.push({ name: profile.nickname, time: 999, isMe: true, noRecord: true });
     ranking.sort((a,b) => a.time - b.time);
-    
     list.innerHTML = ranking.map((r, i) => `
         <li class="leaderboard-item">
             <span class="rank ${i<3?'top-3':''}">${i+1}</span>
@@ -557,18 +638,6 @@ function loadClubLeaderboard() {
             <span class="member-record">${r.noRecord ? '--' : r.time.toFixed(2)}</span>
         </li>
     `).join('');
-}
-
-function loadClubPosts(id) {
-    const feed = document.getElementById('club-feed');
-    if(!feed) return;
-    const posts = (JSON.parse(localStorage.getItem(CLUB_POSTS_KEY)) || {})[id] || [];
-    feed.innerHTML = posts.length ? posts.map(p => `
-        <div class="feed-item">
-            <div class="feed-head"><strong>${p.author}</strong> <span>${new Date(p.date).toLocaleString()}</span></div>
-            <p>${p.content}</p>
-        </div>
-    `).join('') : '<p style="text-align:center; padding:1rem;">글이 없습니다.</p>';
 }
 
 function updateDashboardClubCard() {
@@ -612,7 +681,9 @@ window.openWorkoutModal = () => {
             `).join('');
         }
     });
-    html += `<button onclick="completeDailyWorkout()" class="primary-btn" style="margin-top:1rem;">✅ 완료</button>`;
+    html += `<div style="text-align:right; margin-top:1rem; font-size:1.1rem; font-weight:700; color:#2c5282;">Total: ${currentDailyPlan.totalDist}m</div>`;
+    html += `<button onclick="completeDailyWorkout()" class="primary-btn" style="margin-top:1rem;">✅ 훈련 완료 및 기록 저장</button>`;
+    html += `<div class="yt-disclaimer" style="margin-top:1rem;">${TRANSLATIONS[currentLang].ytDisclaimer}</div>`;
     document.getElementById('modal-body').innerHTML = html;
     modal.classList.remove('hidden');
 };
@@ -624,8 +695,16 @@ window.completeDailyWorkout = () => {
     localStorage.setItem(WORKOUT_KEY, JSON.stringify(workouts));
     loadWorkouts();
     closeWorkoutModal();
-    alert('기록되었습니다!');
+    alert(`🎉 훈련 완료! ${currentDailyPlan.totalDist}m가 기록되었습니다.`);
+    updateTotalDistance(workouts);
 };
+
+function updateTotalDistance(workouts) {
+    const distDisplay = document.getElementById('total-distance-display');
+    if (!distDisplay) return;
+    const total = workouts.reduce((sum, w) => sum + parseInt(w.distance || 0), 0);
+    distDisplay.textContent = `${total} m`;
+}
 
 function readFileAsDataURL(file) {
     return new Promise((r, j) => {
@@ -639,5 +718,17 @@ function readFileAsDataURL(file) {
 const planCard = document.querySelector('.main-plan-card');
 if(planCard) planCard.addEventListener('click', (e) => {
     if(e.target.dataset.i18n === 'termHint') return;
+    if(e.target.classList.contains('tap-hint') && e.target.onclick) return;
     openWorkoutModal();
 });
+
+window.likePost = function(clubId, postIndex) {
+    const allPosts = JSON.parse(localStorage.getItem(CLUB_POSTS_KEY)) || {};
+    if (!allPosts[clubId] || !allPosts[clubId][postIndex]) return;
+    const post = allPosts[clubId][postIndex];
+    if (!post.likes) post.likes = 0;
+    if (post.likedByMe) { post.likes--; post.likedByMe = false; } 
+    else { post.likes++; post.likedByMe = true; }
+    localStorage.setItem(CLUB_POSTS_KEY, JSON.stringify(allPosts));
+    loadClubPosts(clubId);
+};
