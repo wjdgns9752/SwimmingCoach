@@ -306,6 +306,7 @@
               <div class="lane-tabs" id="club-tabs">
                   <div class="lane-tab active" onclick="switchClubTab('ranking')">🏆 랭킹</div>
                   <div class="lane-tab" onclick="switchClubTab('board')">💬 게시판</div>
+                  <div class="lane-tab" onclick="switchClubTab('members')">👥 멤버</div>
               </div>
           </div>
 
@@ -333,6 +334,15 @@
                           <p class="feed-content">오늘 자유형 1500m 완주했습니다! 힘드네요 💦</p>
                       </div>
                   </div>
+              </div>
+          </div>
+
+          <div id="club-tab-members" class="club-tab-content hidden">
+              <div class="feature-card">
+                  <h3>👥 팀원 목록</h3>
+                  <ul class="activity-list" id="club-member-list">
+                      <!-- JS Populated -->
+                  </ul>
               </div>
           </div>
       </div>

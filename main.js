@@ -464,19 +464,99 @@ window.leaveClub = function() {
     updateDashboardClubCard();
 };
 
+window.switchClubTab = function(tabName) {
+    document.querySelectorAll('.club-tab-content').forEach(el => el.classList.add('hidden'));
+    const target = document.getElementById(`club-tab-${tabName}`);
+    if(target) target.classList.remove('hidden');
+    
+    // Update active tab style (simple text check)
+    document.querySelectorAll('#club-tabs .lane-tab').forEach(el => {
+        if(el.textContent.includes(tabName === 'ranking' ? '랭킹' : tabName === 'board' ? '게시판' : '멤버')) {
+            el.classList.add('active');
+        } else {
+            el.classList.remove('active');
+        }
+    });
+};
+
 function showClubDashboard(id) {
     const view = document.getElementById('club-selection-view');
     const dash = document.getElementById('club-dashboard-view');
     const club = getClubs().find(c => c.id === id);
     if(!club) return showClubSelection();
+    
     view.classList.add('hidden');
     dash.classList.remove('hidden');
+    
     document.getElementById('my-club-name').textContent = club.name;
     document.getElementById('my-club-desc').textContent = club.desc;
+    
     const icon = document.getElementById('my-club-icon');
     if(club.icon.startsWith('data:image')) icon.innerHTML = `<img src="${club.icon}" class="club-logo-img-large">`;
     else icon.textContent = club.icon;
+    
     loadClubPosts(id);
+    loadClubMembers();
+    loadClubLeaderboard();
+}
+
+function loadClubMembers() {
+    const list = document.getElementById('club-member-list');
+    if(!list) return;
+    // Mock members + Current User
+    const profile = JSON.parse(localStorage.getItem(PROFILE_KEY)) || { nickname: '나' };
+    const members = [
+        { name: profile.nickname, level: profile.level, isMe: true },
+        { name: '김물개', level: 'advanced' },
+        { name: '박수영', level: 'intermediate' },
+        { name: '이인어', level: 'elite' }
+    ];
+    
+    list.innerHTML = members.map(m => `
+        <li>
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+                <span style="font-size:1.2rem;">👤</span>
+                <span style="${m.isMe ? 'font-weight:bold; color:var(--color-primary);' : ''}">${m.name}</span>
+            </div>
+            <span class="status-badge" style="font-size:0.7rem;">${m.level.toUpperCase()}</span>
+        </li>
+    `).join('');
+}
+
+function loadClubLeaderboard() {
+    const list = document.getElementById('team-leaderboard');
+    if(!list) return;
+    
+    // Get User Best Record
+    const records = JSON.parse(localStorage.getItem(RECORDS_KEY)) || [];
+    // Find best free 50m
+    const myBest = records.filter(r => r.event.includes('자유형 50m') || r.event.includes('Free 50m'))
+                          .sort((a,b) => parseFloat(a.time) - parseFloat(b.time))[0];
+                          
+    const profile = JSON.parse(localStorage.getItem(PROFILE_KEY)) || { nickname: '나' };
+    
+    let ranking = [
+        { name: '이인어', time: 24.50 },
+        { name: '김물개', time: 28.12 },
+        { name: '박수영', time: 32.40 }
+    ];
+    
+    if(myBest) {
+        ranking.push({ name: profile.nickname, time: parseFloat(myBest.time), isMe: true });
+    } else {
+        // Add user with no record for visibility
+        ranking.push({ name: profile.nickname, time: 999, isMe: true, noRecord: true });
+    }
+    
+    ranking.sort((a,b) => a.time - b.time);
+    
+    list.innerHTML = ranking.map((r, i) => `
+        <li class="leaderboard-item">
+            <span class="rank ${i<3?'top-3':''}">${i+1}</span>
+            <div class="member-info"><span class="member-name ${r.isMe?'me':''}">${r.name}</span></div>
+            <span class="member-record">${r.noRecord ? '--' : r.time.toFixed(2)}</span>
+        </li>
+    `).join('');
 }
 
 function loadClubPosts(id) {
