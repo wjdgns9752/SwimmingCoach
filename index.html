@@ -3,12 +3,71 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
+  <meta name="description" content="Your daily companion for swimming training and technique improvement.">
+  <title>Daily Swimming Coach</title>
   <link href='/style.css' rel='stylesheet'>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
+  <header class="app-header">
+    <div class="logo">
+      <span class="logo-icon">🏊</span>
+      <span class="logo-text">SwimCoach</span>
+    </div>
+    <nav class="main-nav">
+      <ul>
+        <li><a href="#dashboard" class="active">Dashboard</a></li>
+        <li><a href="#workouts">Workouts</a></li>
+        <li><a href="#techniques">Techniques</a></li>
+        <li><a href="#profile">Profile</a></li>
+      </ul>
+    </nav>
+    <button class="mobile-menu-btn" aria-label="Toggle menu">☰</button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <h1>Master Your Stroke Today</h1>
+        <p>Your personalized daily swimming plans and technique guides.</p>
+        <button class="cta-button">Start Today's Workout</button>
+      </div>
+      <div class="hero-visual">
+        <!-- CSS-based visual placeholder -->
+        <div class="water-ripple"></div>
+      </div>
+    </section>
+
+    <section class="features" id="dashboard">
+      <div class="feature-card">
+        <div class="icon">📅</div>
+        <h3>Today's Plan</h3>
+        <p>1500m Endurance Set</p>
+        <span class="status-badge pending">Pending</span>
+      </div>
+      
+      <div class="feature-card">
+        <div class="icon">⚡</div>
+        <h3>Focus Area</h3>
+        <p>High Elbow Catch</p>
+        <a href="#" class="link-btn">View Drill &rarr;</a>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon">📈</div>
+        <h3>Weekly Progress</h3>
+        <p>4.5km / 10km Goal</p>
+        <div class="progress-bar"><div class="fill" style="width: 45%"></div></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Daily Swimming Coach. Keep Swimming.</p>
+  </footer>
+
+  <script type="module" src="/main.js"></script>
 </body>
 </html>
