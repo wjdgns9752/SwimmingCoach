@@ -285,10 +285,18 @@ function generateDailyPlan(level, goal, profile) {
     // Age Factor
     if (profile.age && profile.age > 50 && level !== 'elite') baseDist *= 0.8;
     
-    let plan = { title: "Generic Plan", desc: "General swim", warmup: [], drill: [], main: [], cooldown: [] };
+    // Day-based Seed for Variety
+    const today = new Date();
+    const seed = today.getDate() + today.getMonth(); // Simple change every day
+    const variety = seed % 3; // 0, 1, 2
+
+    let plan = { title: "Generic Plan", desc: "General swim", warmup: [], drill: [], main: [], cooldown: [], totalDist: 0 };
     
-    // Helper to format
-    const distStr = (d) => `${Math.floor(d)}m`;
+    // Helper to format: Round to nearest 50m (min 50m)
+    const round50 = (n) => Math.max(50, Math.round(n / 50) * 50);
+    const distStr = (d) => `${round50(d)}m`;
+    const parseDist = (str) => parseInt(str.replace('m', '')) || 0;
+    
     const drillItem = (name, dist) => ({
         dist: dist,
         desc: name,
@@ -299,39 +307,80 @@ function generateDailyPlan(level, goal, profile) {
         plan.title = "Sprint Power (SP1/SP2)";
         plan.desc = "Focus on lactate tolerance & High Elbow.";
         plan.warmup = [{dist: distStr(baseDist*0.2), desc: "Choice swim (EN1)"}];
-        plan.drill = [
-            drillItem("High Elbow", distStr(baseDist*0.05)),
-            drillItem("Catch-Up", distStr(baseDist*0.05))
-        ];
-        plan.main = [
-            {dist: distStr(baseDist*0.1), desc: "4x25m Sprint (SP1) @ 1:30"},
-            {dist: distStr(baseDist*0.4), desc: "Broken Swim 50m (SP2) - Race Pace"}
-        ];
+        
+        if (variety === 0) {
+            plan.drill = [
+                drillItem("High Elbow", distStr(baseDist*0.05)),
+                drillItem("Catch-Up", distStr(baseDist*0.05))
+            ];
+            plan.main = [
+                {dist: distStr(baseDist*0.1), desc: "4x25m Sprint (SP1) @ 1:30"},
+                {dist: distStr(baseDist*0.4), desc: "Broken Swim 50m (SP2) - Race Pace"}
+            ];
+        } else if (variety === 1) {
+            plan.drill = [drillItem("Fist Swim", distStr(baseDist*0.1))];
+            plan.main = [
+                {dist: distStr(baseDist*0.5), desc: "10x50m Fast/Easy (SP1) Interval"}
+            ];
+        } else {
+            plan.drill = [drillItem("Single Arm", distStr(baseDist*0.1))];
+            plan.main = [
+                {dist: distStr(baseDist*0.2), desc: "Build up 25m"},
+                {dist: distStr(baseDist*0.3), desc: "Max Effort 50m Time Trial"}
+            ];
+        }
+        
         plan.cooldown = [{dist: distStr(baseDist*0.2), desc: "Easy Loosen (EN1)"}];
+        
     } else if (goal === 'technique') {
         plan.title = "Advanced Technique";
         plan.desc = "Refining stroke mechanics & Efficiency.";
         baseDist *= 0.8; 
         plan.warmup = [{dist: distStr(baseDist*0.15), desc: "Easy Freestyle"}];
-        plan.drill = [
-            drillItem("Sculling", distStr(baseDist*0.1)),
-            drillItem("Single Arm", distStr(baseDist*0.1)),
-            drillItem("Fist Swim", distStr(baseDist*0.1))
-        ];
-        plan.main = [
-            {dist: distStr(baseDist*0.4), desc: "50m x N (Focus on DPS - Distance Per Stroke)"}
-        ];
+        
+        if (variety === 0) {
+            plan.drill = [
+                drillItem("Sculling", distStr(baseDist*0.1)),
+                drillItem("Single Arm", distStr(baseDist*0.1)),
+                drillItem("Fist Swim", distStr(baseDist*0.1))
+            ];
+            plan.main = [
+                {dist: distStr(baseDist*0.4), desc: "50m x N (Focus on DPS - Distance Per Stroke)"}
+            ];
+        } else {
+            plan.drill = [drillItem("High Elbow", distStr(baseDist*0.2))];
+            plan.main = [
+                {dist: distStr(baseDist*0.2), desc: "Snorkel Swim (Head alignment)"},
+                {dist: distStr(baseDist*0.2), desc: "Paddle & Pullbuoy (Power)"}
+            ];
+        }
+        
         plan.cooldown = [{dist: distStr(baseDist*0.15), desc: "Easy (EN1)"}];
+        
     } else if (goal === 'endurance') {
         plan.title = "Aerobic Capacity (EN1/EN2)";
         plan.desc = "Building aerobic base.";
         baseDist *= 1.1; 
         plan.warmup = [{dist: distStr(baseDist*0.15), desc: "Free/Back Mix (EN1)"}];
         plan.drill = [drillItem("Side Kick", distStr(baseDist*0.05))];
-        plan.main = [
-            {dist: distStr(baseDist*0.6), desc: "Continuous Swim (EN2) HR 130-150"}
-        ];
+        
+        if (variety === 0) {
+            plan.main = [
+                {dist: distStr(baseDist*0.6), desc: "Continuous Swim (EN2) HR 130-150"}
+            ];
+        } else if (variety === 1) {
+            plan.main = [
+                {dist: distStr(baseDist*0.3), desc: "Pullbuoy Swim"},
+                {dist: distStr(baseDist*0.3), desc: "Swim with Paddles"}
+            ];
+        } else {
+            plan.main = [
+                {dist: distStr(baseDist*0.6), desc: "Pyramid: 100-200-300-200-100"}
+            ];
+        }
+        
         plan.cooldown = [{dist: distStr(baseDist*0.2), desc: "Easy (EN1)"}];
+        
     } else {
         // Default
         plan.title = "Balanced Swim (Mix)";
@@ -342,8 +391,21 @@ function generateDailyPlan(level, goal, profile) {
         plan.cooldown = [{dist: distStr(baseDist*0.25), desc: "Easy (EN1)"}];
     }
 
+    // Calculate Total
+    let total = 0;
+    [plan.warmup, plan.drill, plan.main, plan.cooldown].forEach(section => {
+        section.forEach(item => total += parseDist(item.dist));
+    });
+    plan.totalDist = total;
+
     currentDailyPlan = plan;
-    planText.innerHTML = `<strong>${plan.title}</strong><br><span style="font-size:0.9rem; color:#718096">${plan.desc}</span>`;
+    planText.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <strong>${plan.title}</strong>
+            <span style="font-size:1.2rem; font-weight:800; color:#2b6cb0;">${total}m</span>
+        </div>
+        <span style="font-size:0.9rem; color:#718096">${plan.desc}</span>
+    `;
 }
 
 // --- Terminology Modal ---
@@ -470,6 +532,42 @@ const DEFAULT_CLUBS = [
     { id: 'busan_marine', name: '부산 마린보이', desc: '해운대 바다수영 & 실내수영', icon: '🌊', type: 'public' }
 ];
 
+function updateDashboardClubCard() {
+    const clubId = localStorage.getItem(CLUB_KEY);
+    const contentDiv = document.getElementById('dash-club-content');
+    const iconDiv = document.getElementById('dash-club-icon');
+    
+    if (!contentDiv || !iconDiv) return;
+
+    if (clubId) {
+        const clubs = getClubs();
+        const club = clubs.find(c => c.id === clubId);
+        if (club) {
+            if(club.icon.startsWith('data:image')) {
+                iconDiv.innerHTML = `<img src="${club.icon}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                iconDiv.style.padding = '0';
+                iconDiv.style.overflow = 'hidden';
+            } else {
+                iconDiv.textContent = club.icon;
+                iconDiv.style.padding = '0.75rem';
+            }
+            contentDiv.innerHTML = `
+                <div style="margin-bottom:0.5rem;">
+                    <strong style="font-size:1.1rem; color:#2d3748;">${club.name}</strong>
+                    <span style="display:block; font-size:0.85rem; color:#718096;">${club.desc}</span>
+                </div>
+                <span class="status-badge" style="background:#e2e8f0; color:#4a5568; font-weight:normal;">가입됨</span>
+            `;
+        }
+    } else {
+        iconDiv.textContent = '🤝';
+        contentDiv.innerHTML = `
+            <p style="color:#718096; margin-bottom:0.5rem;">아직 소속된 클럽이 없습니다.</p>
+            <span class="link-btn">클럽 찾기 &rarr;</span>
+        `;
+    }
+}
+
 function getClubs() {
     const customClubs = JSON.parse(localStorage.getItem(CUSTOM_CLUBS_KEY)) || [];
     return [...DEFAULT_CLUBS, ...customClubs];
@@ -479,6 +577,8 @@ function initClubFeature() {
     const savedClubId = localStorage.getItem(CLUB_KEY);
     if (savedClubId) showClubDashboard(savedClubId);
     else showClubSelection();
+    
+    updateDashboardClubCard();
 }
 
 function showClubSelection() {
@@ -522,12 +622,14 @@ window.joinClub = function(clubId) {
     
     localStorage.setItem(CLUB_KEY, clubId);
     showClubDashboard(clubId);
+    updateDashboardClubCard();
 };
 
 window.leaveClub = function() {
     if(confirm('탈퇴하시겠습니까?')) {
         localStorage.removeItem(CLUB_KEY);
         showClubSelection();
+        updateDashboardClubCard();
     }
 };
 
@@ -696,15 +798,54 @@ window.openWorkoutModal = () => {
             }
         });
         
+        // Total Summary
+        html += `<div style="text-align:right; margin-top:1rem; font-size:1.1rem; font-weight:700; color:#2c5282;">
+                    Total: ${currentDailyPlan.totalDist}m
+                 </div>`;
+
+        // Complete Button
+        html += `<button onclick="completeDailyWorkout()" class="primary-btn" style="margin-top:1.5rem; width:100%;">
+                    ✅ 훈련 완료 및 기록 저장
+                 </button>`;
+        
         // Add Disclaimer
         const disclaimer = TRANSLATIONS[currentLang].ytDisclaimer || "Please watch linked videos for proper form.";
-        html += `<div class="yt-disclaimer">${disclaimer}</div>`;
+        html += `<div class="yt-disclaimer" style="margin-top:1rem;">${disclaimer}</div>`;
         
         bodyEl.innerHTML = html;
     }
     
     modal.classList.remove('hidden');
 };
+
+window.completeDailyWorkout = function() {
+    if (!currentDailyPlan) return;
+    
+    const newWorkout = {
+        date: new Date().toISOString().split('T')[0],
+        distance: currentDailyPlan.totalDist,
+        duration: Math.floor(currentDailyPlan.totalDist / 25), // Approx estimation
+        mood: 'good',
+        notes: `[Auto-Log] ${currentDailyPlan.title}`,
+        id: Date.now()
+    };
+    
+    const workouts = JSON.parse(localStorage.getItem(WORKOUT_KEY)) || [];
+    workouts.push(newWorkout);
+    localStorage.setItem(WORKOUT_KEY, JSON.stringify(workouts));
+    
+    loadWorkouts(); // Refresh Dashboard
+    closeWorkoutModal();
+    alert(`🎉 훈련 완료! ${currentDailyPlan.totalDist}m가 기록되었습니다.`);
+    updateTotalDistance(workouts);
+};
+
+function updateTotalDistance(workouts) {
+    const distDisplay = document.getElementById('total-distance-display');
+    if (!distDisplay) return;
+    const total = workouts.reduce((sum, w) => sum + parseInt(w.distance || 0), 0);
+    distDisplay.textContent = `${total} m`;
+}
 
 window.closeWorkoutModal = () => {
     const modal = document.getElementById('workout-modal');
