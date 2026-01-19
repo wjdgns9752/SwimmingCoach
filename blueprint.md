@@ -20,10 +20,16 @@ A web-based Swimming Coach application designed to help users improve their swim
 - [x] Create "Video Analysis" section with file upload UI.
 - [x] Implement simulated video processing logic to display metrics (Breakout, Strokes, Breaths, Splits).
 
+### Goal: User Profile & Persistence
+- [x] Update Onboarding to collect Nickname + Level.
+- [x] Persist User Profile (Nickname, Level) in LocalStorage as a single object.
+- [x] Display Nickname in Dashboard greeting.
+- [x] Allow editing Nickname and Level in Profile settings.
+
 ### Goal: UI/UX Overhaul
-- [ ] Implement SPA-style routing (show/hide sections based on hash) to replace vertical scrolling.
-- [ ] Redesign "Workout Logger" UI with cards, emojis for mood, and better spacing.
-- [ ] Add a Bottom Navigation Bar for mobile-app-like experience.
+- [x] Implement SPA-style routing (show/hide sections based on hash) to replace vertical scrolling.
+- [x] Redesign "Workout Logger" UI with cards, emojis for mood, and better spacing.
+- [x] Add a Bottom Navigation Bar for mobile-app-like experience.
 
 ### History
 #### Goal: Advanced Coaching & Analysis
