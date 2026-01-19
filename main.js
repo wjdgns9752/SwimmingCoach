@@ -4,9 +4,9 @@ const TRANSLATIONS = {
     appTitle: "스위밍코치",
     navDashboard: "대시보드", navLogger: "훈련 일지", navAnalysis: "AI 분석", navClub: "클럽", navProfile: "내 기록",
     greeting: "오늘도 물살을 가를 준비 되셨나요?",
-    dailyPlanTitle: "오늘의 맞춤 훈련",
+    dailyPlanTitle: "오늘의 프리미엄 코칭",
     termHint: "훈련 용어 설명 보기",
-    tapDetails: "터치하여 상세 가이드 →",
+    tapDetails: "상세 훈련 가이드 보기 →",
     weeklyDistTitle: "이번 주 누적 거리",
     recentCompTitle: "최근 대회 기록",
     btnAddRecord: "기록 추가하기",
@@ -27,15 +27,16 @@ const TRANSLATIONS = {
     descEN2: "유산소 역치. 지속 가능하지만 약간 숨참 (최대심박 70-80%)",
     descEN3: "최대 산소 섭취량. 숨이 많이 참 (최대심박 80-90%)",
     descSP1: "젖산 내성. 최고 속도, 짧은 휴식",
-    descDrill: "자세 교정을 위한 부분 동작 연습"
+    descDrill: "자세 교정을 위한 부분 동작 연습",
+    ytDisclaimer: "⚠️ 본 훈련 가이드는 YouTube 영상을 참고하여 구성되었습니다. 정확한 자세는 링크된 영상을 확인해주세요."
   },
   en: {
     appTitle: "SwimCoach",
     navDashboard: "Dashboard", navLogger: "Log", navAnalysis: "AI Analysis", navClub: "Club", navProfile: "Profile",
     greeting: "Ready to hit the water?",
-    dailyPlanTitle: "Daily Workout Plan",
+    dailyPlanTitle: "Premium Daily Coaching",
     termHint: "View Terminology Guide",
-    tapDetails: "Tap for details →",
+    tapDetails: "View Detailed Guide →",
     weeklyDistTitle: "Weekly Distance",
     recentCompTitle: "Recent Best",
     btnAddRecord: "Add Record",
@@ -56,15 +57,16 @@ const TRANSLATIONS = {
     descEN2: "Aerobic Threshold. Sustainable but breathless (HR 70-80%)",
     descEN3: "VO2 Max. Hard breathing (HR 80-90%)",
     descSP1: "Lactate Tolerance. Max speed, short rest",
-    descDrill: "Drills for technique correction"
+    descDrill: "Drills for technique correction",
+    ytDisclaimer: "⚠️ This guide references YouTube videos. Please watch the linked videos for correct form."
   },
   jp: {
     appTitle: "スイミングコーチ",
     navDashboard: "ホーム", navLogger: "日誌", navAnalysis: "AI分析", navClub: "クラブ", navProfile: "記録",
     greeting: "今日も泳ぐ準備はできましたか？",
-    dailyPlanTitle: "今日のメニュー",
+    dailyPlanTitle: "今日のプレミアムコーチング",
     termHint: "用語ガイドを見る",
-    tapDetails: "タップして詳細へ →",
+    tapDetails: "詳細ガイドを見る →",
     weeklyDistTitle: "今週の距離",
     recentCompTitle: "最近の記録",
     btnAddRecord: "記録を追加",
@@ -85,15 +87,16 @@ const TRANSLATIONS = {
     descEN2: "有酸素閾値。ややきつい (心拍数 70-80%)",
     descEN3: "最大酸素摂取量。かなりきつい (心拍数 80-90%)",
     descSP1: "乳酸耐性。全力ダッシュ",
-    descDrill: "フォーム矯正練習"
+    descDrill: "フォーム矯正練習",
+    ytDisclaimer: "⚠️ このガイドはYouTube動画を参考にしています。正しいフォームは動画で確認してください。"
   },
   cn: {
     appTitle: "游泳教练",
     navDashboard: "仪表盘", navLogger: "日志", navAnalysis: "AI分析", navClub: "俱乐部", navProfile: "记录",
     greeting: "准备好游泳了吗？",
-    dailyPlanTitle: "今日训练计划",
+    dailyPlanTitle: "今日高级指导",
     termHint: "查看术语指南",
-    tapDetails: "点击查看详情 →",
+    tapDetails: "查看详细指南 →",
     weeklyDistTitle: "本周距离",
     recentCompTitle: "近期记录",
     btnAddRecord: "添加记录",
@@ -114,7 +117,8 @@ const TRANSLATIONS = {
     descEN2: "有氧阈值。稍喘 (心率 70-80%)",
     descEN3: "最大摄氧量。很喘 (心率 80-90%)",
     descSP1: "乳酸耐受。全力冲刺",
-    descDrill: "技术分解练习"
+    descDrill: "技术分解练习",
+    ytDisclaimer: "⚠️ 本指南参考了YouTube视频。请观看链接视频以确认正确姿势。"
   }
 };
 
@@ -144,6 +148,19 @@ const WORKOUT_KEY = 'swim_workouts';
 const RECORDS_KEY = 'swim_competition_records';
 const CLUB_KEY = 'swim_user_club';
 const CUSTOM_CLUBS_KEY = 'swim_custom_clubs';
+const CLUB_POSTS_KEY = 'swim_club_posts';
+
+// Drill Database with YouTube Links
+const DRILL_DB = {
+    "Sculling": "https://www.youtube.com/results?search_query=swimming+sculling+drill",
+    "Fist Swim": "https://www.youtube.com/results?search_query=fist+swimming+drill",
+    "Catch-Up": "https://www.youtube.com/results?search_query=catch+up+drill+freestyle",
+    "Single Arm": "https://www.youtube.com/results?search_query=single+arm+freestyle+drill",
+    "High Elbow": "https://www.youtube.com/results?search_query=high+elbow+catch+drill",
+    "Flip Turn": "https://www.youtube.com/results?search_query=swimming+flip+turn+drill",
+    "Side Kick": "https://www.youtube.com/results?search_query=side+kick+swimming+drill",
+    "6-Kick Switch": "https://www.youtube.com/results?search_query=6+kick+switch+drill"
+};
 
 // Init
 document.addEventListener('DOMContentLoaded', () => {
@@ -265,30 +282,52 @@ function generateDailyPlan(level, goal, profile) {
     if (level === 'masters') baseDist = 3200;
     if (level === 'elite') baseDist = 4500;
 
-    // Age Factor: Reduce volume slightly for seniors if not elite
+    // Age Factor
     if (profile.age && profile.age > 50 && level !== 'elite') baseDist *= 0.8;
     
     let plan = { title: "Generic Plan", desc: "General swim", warmup: [], drill: [], main: [], cooldown: [] };
     
     // Helper to format
     const distStr = (d) => `${Math.floor(d)}m`;
+    const drillItem = (name, dist) => ({
+        dist: dist,
+        desc: name,
+        ytLink: DRILL_DB[name] || null
+    });
 
     if (goal === 'speed') {
-        plan.title = "Sprint & Power (SP1/SP2)";
-        plan.desc = "Focus on lactate tolerance.";
+        plan.title = "Sprint Power (SP1/SP2)";
+        plan.desc = "Focus on lactate tolerance & High Elbow.";
         plan.warmup = [{dist: distStr(baseDist*0.2), desc: "Choice swim (EN1)"}];
-        plan.drill = [{dist: distStr(baseDist*0.1), desc: "Sculling & Catch (Drill)"}];
+        plan.drill = [
+            drillItem("High Elbow", distStr(baseDist*0.05)),
+            drillItem("Catch-Up", distStr(baseDist*0.05))
+        ];
         plan.main = [
             {dist: distStr(baseDist*0.1), desc: "4x25m Sprint (SP1) @ 1:30"},
-            {dist: distStr(baseDist*0.4), desc: "Broken Swim 50m (SP2)"}
+            {dist: distStr(baseDist*0.4), desc: "Broken Swim 50m (SP2) - Race Pace"}
         ];
         plan.cooldown = [{dist: distStr(baseDist*0.2), desc: "Easy Loosen (EN1)"}];
+    } else if (goal === 'technique') {
+        plan.title = "Advanced Technique";
+        plan.desc = "Refining stroke mechanics & Efficiency.";
+        baseDist *= 0.8; 
+        plan.warmup = [{dist: distStr(baseDist*0.15), desc: "Easy Freestyle"}];
+        plan.drill = [
+            drillItem("Sculling", distStr(baseDist*0.1)),
+            drillItem("Single Arm", distStr(baseDist*0.1)),
+            drillItem("Fist Swim", distStr(baseDist*0.1))
+        ];
+        plan.main = [
+            {dist: distStr(baseDist*0.4), desc: "50m x N (Focus on DPS - Distance Per Stroke)"}
+        ];
+        plan.cooldown = [{dist: distStr(baseDist*0.15), desc: "Easy (EN1)"}];
     } else if (goal === 'endurance') {
         plan.title = "Aerobic Capacity (EN1/EN2)";
         plan.desc = "Building aerobic base.";
-        baseDist *= 1.1; // More volume
+        baseDist *= 1.1; 
         plan.warmup = [{dist: distStr(baseDist*0.15), desc: "Free/Back Mix (EN1)"}];
-        plan.drill = [{dist: distStr(baseDist*0.05), desc: "Fist Swim (Drill)"}];
+        plan.drill = [drillItem("Side Kick", distStr(baseDist*0.05))];
         plan.main = [
             {dist: distStr(baseDist*0.6), desc: "Continuous Swim (EN2) HR 130-150"}
         ];
@@ -298,9 +337,9 @@ function generateDailyPlan(level, goal, profile) {
         plan.title = "Balanced Swim (Mix)";
         plan.desc = "Technique and moderate aerobic work.";
         plan.warmup = [{dist: distStr(baseDist*0.2), desc: "Choice (EN1)"}];
-        plan.drill = [{dist: distStr(baseDist*0.2), desc: "Side kick / 6-kick switch (Drill)"}];
+        plan.drill = [drillItem("6-Kick Switch", distStr(baseDist*0.15))];
         plan.main = [{dist: distStr(baseDist*0.4), desc: "50m x 8 (EN2) Interval"}];
-        plan.cooldown = [{dist: distStr(baseDist*0.2), desc: "Easy (EN1)"}];
+        plan.cooldown = [{dist: distStr(baseDist*0.25), desc: "Easy (EN1)"}];
     }
 
     currentDailyPlan = plan;
@@ -337,7 +376,6 @@ if(workoutForm) {
         const date = document.getElementById('date').value;
         const distance = document.getElementById('distance').value;
         const duration = document.getElementById('duration').value;
-        // const notes = document.getElementById('notes').value; // Removed in simplified view, can add back if needed
         const mood = document.querySelector('input[name="mood"]:checked')?.value || 'soso';
         if (!date || !distance) return;
         const newWorkout = { date, distance, duration, mood, id: Date.now() };
@@ -401,7 +439,6 @@ function initAnalysisControls() {
     if (oldZone) {
         const fileInput = document.getElementById('video-upload');
         if (!fileInput) return;
-        // Prevent duplicate listeners
         const newZone = oldZone.cloneNode(true);
         oldZone.parentNode.replaceChild(newZone, oldZone);
         
@@ -412,7 +449,6 @@ function initAnalysisControls() {
 }
 
 function handleFile(file) {
-    // Simulate Analysis
     const loader = document.getElementById('analysis-loader');
     const res = document.getElementById('analysis-results');
     const zone = document.getElementById('upload-zone');
@@ -423,7 +459,6 @@ function handleFile(file) {
     
     setTimeout(() => {
         if(loader) loader.classList.add('hidden');
-        // Show mock results...
         const totalTime = document.getElementById('res-total-time');
         if(totalTime) totalTime.textContent = "32.45s";
     }, 2000);
@@ -434,8 +469,6 @@ const DEFAULT_CLUBS = [
     { id: 'seoul_dolphins', name: '서울 돌핀스', desc: '서울 지역 직장인 수영 모임', icon: '🐬', type: 'public' },
     { id: 'busan_marine', name: '부산 마린보이', desc: '해운대 바다수영 & 실내수영', icon: '🌊', type: 'public' }
 ];
-
-const CLUB_POSTS_KEY = 'swim_club_posts';
 
 function getClubs() {
     const customClubs = JSON.parse(localStorage.getItem(CUSTOM_CLUBS_KEY)) || [];
@@ -459,7 +492,6 @@ function showClubSelection() {
     
     const allClubs = getClubs();
     clubList.innerHTML = allClubs.map(club => {
-        // Check if icon is base64 image or emoji
         const iconHtml = club.icon.startsWith('data:image') 
             ? `<img src="${club.icon}" class="club-logo-img" alt="logo">` 
             : `<div class="club-icon">${club.icon}</div>`;
@@ -513,10 +545,10 @@ function showClubDashboard(clubId) {
     document.getElementById('my-club-name').textContent = club.name;
     document.getElementById('my-club-desc').textContent = club.desc;
     
-    const iconContainer = document.getElementById('my-club-icon'); // It's a span, replace content
+    const iconContainer = document.getElementById('my-club-icon');
     if(club.icon.startsWith('data:image')) {
         iconContainer.innerHTML = `<img src="${club.icon}" class="club-logo-img-large" alt="logo">`;
-        iconContainer.className = ''; // remove default class if needed
+        iconContainer.className = '';
     } else {
         iconContainer.textContent = club.icon;
         iconContainer.className = 'club-icon-large';
@@ -533,7 +565,6 @@ function loadClubPosts(clubId) {
     const allPosts = JSON.parse(localStorage.getItem(CLUB_POSTS_KEY)) || {};
     const clubPosts = allPosts[clubId] || [];
     
-    // Add some default dummy posts if empty for demo
     if(clubPosts.length === 0 && clubId.startsWith('custom_') === false) {
          feed.innerHTML = `
             <div class="feed-item">
@@ -556,10 +587,7 @@ function loadClubPosts(clubId) {
     }
 }
 
-// Write Post Logic
-window.postToBoard = function() {
-    document.getElementById('write-post-modal').classList.remove('hidden');
-};
+window.postToBoard = function() { document.getElementById('write-post-modal').classList.remove('hidden'); };
 window.closeWritePostModal = () => document.getElementById('write-post-modal').classList.add('hidden');
 
 const writePostForm = document.getElementById('write-post-form');
@@ -572,27 +600,18 @@ if(writePostForm) {
         
         if(!content || !clubId) return;
         
-        const newPost = {
-            id: Date.now(),
-            author: profile.nickname,
-            content: content,
-            date: new Date().toISOString()
-        };
-        
+        const newPost = { id: Date.now(), author: profile.nickname, content: content, date: new Date().toISOString() };
         const allPosts = JSON.parse(localStorage.getItem(CLUB_POSTS_KEY)) || {};
         if(!allPosts[clubId]) allPosts[clubId] = [];
-        allPosts[clubId].unshift(newPost); // Add to top
-        
+        allPosts[clubId].unshift(newPost);
         localStorage.setItem(CLUB_POSTS_KEY, JSON.stringify(allPosts));
-        
         document.getElementById('post-content').value = '';
         closeWritePostModal();
         loadClubPosts(clubId);
     });
 }
 
-
-// --- Create Club Logic with Image ---
+// --- Create Club Logic ---
 window.openCreateClubModal = () => document.getElementById('create-club-modal').classList.remove('hidden');
 window.closeCreateClubModal = () => document.getElementById('create-club-modal').classList.add('hidden');
 
@@ -611,13 +630,7 @@ if(createClubForm) {
 
         let icon = emoji;
         if(fileInput.files && fileInput.files[0]) {
-            try {
-                icon = await readFileAsDataURL(fileInput.files[0]);
-            } catch(err) {
-                console.error("Image read failed", err);
-                alert("이미지 처리 중 오류가 발생했습니다.");
-                return;
-            }
+            try { icon = await readFileAsDataURL(fileInput.files[0]); } catch(err) { alert("Error reading image"); return; }
         }
         
         const newClub = { id: 'custom_' + Date.now(), name, desc, icon, type, password };
@@ -663,17 +676,30 @@ window.openWorkoutModal = () => {
         
         sections.forEach(sec => {
             if(currentDailyPlan[sec.key] && currentDailyPlan[sec.key].length > 0) {
-                html += `<div class="workout-section" style="margin-bottom:1rem;">
-                            <h4 style="margin-bottom:0.5rem; color:#2c5282;">${sec.title}</h4>`;
+                html += `<div class="workout-section"><h4>${sec.title}</h4>`;
                 currentDailyPlan[sec.key].forEach(set => {
-                    html += `<div class="workout-item" style="display:flex; justify-content:space-between; padding:0.5rem; background:#f7fafc; margin-bottom:0.3rem; border-radius:4px;">
-                                <span style="font-weight:700; color:#2b6cb0;">${set.dist}</span>
-                                <span>${set.desc}</span>
+                    const ytBtn = set.ytLink 
+                        ? `<a href="${set.ytLink}" target="_blank" class="yt-link-btn" title="Watch on YouTube">
+                             ▶ YouTube
+                           </a>` 
+                        : '';
+                        
+                    html += `<div class="workout-item">
+                                <strong>${set.dist}</strong>
+                                <div class="workout-desc-row">
+                                    <span>${set.desc}</span>
+                                    ${ytBtn}
+                                </div>
                              </div>`;
                 });
                 html += `</div>`;
             }
         });
+        
+        // Add Disclaimer
+        const disclaimer = TRANSLATIONS[currentLang].ytDisclaimer || "Please watch linked videos for proper form.";
+        html += `<div class="yt-disclaimer">${disclaimer}</div>`;
+        
         bodyEl.innerHTML = html;
     }
     
@@ -690,7 +716,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const planCard = document.querySelector('.main-plan-card');
     if(planCard) {
         planCard.addEventListener('click', (e) => {
-            // Prevent if clicking the Terminology link specifically
             if(e.target.dataset.i18n === 'termHint') return; 
             if(e.target.classList.contains('tap-hint') && e.target.onclick) return;
             openWorkoutModal();
