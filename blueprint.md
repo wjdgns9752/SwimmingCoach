@@ -21,9 +21,9 @@ A web-based Swimming Coach application designed to help users improve their swim
 - [x] Implement simulated video processing logic to display metrics (Breakout, Strokes, Breaths, Splits).
 
 ### Goal: Enhance Features
-- [ ] Increase video upload limit text and logic to 500MB.
-- [ ] Implement "Smart Schedule Algorithm" to generate daily plans based on stored PRs and recent volume.
-- [ ] Update Dashboard UI to display the dynamic plan.
+- [x] Increase video upload limit text and logic to 500MB.
+- [x] Implement "Smart Schedule Algorithm" to generate daily plans based on stored PRs and recent volume.
+- [x] Update Dashboard UI to display the dynamic plan.
 
 ### History
 #### Goal: Implement Core Features (Tracker & Analysis)

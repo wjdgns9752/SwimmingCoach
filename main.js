@@ -1,6 +1,6 @@
 console.log('Daily Swimming Coach App Initialized');
 
-// --- Mobile Menu ---
+// --- 1. Mobile Menu ---
 const menuBtn = document.querySelector('.mobile-menu-btn');
 const nav = document.querySelector('.main-nav');
 
@@ -42,9 +42,8 @@ if (menuBtn && nav) {
   });
 }
 
-// --- Data Persistence (LocalStorage) ---
+// --- 2. Data Persistence (LocalStorage) ---
 
-// 1. Workout Logger
 const workoutForm = document.getElementById('swim-log-form');
 const recentActivityList = document.getElementById('recent-activity-list');
 const totalDistanceDisplay = document.getElementById('total-distance-display');
@@ -78,8 +77,7 @@ function renderActivityList(workouts) {
 
 function updateTotalDistance(workouts) {
     if (!totalDistanceDisplay) return;
-    // Sum distance from current week (simplified: just total for now)
-    const total = workouts.reduce((sum, w) => sum + parseInt(w.distance), 0);
+    const total = workouts.reduce((sum, w) => sum + parseInt(w.distance || 0), 0);
     totalDistanceDisplay.textContent = `${total} m`;
 }
 
@@ -99,12 +97,15 @@ if (workoutForm) {
         localStorage.setItem('swim_workouts', JSON.stringify(workouts));
 
         loadWorkouts();
+        // Update plan immediately after logging new data
+        generateDailyPlan();
+        
         workoutForm.reset();
         alert('Workout logged successfully!');
     });
 }
 
-// 2. Personal Records (PR)
+// --- 3. Personal Records (PR) ---
 const prForm = document.getElementById('pr-form');
 const prInputs = document.querySelectorAll('.pr-input');
 const prDisplay = document.getElementById('pr-display');
@@ -116,7 +117,6 @@ function loadPRs() {
         if (prs[event]) input.value = prs[event];
     });
     
-    // Update Dashboard Display
     if (prDisplay && prs['100free']) {
         prDisplay.textContent = prs['100free'];
     }
@@ -131,11 +131,55 @@ if (prForm) {
         });
         localStorage.setItem('swim_prs', JSON.stringify(prs));
         loadPRs();
+        generateDailyPlan(); // Update plan based on new PRs
         alert('Records updated!');
     });
 }
 
-// --- Video Analysis Simulation ---
+// --- 4. Smart Daily Schedule Generation ---
+function generateDailyPlan() {
+    const planText = document.getElementById('daily-plan-text');
+    if (!planText) return;
+
+    const workouts = JSON.parse(localStorage.getItem('swim_workouts')) || [];
+    const prs = JSON.parse(localStorage.getItem('swim_prs')) || {};
+    
+    // Calculate Average Recent Volume (Last 3 sessions)
+    let avgDist = 0;
+    if (workouts.length > 0) {
+        const recent = workouts.slice(-3);
+        const totalRecent = recent.reduce((sum, w) => sum + parseInt(w.distance || 0), 0);
+        avgDist = totalRecent / recent.length;
+    }
+
+    let plan = "";
+    let focus = "";
+    
+    // Logic Table
+    if (avgDist === 0) {
+        plan = "Welcome Swim (800m)";
+        focus = "Easy warmup to establish baseline.";
+    } else if (avgDist < 1000) {
+        plan = "Technical Drill Set (1200m)";
+        focus = "Focus on body position & rotation.";
+    } else if (avgDist < 2500) {
+        plan = "Aerobic Endurance (2000m)";
+        focus = "Maintain consistent pace.";
+        if (prs['100free']) {
+            focus = `Main Set: 10x100m @ Pace (based on ${prs['100free']})`;
+        }
+    } else {
+        plan = "Threshold Power (3000m+)";
+        focus = "High intensity intervals.";
+        if (prs['100free']) {
+             focus = `Target: Sprint sets beating ${prs['100free']}`;
+        }
+    }
+
+    planText.innerHTML = `<strong>${plan}</strong><br><span style="font-size:0.9em; color:#718096">${focus}</span>`;
+}
+
+// --- 5. Video Analysis (Click & Drag-n-Drop) ---
 const uploadZone = document.getElementById('upload-zone');
 const fileInput = document.getElementById('video-upload');
 const analysisResults = document.getElementById('analysis-results');
@@ -148,14 +192,61 @@ const resDps = document.getElementById('res-dps');
 const resTime = document.getElementById('res-time');
 
 if (uploadZone && fileInput) {
+    // A. Click to Upload
     uploadZone.addEventListener('click', () => fileInput.click());
 
     fileInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
-            const file = e.target.files[0];
-            startAnalysisSimulation(file);
+            handleFile(e.target.files[0]);
         }
     });
+
+    // B. Drag & Drop Support
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // Visual feedback
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadZone.addEventListener(eventName, () => uploadZone.style.borderColor = '#006994', false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadZone.addEventListener(eventName, () => uploadZone.style.borderColor = '#cbd5e0', false);
+    });
+
+    // Handle Drop
+    uploadZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    });
+}
+
+function handleFile(file) {
+    // 500MB Limit
+    const maxSize = 500 * 1024 * 1024;
+    
+    // Check type
+    if (!file.type.startsWith('video/')) {
+        alert('Please upload a valid video file.');
+        return;
+    }
+
+    // Check size
+    if (file.size > maxSize) {
+        alert('File is too large. Max size is 500MB.');
+        return;
+    }
+
+    startAnalysisSimulation(file);
 }
 
 function startAnalysisSimulation(file) {
@@ -174,17 +265,14 @@ function startAnalysisSimulation(file) {
 }
 
 function generateMockData() {
-    // Generate realistic random swimming data
-    const breakoutTime = (Math.random() * (7 - 4) + 4).toFixed(2); // 4s - 7s
-    const totalTime = (Math.random() * (35 - 28) + 28).toFixed(2); // 28s - 35s (50m free)
-    const dps = (Math.random() * (1.8 - 1.2) + 1.2).toFixed(2); // Distance per stroke
+    const breakoutTime = (Math.random() * (7 - 4) + 4).toFixed(2);
+    const totalTime = (Math.random() * (35 - 28) + 28).toFixed(2);
+    const dps = (Math.random() * (1.8 - 1.2) + 1.2).toFixed(2);
 
     resBreakout.textContent = breakoutTime;
     resTime.textContent = totalTime;
     resDps.textContent = dps;
 
-    // Generate Splits Table (Breakout + Segments)
-    // Assume 50m pool, split into roughly 10m segments + breakout
     const segments = [
         { name: 'Breakout (0-15m)', strokes: 6, breaths: 1, time: breakoutTime },
         { name: 'Mid-Swim (15-35m)', strokes: 18, breaths: 6, time: (parseFloat(totalTime) * 0.4).toFixed(2) },
@@ -201,174 +289,9 @@ function generateMockData() {
     `).join('');
 }
 
-// Initialize
-
+// --- Initialize ---
 document.addEventListener('DOMContentLoaded', () => {
-
     loadWorkouts();
-
     loadPRs();
-
     generateDailyPlan();
-
 });
-
-
-
-// --- Smart Daily Schedule Generation ---
-
-function generateDailyPlan() {
-
-    const planText = document.getElementById('daily-plan-text');
-
-    if (!planText) return;
-
-
-
-    const workouts = JSON.parse(localStorage.getItem('swim_workouts')) || [];
-
-    const prs = JSON.parse(localStorage.getItem('swim_prs')) || {};
-
-    
-
-    // 1. Calculate Average Recent Volume (Last 3 sessions)
-
-    let avgDist = 0;
-
-    if (workouts.length > 0) {
-
-        const recent = workouts.slice(-3);
-
-        const totalRecent = recent.reduce((sum, w) => sum + parseInt(w.distance), 0);
-
-        avgDist = totalRecent / recent.length;
-
-    }
-
-
-
-    // 2. Determine Focus based on Volume & PR
-
-    let plan = "";
-
-    let focus = "";
-
-    
-
-    // Default / Beginner
-
-    if (avgDist < 1000) {
-
-        plan = "Technical Drill Set (1200m)";
-
-        focus = "Focus on body position & rotation.";
-
-    } 
-
-    // Intermediate
-
-    else if (avgDist < 2500) {
-
-        plan = "Aerobic Endurance (2000m)";
-
-        focus = "Maintain consistent pace.";
-
-        
-
-        // If they have a 100m PR, suggest a pace
-
-        if (prs['100free']) {
-
-            focus = `Main Set: 10x100m @ Pace (based on ${prs['100free']})`;
-
-        }
-
-    } 
-
-    // Advanced
-
-    else {
-
-        plan = "Threshold Power (3000m+)";
-
-        focus = "High intensity intervals.";
-
-        if (prs['100free']) {
-
-             focus = `Target: Sprint sets beating ${prs['100free']}`;
-
-        }
-
-    }
-
-
-
-    planText.innerHTML = `<strong>${plan}</strong><br><span style="font-size:0.9em; color:#718096">${focus}</span>`;
-
-}
-
-
-
-// --- Video Analysis Simulation ---
-
-const uploadZone = document.getElementById('upload-zone');
-
-const fileInput = document.getElementById('video-upload');
-
-const analysisResults = document.getElementById('analysis-results');
-
-const loader = document.getElementById('analysis-loader');
-
-const splitsBody = document.getElementById('splits-body');
-
-
-
-// UI Elements for Data
-
-const resBreakout = document.getElementById('res-breakout');
-
-const resDps = document.getElementById('res-dps');
-
-const resTime = document.getElementById('res-time');
-
-
-
-if (uploadZone && fileInput) {
-
-    uploadZone.addEventListener('click', () => fileInput.click());
-
-
-
-    fileInput.addEventListener('change', (e) => {
-
-        if (e.target.files.length > 0) {
-
-            const file = e.target.files[0];
-
-            
-
-            // File Size Check (500MB = 500 * 1024 * 1024 bytes)
-
-            const maxSize = 500 * 1024 * 1024;
-
-            if (file.size > maxSize) {
-
-                alert('File is too large. Max size is 500MB.');
-
-                return;
-
-            }
-
-
-
-            startAnalysisSimulation(file);
-
-        }
-
-    });
-
-}
-
-
-
-function startAnalysisSimulation(file) {
