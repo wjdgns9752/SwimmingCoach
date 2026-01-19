@@ -15,14 +15,16 @@ A web-based Swimming Coach application designed to help users improve their swim
 - [x] Ensure mobile responsiveness.
 
 ### Goal: Implement Core Features (Tracker & Analysis)
-- [ ] Implement "Workout Logger" (Distance, Time, Mood) with LocalStorage persistence.
-- [ ] Implement "Personal Records (PR)" section.
-- [ ] Create "Video Analysis" section with file upload UI.
-- [ ] Implement simulated video processing logic to display metrics (Breakout, Strokes, Breaths, Splits).
+- [x] Implement "Workout Logger" (Distance, Time, Mood) with LocalStorage persistence.
+- [x] Implement "Personal Records (PR)" section.
+- [x] Create "Video Analysis" section with file upload UI.
+- [x] Implement simulated video processing logic to display metrics (Breakout, Strokes, Breaths, Splits).
+
+### Goal: Enhance Features
+- [ ] Increase video upload limit text and logic to 500MB.
+- [ ] Implement "Smart Schedule Algorithm" to generate daily plans based on stored PRs and recent volume.
+- [ ] Update Dashboard UI to display the dynamic plan.
 
 ### History
-#### Goal: Create Daily Swimming Coach Base
-- [x] Update `index.html` with semantic structure (Header, Hero, Features).
-- [x] Create `style.css` with swimming-themed color palette and responsive layout.
-- [x] Implement basic interactivity in `main.js`.
-- [x] Ensure mobile responsiveness.
+#### Goal: Implement Core Features (Tracker & Analysis)
+- [x] Implement "Workout Logger" (Distance, Time, Mood) with LocalStorage persistence.

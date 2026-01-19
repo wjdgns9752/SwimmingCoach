@@ -202,7 +202,173 @@ function generateMockData() {
 }
 
 // Initialize
+
 document.addEventListener('DOMContentLoaded', () => {
+
     loadWorkouts();
+
     loadPRs();
+
+    generateDailyPlan();
+
 });
+
+
+
+// --- Smart Daily Schedule Generation ---
+
+function generateDailyPlan() {
+
+    const planText = document.getElementById('daily-plan-text');
+
+    if (!planText) return;
+
+
+
+    const workouts = JSON.parse(localStorage.getItem('swim_workouts')) || [];
+
+    const prs = JSON.parse(localStorage.getItem('swim_prs')) || {};
+
+    
+
+    // 1. Calculate Average Recent Volume (Last 3 sessions)
+
+    let avgDist = 0;
+
+    if (workouts.length > 0) {
+
+        const recent = workouts.slice(-3);
+
+        const totalRecent = recent.reduce((sum, w) => sum + parseInt(w.distance), 0);
+
+        avgDist = totalRecent / recent.length;
+
+    }
+
+
+
+    // 2. Determine Focus based on Volume & PR
+
+    let plan = "";
+
+    let focus = "";
+
+    
+
+    // Default / Beginner
+
+    if (avgDist < 1000) {
+
+        plan = "Technical Drill Set (1200m)";
+
+        focus = "Focus on body position & rotation.";
+
+    } 
+
+    // Intermediate
+
+    else if (avgDist < 2500) {
+
+        plan = "Aerobic Endurance (2000m)";
+
+        focus = "Maintain consistent pace.";
+
+        
+
+        // If they have a 100m PR, suggest a pace
+
+        if (prs['100free']) {
+
+            focus = `Main Set: 10x100m @ Pace (based on ${prs['100free']})`;
+
+        }
+
+    } 
+
+    // Advanced
+
+    else {
+
+        plan = "Threshold Power (3000m+)";
+
+        focus = "High intensity intervals.";
+
+        if (prs['100free']) {
+
+             focus = `Target: Sprint sets beating ${prs['100free']}`;
+
+        }
+
+    }
+
+
+
+    planText.innerHTML = `<strong>${plan}</strong><br><span style="font-size:0.9em; color:#718096">${focus}</span>`;
+
+}
+
+
+
+// --- Video Analysis Simulation ---
+
+const uploadZone = document.getElementById('upload-zone');
+
+const fileInput = document.getElementById('video-upload');
+
+const analysisResults = document.getElementById('analysis-results');
+
+const loader = document.getElementById('analysis-loader');
+
+const splitsBody = document.getElementById('splits-body');
+
+
+
+// UI Elements for Data
+
+const resBreakout = document.getElementById('res-breakout');
+
+const resDps = document.getElementById('res-dps');
+
+const resTime = document.getElementById('res-time');
+
+
+
+if (uploadZone && fileInput) {
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+
+
+
+    fileInput.addEventListener('change', (e) => {
+
+        if (e.target.files.length > 0) {
+
+            const file = e.target.files[0];
+
+            
+
+            // File Size Check (500MB = 500 * 1024 * 1024 bytes)
+
+            const maxSize = 500 * 1024 * 1024;
+
+            if (file.size > maxSize) {
+
+                alert('File is too large. Max size is 500MB.');
+
+                return;
+
+            }
+
+
+
+            startAnalysisSimulation(file);
+
+        }
+
+    });
+
+}
+
+
+
+function startAnalysisSimulation(file) {
