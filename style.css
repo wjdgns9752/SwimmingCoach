@@ -199,3 +199,81 @@ button { cursor: pointer; border: none; font-family: inherit; }
 }
 .term-title { color: var(--color-primary); font-weight: 700; margin-bottom: 0.25rem; }
 .term-desc { font-size: 0.8rem; color: #4a5568; }
+
+/* Add to style.css */
+.club-logo-img {
+    width: 48px; height: 48px; border-radius: 50%; object-fit: cover;
+    margin-right: 0.5rem; border: 2px solid var(--color-bg);
+}
+.club-logo-img-large {
+    width: 64px; height: 64px; border-radius: 50%; object-fit: cover;
+    border: 3px solid var(--color-primary); box-shadow: var(--shadow-md);
+}
+
+/* Post Modal Textarea */
+#post-content {
+    width: 100%; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px;
+    font-size: 1rem; resize: none; font-family: inherit;
+}
+#post-content:focus { border-color: var(--color-primary); outline: none; }
+
+/* Feed Styles */
+.board-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.feed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.feed-item {
+    background: var(--color-bg);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--color-primary);
+}
+.feed-head {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+.feed-user {
+    font-weight: 700;
+    color: var(--color-primary-dark);
+}
+.feed-content {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* Club Badge (Restored) */
+.club-badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+/* Page Header Actions */
+.page-header-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+}
+.small-btn {
+    width: auto;
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+.small-text-btn {
+    background: none; border: none; font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 0;
+}

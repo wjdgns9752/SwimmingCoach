@@ -344,18 +344,28 @@
                         <label>한줄 소개</label>
                         <input type="text" id="new-club-desc" placeholder="우리 클럽을 소개해주세요" required>
                     </div>
+                    
+                    <!-- Logo Upload Section -->
                     <div class="input-group">
-                        <label>클럽 아이콘</label>
-                        <select id="new-club-icon" class="form-select">
-                            <option value="🦈">🦈 상어</option>
-                            <option value="🐬">🐬 돌고래</option>
-                            <option value="🐳">🐳 고래</option>
-                            <option value="🦦">🦦 수달</option>
-                            <option value="🐢">🐢 거북이</option>
-                            <option value="🏊">🏊 수영인</option>
-                            <option value="🌊">🌊 파도</option>
-                        </select>
+                        <label>클럽 로고</label>
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <select id="new-club-icon-emoji" class="form-select" style="flex:1;">
+                                <option value="🦈">🦈 상어</option>
+                                <option value="🐬">🐬 돌고래</option>
+                                <option value="🐳">🐳 고래</option>
+                                <option value="🦦">🦦 수달</option>
+                                <option value="🐢">🐢 거북이</option>
+                                <option value="🏊">🏊 수영인</option>
+                                <option value="🌊">🌊 파도</option>
+                            </select>
+                            <span style="font-size:0.8rem; color:#718096;">OR</span>
+                        </div>
+                        <div style="margin-top:0.5rem;">
+                            <input type="file" id="new-club-logo-file" accept="image/*" style="font-size:0.9rem;">
+                            <p style="font-size:0.8rem; color:#a0aec0; margin-top:0.2rem;">이미지 업로드 시 이모지 대신 사용됩니다.</p>
+                        </div>
                     </div>
+
                     <div class="input-group">
                         <label>공개 설정</label>
                         <select id="new-club-type" class="form-select" onchange="toggleClubPassword()">
@@ -368,6 +378,24 @@
                         <input type="password" id="new-club-password" placeholder="4자리 숫자" maxlength="4">
                     </div>
                     <button type="submit" class="primary-btn" style="margin-top:1rem;">클럽 생성 완료</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Write Post Modal -->
+    <div id="write-post-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>글쓰기</h3>
+                <button class="close-btn" onclick="closeWritePostModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="write-post-form" class="logger-form">
+                    <div class="input-group">
+                        <textarea id="post-content" rows="4" placeholder="오늘의 훈련 내용이나 하고 싶은 말을 적어보세요." required></textarea>
+                    </div>
+                    <button type="submit" class="primary-btn">등록하기</button>
                 </form>
             </div>
         </div>

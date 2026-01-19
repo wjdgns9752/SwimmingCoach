@@ -435,6 +435,8 @@ const DEFAULT_CLUBS = [
     { id: 'busan_marine', name: '부산 마린보이', desc: '해운대 바다수영 & 실내수영', icon: '🌊', type: 'public' }
 ];
 
+const CLUB_POSTS_KEY = 'swim_club_posts';
+
 function getClubs() {
     const customClubs = JSON.parse(localStorage.getItem(CUSTOM_CLUBS_KEY)) || [];
     return [...DEFAULT_CLUBS, ...customClubs];
@@ -456,15 +458,22 @@ function showClubSelection() {
     dashboardView.classList.add('hidden');
     
     const allClubs = getClubs();
-    clubList.innerHTML = allClubs.map(club => `
+    clubList.innerHTML = allClubs.map(club => {
+        // Check if icon is base64 image or emoji
+        const iconHtml = club.icon.startsWith('data:image') 
+            ? `<img src="${club.icon}" class="club-logo-img" alt="logo">` 
+            : `<div class="club-icon">${club.icon}</div>`;
+            
+        return `
         <div class="club-card" onclick="joinClub('${club.id}')">
-            <div class="club-icon">${club.icon}</div>
+            ${iconHtml}
             <div class="club-details">
                 <h3>${club.name} ${club.type==='private'?'🔒':''}</h3>
                 <p>${club.desc}</p>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 window.joinClub = function(clubId) {
@@ -472,10 +481,15 @@ window.joinClub = function(clubId) {
     const club = allClubs.find(c => c.id === clubId);
     if(!club) return;
     
-    if(confirm(`${club.name}에 가입하시겠습니까?`)) {
-        localStorage.setItem(CLUB_KEY, clubId);
-        showClubDashboard(clubId);
+    if(club.type === 'private') {
+        const pw = prompt('비밀번호를 입력하세요:');
+        if(pw !== club.password) { alert('비밀번호가 일치하지 않습니다.'); return; }
+    } else {
+        if(!confirm(`${club.name}에 가입하시겠습니까?`)) return;
     }
+    
+    localStorage.setItem(CLUB_KEY, clubId);
+    showClubDashboard(clubId);
 };
 
 window.leaveClub = function() {
@@ -498,29 +512,132 @@ function showClubDashboard(clubId) {
 
     document.getElementById('my-club-name').textContent = club.name;
     document.getElementById('my-club-desc').textContent = club.desc;
-    document.getElementById('my-club-icon').textContent = club.icon;
+    
+    const iconContainer = document.getElementById('my-club-icon'); // It's a span, replace content
+    if(club.icon.startsWith('data:image')) {
+        iconContainer.innerHTML = `<img src="${club.icon}" class="club-logo-img-large" alt="logo">`;
+        iconContainer.className = ''; // remove default class if needed
+    } else {
+        iconContainer.textContent = club.icon;
+        iconContainer.className = 'club-icon-large';
+    }
+
+    loadClubPosts(clubId);
 }
 
+// --- Club Posts (Feed) ---
+function loadClubPosts(clubId) {
+    const feed = document.getElementById('club-feed');
+    if(!feed) return;
+    
+    const allPosts = JSON.parse(localStorage.getItem(CLUB_POSTS_KEY)) || {};
+    const clubPosts = allPosts[clubId] || [];
+    
+    // Add some default dummy posts if empty for demo
+    if(clubPosts.length === 0 && clubId.startsWith('custom_') === false) {
+         feed.innerHTML = `
+            <div class="feed-item">
+                <div class="feed-head"><span class="feed-user">Coach</span><span class="feed-time">Yesterday</span></div>
+                <p class="feed-content">Welcome to the club! Share your workouts here.</p>
+            </div>
+         `;
+    } else if (clubPosts.length === 0) {
+        feed.innerHTML = '<p style="text-align:center; color:#a0aec0; padding:1rem;">아직 게시글이 없습니다. 첫 글을 남겨보세요!</p>';
+    } else {
+        feed.innerHTML = clubPosts.map(p => `
+            <div class="feed-item">
+                <div class="feed-head">
+                    <span class="feed-user">${p.author}</span>
+                    <span class="feed-time">${new Date(p.date).toLocaleString()}</span>
+                </div>
+                <p class="feed-content">${p.content}</p>
+            </div>
+        `).join('');
+    }
+}
+
+// Write Post Logic
+window.postToBoard = function() {
+    document.getElementById('write-post-modal').classList.remove('hidden');
+};
+window.closeWritePostModal = () => document.getElementById('write-post-modal').classList.add('hidden');
+
+const writePostForm = document.getElementById('write-post-form');
+if(writePostForm) {
+    writePostForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const content = document.getElementById('post-content').value;
+        const clubId = localStorage.getItem(CLUB_KEY);
+        const profile = JSON.parse(localStorage.getItem(PROFILE_KEY)) || { nickname: 'Anonymous' };
+        
+        if(!content || !clubId) return;
+        
+        const newPost = {
+            id: Date.now(),
+            author: profile.nickname,
+            content: content,
+            date: new Date().toISOString()
+        };
+        
+        const allPosts = JSON.parse(localStorage.getItem(CLUB_POSTS_KEY)) || {};
+        if(!allPosts[clubId]) allPosts[clubId] = [];
+        allPosts[clubId].unshift(newPost); // Add to top
+        
+        localStorage.setItem(CLUB_POSTS_KEY, JSON.stringify(allPosts));
+        
+        document.getElementById('post-content').value = '';
+        closeWritePostModal();
+        loadClubPosts(clubId);
+    });
+}
+
+
+// --- Create Club Logic with Image ---
 window.openCreateClubModal = () => document.getElementById('create-club-modal').classList.remove('hidden');
 window.closeCreateClubModal = () => document.getElementById('create-club-modal').classList.add('hidden');
 
 const createClubForm = document.getElementById('create-club-form');
 if(createClubForm) {
-    createClubForm.addEventListener('submit', (e) => {
+    createClubForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('new-club-name').value;
         const desc = document.getElementById('new-club-desc').value;
-        const icon = document.getElementById('new-club-icon').value;
+        const emoji = document.getElementById('new-club-icon-emoji').value;
         const type = document.getElementById('new-club-type').value;
+        const password = document.getElementById('new-club-password').value;
+        const fileInput = document.getElementById('new-club-logo-file');
         
-        const newClub = { id: 'custom_' + Date.now(), name, desc, icon, type };
+        if(type === 'private' && !password) { alert('비밀번호를 설정해주세요.'); return; }
+
+        let icon = emoji;
+        if(fileInput.files && fileInput.files[0]) {
+            try {
+                icon = await readFileAsDataURL(fileInput.files[0]);
+            } catch(err) {
+                console.error("Image read failed", err);
+                alert("이미지 처리 중 오류가 발생했습니다.");
+                return;
+            }
+        }
+        
+        const newClub = { id: 'custom_' + Date.now(), name, desc, icon, type, password };
         const customClubs = JSON.parse(localStorage.getItem(CUSTOM_CLUBS_KEY)) || [];
         customClubs.push(newClub);
         localStorage.setItem(CUSTOM_CLUBS_KEY, JSON.stringify(customClubs));
 
         alert('클럽이 생성되었습니다!');
+        createClubForm.reset();
         closeCreateClubModal();
         joinClub(newClub.id); 
+    });
+}
+
+function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
     });
 }
 
