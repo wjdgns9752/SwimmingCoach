@@ -1,9 +1,8 @@
-console.log('일일 스위밍 코치 앱 초기화 시작');
+console.log('일일 스위밍 코치 앱 초기화 시작 (복구 버전)');
 
-// --- Global Error Handler (Debug) ---
+// --- Global Error Handler ---
 window.onerror = function(message, source, lineno, colno, error) {
     console.error("Global Error:", message, error);
-    // alert(`오류가 발생했습니다: ${message}\n페이지를 새로고침 해주세요.`); 
     return false;
 };
 
@@ -17,10 +16,10 @@ const OLD_LEVEL_KEY = 'swim_user_level';
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        // 1. Init Navigation FIRST (Critical)
+        // 1. Navigation First
         initNavigation();
         
-        // 2. Data & Logic
+        // 2. Data & Logic with Safety
         safeExecute(checkUserProfile, "Profile Check");
         safeExecute(loadWorkouts, "Load Workouts");
         safeExecute(loadRecords, "Load Records");
@@ -33,9 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (e) {
         console.error("Critical Initialization Error:", e);
-        alert("앱 초기화 중 문제가 발생했습니다. 데이터를 초기화합니다.");
-        localStorage.clear();
-        location.reload();
     }
 });
 
@@ -53,7 +49,6 @@ function initNavigation() {
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            // Handle clicks on children (icons/text) by finding closest data-page
             const target = e.target.closest('[data-page]');
             if (target && target.dataset.page) {
                 navigateTo(target.dataset.page);
@@ -64,10 +59,7 @@ function initNavigation() {
 
 window.navigateTo = function(pageId) {
     const targetSection = document.getElementById(`${pageId}-page`);
-    if (!targetSection) {
-        console.warn(`Page section not found: ${pageId}`);
-        return;
-    }
+    if (!targetSection) return;
 
     const sections = document.querySelectorAll('.page-section');
     sections.forEach(sec => {
@@ -80,7 +72,7 @@ window.navigateTo = function(pageId) {
         }
     });
 
-    // Update Tab State
+    // Update Nav Active State
     const navItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
     const desktopLinks = document.querySelectorAll('.desktop-nav .nav-link');
 
@@ -111,7 +103,6 @@ function checkUserProfile() {
         localStorage.removeItem(PROFILE_KEY);
     }
 
-    // Migration
     const oldLevel = localStorage.getItem(OLD_LEVEL_KEY);
     if (oldLevel && !profile) {
         profile = { nickname: '수영인', level: oldLevel, goal: 'endurance' };
@@ -190,7 +181,6 @@ function generateDailyPlan(level = 'beginner', goal = 'endurance') {
     const planText = document.getElementById('daily-plan-text');
     if (!planText) return;
 
-    // Safety checks
     const validLevels = ['beginner', 'intermediate', 'advanced', 'masters', 'elite'];
     if (!validLevels.includes(level)) level = 'beginner';
     const validGoals = ['endurance', 'speed', 'technique', 'diet', 'competition'];
@@ -245,6 +235,122 @@ function generateDailyPlan(level = 'beginner', goal = 'endurance') {
     planText.innerHTML = `<strong>[${level.toUpperCase()}] ${plan.title}</strong><br><span style="font-size:0.9rem; color:#718096">${plan.desc}</span>`;
 }
 
+// --- Workout Data Loading (Restored) ---
+const recentActivityList = document.getElementById('recent-activity-list');
+const totalDistanceDisplay = document.getElementById('total-distance-display');
+
+function loadWorkouts() {
+    const workouts = JSON.parse(localStorage.getItem(WORKOUT_KEY)) || [];
+    renderActivityList(workouts);
+    updateTotalDistance(workouts);
+}
+
+function renderActivityList(workouts) {
+    if (!recentActivityList) return;
+    recentActivityList.innerHTML = '';
+    
+    if (workouts.length === 0) {
+        recentActivityList.innerHTML = '<li class="empty-state">아직 기록된 훈련이 없습니다.</li>';
+        return;
+    }
+
+    const recent = workouts.slice(-3).reverse();
+    recent.forEach(w => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${w.date}</span><strong>${w.distance}m</strong>`;
+        recentActivityList.appendChild(li);
+    });
+}
+
+function updateTotalDistance(workouts) {
+    if (!totalDistanceDisplay) return;
+    const total = workouts.reduce((sum, w) => sum + parseInt(w.distance || 0), 0);
+    totalDistanceDisplay.textContent = `${total} m`;
+}
+
+window.addDistance = (amount) => { 
+    const el = document.getElementById('distance'); 
+    if(el) el.value = (parseInt(el.value)||0)+amount; 
+};
+
+const workoutForm = document.getElementById('swim-log-form');
+if(workoutForm) {
+    workoutForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const date = document.getElementById('date').value;
+        const distance = document.getElementById('distance').value;
+        const duration = document.getElementById('duration').value;
+        const notes = document.getElementById('notes').value;
+        const mood = document.querySelector('input[name="mood"]:checked')?.value || 'soso';
+
+        if (!date || !distance) return;
+
+        const newWorkout = { date, distance, duration, notes, mood, id: Date.now() };
+        const workouts = JSON.parse(localStorage.getItem(WORKOUT_KEY)) || [];
+        workouts.push(newWorkout);
+        localStorage.setItem(WORKOUT_KEY, JSON.stringify(workouts));
+
+        loadWorkouts();
+        alert('저장되었습니다.');
+        navigateTo('dashboard');
+    });
+}
+
+// --- Competition Records (Restored) ---
+const compForm = document.getElementById('competition-form');
+const recordsList = document.getElementById('records-list');
+const prDisplay = document.getElementById('pr-display');
+
+function loadRecords() {
+    const records = JSON.parse(localStorage.getItem(RECORDS_KEY)) || [];
+    records.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    if (recordsList) {
+        recordsList.innerHTML = '';
+        if (records.length === 0) {
+            recordsList.innerHTML = '<li class="empty-state">등록된 대회 기록이 없습니다.</li>';
+        } else {
+            records.forEach(rec => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div class="rec-meta">
+                        <span class="rec-event">${rec.event}</span>
+                        <span class="rec-name">${rec.name} (${rec.date})</span>
+                    </div>
+                    <span class="rec-time">${rec.time}</span>
+                `;
+                recordsList.appendChild(li);
+            });
+        }
+    }
+    // Update Dashboard PR
+    if (prDisplay && records.length > 0) {
+        const recent = records[0];
+        prDisplay.textContent = `${recent.event}: ${recent.time}`;
+    } else if (prDisplay) {
+        prDisplay.textContent = '기록 없음';
+    }
+}
+
+if (compForm) {
+    compForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('comp-name').value;
+        const date = document.getElementById('comp-date').value;
+        const event = document.getElementById('comp-event').value;
+        const time = document.getElementById('comp-time').value;
+
+        const newRecord = { id: Date.now(), name, date, event, time };
+        const records = JSON.parse(localStorage.getItem(RECORDS_KEY)) || [];
+        records.push(newRecord);
+        localStorage.setItem(RECORDS_KEY, JSON.stringify(records));
+
+        loadRecords();
+        alert('기록이 추가되었습니다!');
+        compForm.reset();
+    });
+}
+
 // --- Analysis Controls ---
 function initAnalysisControls() {
     const poolSelect = document.getElementById('ana-pool-length');
@@ -252,11 +358,11 @@ function initAnalysisControls() {
     
     if(!poolSelect || !eventSelect) return;
 
-    poolSelect.removeEventListener('change', updateEventOptions); // cleanup
+    poolSelect.removeEventListener('change', updateEventOptions);
     poolSelect.addEventListener('change', updateEventOptions);
     updateEventOptions();
 
-    // Safe Event Listener Attachment for Upload Zone
+    // Upload Zone Logic
     const oldZone = document.getElementById('upload-zone');
     if (oldZone) {
         const fileInput = document.getElementById('video-upload');
@@ -264,8 +370,6 @@ function initAnalysisControls() {
 
         const newZone = oldZone.cloneNode(true);
         oldZone.parentNode.replaceChild(newZone, oldZone);
-        
-        // Re-select fresh
         const freshZone = document.getElementById('upload-zone');
         
         freshZone.addEventListener('click', () => fileInput.click());
@@ -334,7 +438,89 @@ function startAnalysisSimulation(file) {
     }, 2500);
 }
 
-// --- Data & Helpers (Simplified for brevity but robust) ---
+function setupLaneTabs() {
+    const container = document.getElementById('lane-tabs');
+    if(!container) return;
+    container.innerHTML = '';
+    for(let i=1; i<=8; i++) {
+        const tab = document.createElement('div');
+        tab.className = `lane-tab ${i===1?'active':''}`;
+        tab.textContent = `레인 ${i}`;
+        tab.onclick = () => {
+            document.querySelectorAll('.lane-tab').forEach(t=>t.classList.remove('active'));
+            tab.classList.add('active');
+            generateAdvancedMockData(i);
+        };
+        container.appendChild(tab);
+    }
+}
+
+function generateAdvancedMockData(laneNum) {
+    const resLane = document.getElementById('res-badge-lane');
+    const resPool = document.getElementById('res-badge-pool');
+    const resEvent = document.getElementById('res-badge-event');
+    const resTotal = document.getElementById('res-total-time');
+    const resEff = document.getElementById('res-efficiency');
+    const resReact = document.getElementById('res-reaction');
+    const aiText = document.getElementById('ai-solution-text');
+    const splitsHead = document.getElementById('splits-head');
+    const splitsBody = document.getElementById('splits-body');
+
+    if(resLane) resLane.textContent = `Lane ${laneNum}`;
+    
+    const poolSelect = document.getElementById('ana-pool-length');
+    const eventSelect = document.getElementById('ana-event-type');
+    
+    const pool = poolSelect ? poolSelect.value : '25';
+    const eventName = eventSelect && eventSelect.options.length > 0 ? eventSelect.options[eventSelect.selectedIndex].text : '자유형 50m';
+    
+    if(resPool) resPool.textContent = `${pool}m 풀`;
+    if(resEvent) resEvent.textContent = eventName;
+
+    // Simulation Data
+    const totalTime = (30 + Math.random() * 10).toFixed(2);
+    const efficiency = Math.floor(60 + Math.random() * 35);
+    const reaction = (0.5 + Math.random() * 0.4).toFixed(2);
+
+    if(resTotal) resTotal.textContent = `${totalTime}초`;
+    if(resEff) resEff.textContent = `${efficiency}점`;
+    if(resReact) resReact.textContent = `${reaction}초`;
+
+    // AI Solution
+    let solution = "";
+    if (parseFloat(reaction) > 0.75) solution = "🚀 <strong>스타트 반응 개선:</strong> 반응속도가 느립니다. 점프 훈련이 필요합니다.";
+    else if (efficiency < 70) solution = "🌊 <strong>효율성 저하:</strong> 물을 잡는 힘이 부족합니다. 스컬링 드릴을 추천합니다.";
+    else solution = "✨ <strong>좋은 퍼포먼스:</strong> 기록 단축을 위해 돌핀킥 거리를 늘려보세요.";
+    
+    if(aiText) aiText.innerHTML = solution;
+
+    // Table Generation (Restored)
+    let headerHtml = `<tr><th>구간</th><th>스트로크</th><th>호흡</th><th>기록</th></tr>`;
+    let bodyHtml = `<tr><td>전체</td><td>${Math.floor(Math.random()*15+30)}</td><td>12</td><td>${totalTime}s</td></tr>`;
+    
+    // Simple logic for table content based on event type
+    const eventId = eventSelect ? eventSelect.value : 'free50';
+    if (eventId.includes('relay')) {
+        headerHtml = `<tr><th>주자</th><th>반응(RT)</th><th>구간</th><th>누적</th></tr>`;
+        let cum = 0;
+        bodyHtml = ['1번', '2번', '3번', '4번'].map((s, idx) => {
+            const split = (parseFloat(totalTime)/4).toFixed(2);
+            cum += parseFloat(split);
+            return `<tr><td>${s}</td><td>${idx===0?reaction:'0.23'}s</td><td>${split}s</td><td>${cum.toFixed(2)}s</td></tr>`;
+        }).join('');
+    } else if (eventId.includes('im')) {
+        headerHtml = `<tr><th>영법</th><th>스트로크</th><th>턴</th><th>기록</th></tr>`;
+        const strokes = ['접영', '배영', '평영', '자유형'];
+        bodyHtml = strokes.map(s => {
+            return `<tr><td>${s}</td><td>${Math.floor(Math.random()*10+5)}</td><td>${(Math.random()+0.5).toFixed(2)}s</td><td>${(parseFloat(totalTime)/4).toFixed(2)}s</td></tr>`;
+        }).join('');
+    }
+
+    if(splitsHead) splitsHead.innerHTML = headerHtml;
+    if(splitsBody) splitsBody.innerHTML = bodyHtml;
+}
+
+// --- Data & Helpers ---
 const planCard = document.querySelector('.main-plan-card');
 const workoutModal = document.getElementById('workout-modal');
 const modalTitle = document.getElementById('modal-title');
@@ -439,44 +625,4 @@ function showClubDashboard(clubId) {
             </li>
         `).join('');
     }
-}
-
-// --- Mock Data Generators (Stats, Analysis) ---
-window.addDistance = (amount) => { const el = document.getElementById('distance'); if(el) el.value = (parseInt(el.value)||0)+amount; };
-
-const workoutForm = document.getElementById('swim-log-form');
-if(workoutForm) {
-    workoutForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        alert('저장되었습니다.');
-        navigateTo('dashboard');
-    });
-}
-
-function loadWorkouts() {} // Simplified for robustness
-function loadRecords() {}
-
-function setupLaneTabs() {
-    const container = document.getElementById('lane-tabs');
-    if(!container) return;
-    container.innerHTML = '';
-    for(let i=1; i<=8; i++) {
-        const tab = document.createElement('div');
-        tab.className = `lane-tab ${i===1?'active':''}`;
-        tab.textContent = `레인 ${i}`;
-        tab.onclick = () => {
-            document.querySelectorAll('.lane-tab').forEach(t=>t.classList.remove('active'));
-            tab.classList.add('active');
-            generateAdvancedMockData(i);
-        };
-        container.appendChild(tab);
-    }
-}
-
-function generateAdvancedMockData(lane) {
-    const resLane = document.getElementById('res-badge-lane');
-    if(resLane) resLane.textContent = `Lane ${lane}`;
-    // ... Fill other data ...
-    const resTotal = document.getElementById('res-total-time');
-    if(resTotal) resTotal.textContent = (30 + Math.random()*5).toFixed(2);
 }
