@@ -352,18 +352,64 @@ const resBadgeLane = document.getElementById('res-badge-lane');
 const poolSelect = document.getElementById('ana-pool-length');
 const eventSelect = document.getElementById('ana-event-type');
 
-const EVENTS_25M = [{ id: 'free50', name: '자유형 50m' }, { id: 'im100', name: '개인혼영 100m' }, { id: 'relay200f', name: '계영 200m' }];
-const EVENTS_50M = [{ id: 'free50', name: '자유형 50m' }, { id: 'im200', name: '개인혼영 200m' }, { id: 'relay400f', name: '계영 400m' }];
+const EVENTS_25M = [
+    { id: 'free50', name: '자유형 50m' },
+    { id: 'free100', name: '자유형 100m' },
+    { id: 'back50', name: '배영 50m' },
+    { id: 'back100', name: '배영 100m' },
+    { id: 'breast50', name: '평영 50m' },
+    { id: 'breast100', name: '평영 100m' },
+    { id: 'fly50', name: '접영 50m' },
+    { id: 'fly100', name: '접영 100m' },
+    { id: 'im100', name: '개인혼영 100m' },
+    { id: 'relay200f', name: '계영 200m' },
+    { id: 'relay200m', name: '혼계영 200m' }
+];
+
+const EVENTS_50M = [
+    { id: 'free50', name: '자유형 50m' },
+    { id: 'free100', name: '자유형 100m' },
+    { id: 'back50', name: '배영 50m' },
+    { id: 'back100', name: '배영 100m' },
+    { id: 'breast50', name: '평영 50m' },
+    { id: 'breast100', name: '평영 100m' },
+    { id: 'fly50', name: '접영 50m' },
+    { id: 'fly100', name: '접영 100m' },
+    { id: 'im200', name: '개인혼영 200m' },
+    { id: 'relay400f', name: '계영 400m' },
+    { id: 'relay200m', name: '혼계영 200m' }
+];
 
 function initAnalysisControls() {
     if(!poolSelect || !eventSelect) return;
     poolSelect.addEventListener('change', updateEventOptions);
     updateEventOptions();
+
+    // Re-attach event listeners robustly
     if (uploadZone && fileInput) {
-        uploadZone.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => { if (e.target.files.length > 0) handleFile(e.target.files[0]); });
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => uploadZone.addEventListener(ev, e => {e.preventDefault(); e.stopPropagation()}, false));
-        uploadZone.addEventListener('drop', (e) => { if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]); });
+        // Remove existing listeners to prevent duplicates (clean slate approach)
+        const newUploadZone = uploadZone.cloneNode(true);
+        uploadZone.parentNode.replaceChild(newUploadZone, uploadZone);
+        
+        // Re-select fresh element
+        const freshUploadZone = document.getElementById('upload-zone');
+        
+        freshUploadZone.addEventListener('click', () => fileInput.click());
+        
+        fileInput.onchange = (e) => { 
+            if (e.target.files.length > 0) handleFile(e.target.files[0]); 
+        };
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
+            freshUploadZone.addEventListener(ev, (e) => {
+                e.preventDefault(); 
+                e.stopPropagation();
+            }, false);
+        });
+
+        freshUploadZone.addEventListener('drop', (e) => { 
+            if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]); 
+        });
     }
 }
 function updateEventOptions() {
