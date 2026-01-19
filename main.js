@@ -1,6 +1,5 @@
 console.log('일일 스위밍 코치 앱 초기화됨');
 
-// --- 0. Global State & Initialization ---
 const LEVEL_KEY = 'swim_user_level';
 const WORKOUT_KEY = 'swim_workouts';
 const RECORDS_KEY = 'swim_competition_records';
@@ -11,10 +10,67 @@ document.addEventListener('DOMContentLoaded', () => {
     loadRecords();
     generateDailyPlan();
     initAnalysisControls();
+    initNavigation();
+    
+    // Set default date to today
+    const dateInput = document.getElementById('date');
+    if(dateInput) dateInput.valueAsDate = new Date();
 });
 
+// --- Navigation (SPA Routing) ---
+function initNavigation() {
+    const navLinks = document.querySelectorAll('.nav-link, .nav-item');
+    const sections = document.querySelectorAll('.page-section');
 
-// --- 1. User Level Onboarding ---
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = link.dataset.page;
+            navigateTo(targetId);
+        });
+    });
+}
+
+// Global navigate function
+window.navigateTo = function(pageId) {
+    const sections = document.querySelectorAll('.page-section');
+    const navItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
+    const desktopLinks = document.querySelectorAll('.desktop-nav .nav-link');
+
+    // 1. Show Section
+    sections.forEach(sec => {
+        if (sec.id === `${pageId}-page`) {
+            sec.classList.remove('hidden');
+            sec.classList.add('active');
+        } else {
+            sec.classList.add('hidden');
+            sec.classList.remove('active');
+        }
+    });
+
+    // 2. Update Nav State
+    [navItems, desktopLinks].forEach(nodeList => {
+        nodeList.forEach(item => {
+            if (item.dataset.page === pageId) item.classList.add('active');
+            else item.classList.remove('active');
+        });
+    });
+
+    // Scroll to top
+    window.scrollTo(0, 0);
+};
+
+
+// --- Logger Redesign Logic ---
+window.addDistance = function(amount) {
+    const input = document.getElementById('distance');
+    if(input) {
+        const current = parseInt(input.value) || 0;
+        input.value = current + amount;
+    }
+}
+
+// --- User Level Onboarding ---
 const onboardingOverlay = document.getElementById('onboarding-overlay');
 const userLevelBadge = document.getElementById('user-level-badge');
 
@@ -31,7 +87,7 @@ window.selectLevel = function(level) {
     localStorage.setItem(LEVEL_KEY, level);
     if (onboardingOverlay) onboardingOverlay.classList.remove('active');
     updateLevelBadge(level);
-    generateDailyPlan(); 
+    generateDailyPlan();
     alert('레벨이 설정되었습니다!');
 };
 
@@ -43,61 +99,13 @@ window.resetLevel = function() {
 function updateLevelBadge(level) {
     if (!userLevelBadge) return;
     const levelNames = {
-        'beginner': '초급 (Beginner)',
-        'intermediate': '중급 (Intermediate)',
-        'advanced': '상급 (Advanced)',
-        'masters': '마스터즈 (Masters)',
-        'elite': '선수 (Elite)'
+        'beginner': '초급', 'intermediate': '중급',
+        'advanced': '상급', 'masters': '마스터즈', 'elite': '선수'
     };
     userLevelBadge.textContent = levelNames[level] || '레벨 미설정';
-    userLevelBadge.classList.remove('pending');
-    userLevelBadge.style.backgroundColor = '#e6fffa';
-    userLevelBadge.style.color = '#2c7a7b';
 }
 
-
-// --- 2. Mobile Menu ---
-const menuBtn = document.querySelector('.mobile-menu-btn');
-const nav = document.querySelector('.main-nav');
-
-if (menuBtn && nav) {
-  menuBtn.addEventListener('click', () => {
-    const isHidden = getComputedStyle(nav).display === 'none';
-    if (isHidden) {
-        nav.style.display = 'block';
-        nav.style.position = 'absolute';
-        nav.style.top = '100%';
-        nav.style.left = '0';
-        nav.style.width = '100%';
-        nav.style.background = 'white';
-        nav.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
-        nav.style.padding = '1rem';
-        nav.style.zIndex = '1000';
-        const ul = nav.querySelector('ul');
-        if (ul) {
-            ul.style.flexDirection = 'column';
-            ul.style.gap = '1rem';
-        }
-    } else {
-        nav.style.display = ''; 
-        nav.style.position = '';
-        nav.style.zIndex = '';
-        nav.style.top = '';
-        nav.style.left = '';
-        nav.style.width = '';
-        nav.style.background = '';
-        nav.style.boxShadow = '';
-        nav.style.padding = '';
-        const ul = nav.querySelector('ul');
-        if (ul) {
-            ul.style.flexDirection = '';
-            ul.style.gap = '';
-        }
-    }
-  });
-}
-
-// --- 3. Workout Logger ---
+// --- Workout Logger ---
 const workoutForm = document.getElementById('swim-log-form');
 const recentActivityList = document.getElementById('recent-activity-list');
 const totalDistanceDisplay = document.getElementById('total-distance-display');
@@ -136,10 +144,11 @@ if (workoutForm) {
         const distance = document.getElementById('distance').value;
         const duration = document.getElementById('duration').value;
         const notes = document.getElementById('notes').value;
+        const mood = document.querySelector('input[name="mood"]:checked')?.value || 'soso';
 
         if (!date || !distance) return;
 
-        const newWorkout = { date, distance, duration, notes, id: Date.now() };
+        const newWorkout = { date, distance, duration, notes, mood, id: Date.now() };
         const workouts = JSON.parse(localStorage.getItem(WORKOUT_KEY)) || [];
         workouts.push(newWorkout);
         localStorage.setItem(WORKOUT_KEY, JSON.stringify(workouts));
@@ -147,11 +156,14 @@ if (workoutForm) {
         loadWorkouts();
         generateDailyPlan();
         workoutForm.reset();
-        alert('오늘의 훈련이 기록되었습니다!');
+        document.getElementById('date').valueAsDate = new Date(); // Reset date to today
+        
+        alert('오늘의 훈련이 저장되었습니다!');
+        navigateTo('dashboard'); // Go back to dashboard
     });
 }
 
-// --- 4. Competition Records ---
+// --- Competition Records ---
 const compForm = document.getElementById('competition-form');
 const recordsList = document.getElementById('records-list');
 const prDisplay = document.getElementById('pr-display');
@@ -198,69 +210,42 @@ if (compForm) {
         localStorage.setItem(RECORDS_KEY, JSON.stringify(records));
 
         loadRecords();
-        generateDailyPlan();
         compForm.reset();
-        alert('대회 기록이 추가되었습니다!');
+        alert('기록이 추가되었습니다!');
     });
 }
 
-
-// --- 5. Smart Daily Schedule (Interactive Modal) ---
-const planCard = document.querySelector('#dashboard .feature-card:first-child');
+// --- Daily Plan & Modal ---
+const planCard = document.querySelector('.main-plan-card');
 const workoutModal = document.getElementById('workout-modal');
 const modalTitle = document.getElementById('modal-title');
 const modalBody = document.getElementById('modal-body');
+let currentDailyPlan = null;
 
-let currentDailyPlan = null; // Store calculated plan
-
-if (planCard) {
-    planCard.addEventListener('click', openWorkoutModal);
-}
-
-function closeWorkoutModal() {
-    if (workoutModal) workoutModal.classList.add('hidden');
-}
-
-window.closeWorkoutModal = closeWorkoutModal; // Export to global
+if (planCard) planCard.addEventListener('click', openWorkoutModal);
+window.closeWorkoutModal = () => { if(workoutModal) workoutModal.classList.add('hidden'); };
 
 function openWorkoutModal() {
     if (!currentDailyPlan || !workoutModal) return;
-    
-    // Populate Modal
     modalTitle.textContent = currentDailyPlan.title;
     
     let html = '';
-    
-    // Warm Up
-    html += `<div class="workout-section"><h4>🔥 웜업 (Warm Up)</h4>`;
-    currentDailyPlan.warmup.forEach(set => {
-        html += `<div class="workout-item"><span class="set-dist">${set.dist}</span><span>${set.desc}</span></div>`;
+    const sections = [
+        {key: 'warmup', title: '🔥 웜업 (Warm Up)'},
+        {key: 'drill', title: '🛠️ 드릴 (Drill)'},
+        {key: 'main', title: '🏊 메인 세트 (Main Set)'},
+        {key: 'cooldown', title: '❄️ 쿨다운 (Cool Down)'}
+    ];
+
+    sections.forEach(sec => {
+        if(currentDailyPlan[sec.key] && currentDailyPlan[sec.key].length > 0) {
+            html += `<div class="workout-section"><h4>${sec.title}</h4>`;
+            currentDailyPlan[sec.key].forEach(set => {
+                html += `<div class="workout-item"><span class="set-dist">${set.dist}</span><span>${set.desc}</span></div>`;
+            });
+            html += `</div>`;
+        }
     });
-    html += `</div>`;
-
-    // Drill
-    if (currentDailyPlan.drill.length > 0) {
-        html += `<div class="workout-section"><h4>🛠️ 드릴 (Drill)</h4>`;
-        currentDailyPlan.drill.forEach(set => {
-            html += `<div class="workout-item"><span class="set-dist">${set.dist}</span><span>${set.desc}</span></div>`;
-        });
-        html += `</div>`;
-    }
-
-    // Main Set
-    html += `<div class="workout-section"><h4>🏊 메인 세트 (Main Set)</h4>`;
-    currentDailyPlan.main.forEach(set => {
-        html += `<div class="workout-item"><span class="set-dist">${set.dist}</span><span>${set.desc}</span></div>`;
-    });
-    html += `</div>`;
-
-    // Cool Down
-    html += `<div class="workout-section"><h4>❄️ 쿨다운 (Cool Down)</h4>`;
-    currentDailyPlan.cooldown.forEach(set => {
-        html += `<div class="workout-item"><span class="set-dist">${set.dist}</span><span>${set.desc}</span></div>`;
-    });
-    html += `</div>`;
-
     modalBody.innerHTML = html;
     workoutModal.classList.remove('hidden');
 }
@@ -270,39 +255,37 @@ function generateDailyPlan() {
     if (!planText) return;
 
     const level = localStorage.getItem(LEVEL_KEY);
-    
-    // Define Plan Structures
     const PLANS = {
         'beginner': {
             title: "초급: 기초 다지기 (1000m)",
-            desc: "호흡 패턴 안정화 및 킥 밸런스 훈련",
+            desc: "호흡 패턴 안정화 및 킥 밸런스",
             warmup: [{dist: '200m', desc: '자유형 천천히 (50m x 4)'}],
-            drill: [{dist: '200m', desc: '킥판 잡고 발차기 (25m x 8)'}, {dist: '200m', desc: '사이드 킥 (좌/우 번갈아)'}],
-            main: [{dist: '300m', desc: '자유형 50m x 6 (휴식 30초, 자세 집중)'}],
-            cooldown: [{dist: '100m', desc: '배영 또는 걷기'}]
+            drill: [{dist: '200m', desc: '킥판 잡고 발차기 (25m x 8)'}, {dist: '200m', desc: '사이드 킥'}],
+            main: [{dist: '300m', desc: '자유형 50m x 6 (휴식 30초)'}],
+            cooldown: [{dist: '100m', desc: '걷기 또는 배영'}]
         },
         'intermediate': {
             title: "중급: 유산소 지구력 (1800m)",
             desc: "스트로크 효율(DPS) 향상",
             warmup: [{dist: '300m', desc: '자유형 200m + 배영 100m'}],
-            drill: [{dist: '300m', desc: '주먹 쥐고 자유형 (감각 익히기)'}],
-            main: [{dist: '1000m', desc: '100m x 10 @ 2:00 (일정한 페이스 유지)'}],
+            drill: [{dist: '300m', desc: '주먹 쥐고 자유형'}],
+            main: [{dist: '1000m', desc: '100m x 10 @ 2:00 (일정한 페이스)'}],
             cooldown: [{dist: '200m', desc: '이지 스윔'}]
         },
         'advanced': {
             title: "상급: 역치 향상 (2800m)",
             desc: "고강도 인터벌 및 페이스 조절",
-            warmup: [{dist: '600m', desc: 'SKPS (Swim-Kick-Pull-Swim) 각각 150m'}],
+            warmup: [{dist: '600m', desc: 'SKPS 혼합'}],
             drill: [{dist: '400m', desc: '개인혼영 드릴'}],
-            main: [{dist: '1500m', desc: '200m x 4 (Descending) + 100m x 7 (Hard)'}],
+            main: [{dist: '1500m', desc: '200m x 4 (Desc) + 100m x 7 (Hard)'}],
             cooldown: [{dist: '300m', desc: '부드럽게 풀기'}]
         },
         'masters': {
-            title: "마스터즈: 대회 시뮬레이션 (3200m)",
-            desc: "스타트, 턴, 피니시 실전 훈련",
-            warmup: [{dist: '800m', desc: '믹스 웜업 (자유형/혼영)'}],
+            title: "마스터즈: 실전 시뮬레이션 (3200m)",
+            desc: "스타트, 턴, 피니시 집중",
+            warmup: [{dist: '800m', desc: '믹스 웜업'}],
             drill: [],
-            main: [{dist: '2000m', desc: 'Broken 200m x 4 (대회 페이스) + 50m x 8 (All-out)'}],
+            main: [{dist: '2000m', desc: 'Broken 200m x 4 + 50m x 8 Sprint'}],
             cooldown: [{dist: '400m', desc: '회복 수영'}]
         },
         'elite': {
@@ -310,19 +293,17 @@ function generateDailyPlan() {
             desc: "젖산 내성 및 한계 돌파",
             warmup: [{dist: '1500m', desc: '에어로빅 베이스'}],
             drill: [{dist: '500m', desc: '테크닉 교정'}],
-            main: [{dist: '2500m', desc: 'Threshold Set: 400m x 3 + 200m x 4 + 100m x 5'}],
-            cooldown: [{dist: '500m', desc: '완벽한 정리 운동'}]
+            main: [{dist: '2500m', desc: 'Threshold Set'}],
+            cooldown: [{dist: '500m', desc: '정리 운동'}]
         }
     };
 
     const selectedPlan = PLANS[level] || PLANS['beginner'];
-    currentDailyPlan = selectedPlan; // Save for modal
-
-    planText.innerHTML = `<strong>${selectedPlan.title}</strong><br><span style="font-size:0.9rem; color:#718096">${selectedPlan.desc}</span><br><span style="font-size:0.8rem; text-decoration:underline; color:var(--color-primary)">클릭하여 상세 보기 &rarr;</span>`;
+    currentDailyPlan = selectedPlan;
+    planText.innerHTML = `<strong>${selectedPlan.title}</strong><br><span style="font-size:0.9rem; color:#718096">${selectedPlan.desc}</span>`;
 }
 
-
-// --- 6. Advanced Video Analysis (Multi-Lane & AI Solution) ---
+// --- Video Analysis ---
 const uploadZone = document.getElementById('upload-zone');
 const fileInput = document.getElementById('video-upload');
 const analysisResults = document.getElementById('analysis-results');
@@ -342,36 +323,18 @@ const resBadgeLane = document.getElementById('res-badge-lane');
 const poolSelect = document.getElementById('ana-pool-length');
 const eventSelect = document.getElementById('ana-event-type');
 
-// Event Definitions
-const EVENTS_25M = [
-    { id: 'free50', name: '자유형 50m' },
-    { id: 'im100', name: '개인혼영 100m' },
-    { id: 'relay200f', name: '계영 200m' },
-    { id: 'relay200m', name: '혼계영 200m' }
-];
-
-const EVENTS_50M = [
-    { id: 'free50', name: '자유형 50m' },
-    { id: 'free100', name: '자유형 100m' },
-    { id: 'im200', name: '개인혼영 200m' },
-    { id: 'relay400f', name: '계영 400m' },
-    { id: 'relay200m', name: '혼계영 200m' }
-];
-
-let currentLane = 1; // Default Lane
+const EVENTS_25M = [{ id: 'free50', name: '자유형 50m' }, { id: 'im100', name: '개인혼영 100m' }, { id: 'relay200f', name: '계영 200m' }];
+const EVENTS_50M = [{ id: 'free50', name: '자유형 50m' }, { id: 'im200', name: '개인혼영 200m' }, { id: 'relay400f', name: '계영 400m' }];
 
 function initAnalysisControls() {
     if(!poolSelect || !eventSelect) return;
     poolSelect.addEventListener('change', updateEventOptions);
     updateEventOptions();
 
-    // Setup Upload
     if (uploadZone && fileInput) {
         uploadZone.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => { if (e.target.files.length > 0) handleFile(e.target.files[0]); });
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadZone.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
-        });
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => uploadZone.addEventListener(ev, e => {e.preventDefault(); e.stopPropagation()}, false));
         uploadZone.addEventListener('drop', (e) => { if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]); });
     }
 }
@@ -383,9 +346,8 @@ function updateEventOptions() {
 }
 
 function handleFile(file) {
-    const maxSize = 500 * 1024 * 1024;
     if (!file.type.startsWith('video/')) { alert('동영상 파일만 업로드 가능합니다.'); return; }
-    if (file.size > maxSize) { alert('파일 크기가 너무 큽니다. (최대 500MB)'); return; }
+    if (file.size > 500 * 1024 * 1024) { alert('파일 크기가 너무 큽니다. (최대 500MB)'); return; }
     startAnalysisSimulation(file);
 }
 
@@ -398,8 +360,8 @@ function startAnalysisSimulation(file) {
     setTimeout(() => {
         loader.classList.add('hidden');
         document.querySelector('.result-card').classList.remove('hidden');
-        setupLaneTabs(); // Init Tabs
-        generateAdvancedMockData(1); // Default Lane 1
+        setupLaneTabs();
+        generateAdvancedMockData(1);
     }, 2500);
 }
 
@@ -410,10 +372,8 @@ function setupLaneTabs() {
         tab.className = `lane-tab ${i === 1 ? 'active' : ''}`;
         tab.textContent = `레인 ${i}`;
         tab.onclick = () => {
-            // UI Toggle
             document.querySelectorAll('.lane-tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
-            // Data Update
             generateAdvancedMockData(i);
         };
         laneTabsContainer.appendChild(tab);
@@ -421,9 +381,7 @@ function setupLaneTabs() {
 }
 
 function generateAdvancedMockData(laneNum) {
-    currentLane = laneNum;
     resBadgeLane.textContent = `Lane ${laneNum}`;
-
     const pool = poolSelect.value;
     const eventId = eventSelect.value;
     const eventName = eventSelect.options[eventSelect.selectedIndex].text;
@@ -431,54 +389,33 @@ function generateAdvancedMockData(laneNum) {
     resBadgePool.textContent = `${pool}m 풀`;
     resBadgeEvent.textContent = eventName;
 
-    // Randomize Stats slightly based on lane number (Simulator feel)
-    const baseTime = 30 + (laneNum * 0.5); 
-    const totalTime = (Math.random() * 5 + baseTime).toFixed(2);
-    const efficiency = Math.floor(Math.random() * (95 - 60) + 60);
-    const reaction = (Math.random() * (0.9 - 0.5) + 0.5).toFixed(2);
+    const totalTime = (Math.random() * 5 + 30).toFixed(2);
+    const efficiency = Math.floor(Math.random() * 35 + 60);
+    const reaction = (Math.random() * 0.4 + 0.5).toFixed(2);
 
-    resTotalTime.textContent = totalTime;
-    resEfficiency.textContent = efficiency;
-    resReaction.textContent = reaction;
+    resTotalTime.textContent = `${totalTime}초`;
+    resEfficiency.textContent = `${efficiency}점`;
+    resReaction.textContent = `${reaction}초`;
 
-    // AI Coaching Solution Logic
     let solution = "";
-    if (parseFloat(reaction) > 0.75) {
-        solution = "🚀 <strong>스타트 반응 속도 개선 필요:</strong> 블록에서의 반응이 0.75초 이상으로 느립니다. '제자리 점프' 훈련과 신호 반응 훈련을 병행하세요.";
-    } else if (efficiency < 70) {
-        solution = "🌊 <strong>스트로크 효율 저하:</strong> 물을 잡는 느낌(Catch)이 부족하여 스트로크 수가 많습니다. '스컬링(Sculling)' 드릴을 추천합니다.";
-    } else {
-        solution = "✨ <strong>훌륭한 퍼포먼스:</strong> 전반적인 밸런스가 좋습니다. 이제 턴 이후 '돌핀킥' 거리를 늘려 기록을 단축해보세요.";
-    }
+    if (parseFloat(reaction) > 0.75) solution = "🚀 <strong>스타트 반응 개선:</strong> 반응속도가 느립니다.";
+    else if (efficiency < 70) solution = "🌊 <strong>효율성 저하:</strong> 스컬링 드릴을 추천합니다.";
+    else solution = "✨ <strong>좋은 퍼포먼스:</strong> 기록 단축을 위해 돌핀킥을 강화하세요.";
     aiSolutionText.innerHTML = solution;
 
-
-    // Table Generation
-    let headerHtml = '';
-    let bodyHtml = '';
-
+    let headerHtml = '', bodyHtml = '';
     if (eventId.includes('relay')) {
-        headerHtml = `<tr><th>주자</th><th>반응속도 (RT)</th><th>구간 기록</th><th>누적 기록</th></tr>`;
-        let cumulative = 0;
-        const swimmers = ['1번 주자', '2번 주자', '3번 주자', '4번 주자'];
-        bodyHtml = swimmers.map((s, idx) => {
-            const split = (parseFloat(totalTime) / 4 + (Math.random() - 0.5)).toFixed(2);
-            cumulative += parseFloat(split);
-            const rt = idx === 0 ? reaction : (Math.random() * 0.4 - 0.1).toFixed(2);
-            return `<tr><td>${s}</td><td style="color:${parseFloat(rt)<0?'red':'inherit'}">${rt}s</td><td>${split}s</td><td>${cumulative.toFixed(2)}s</td></tr>`;
-        }).join('');
-    } else if (eventId.includes('im')) {
-        headerHtml = `<tr><th>영법</th><th>스트로크 수</th><th>턴 타임</th><th>구간 기록</th></tr>`;
-        const strokes = ['접영', '배영', '평영', '자유형'];
-        bodyHtml = strokes.map(s => {
-            const split = (parseFloat(totalTime) / 4).toFixed(2);
-            return `<tr><td>${s}</td><td>${Math.floor(Math.random()*15+10)}</td><td>${(Math.random()+0.8).toFixed(2)}s</td><td>${split}s</td></tr>`;
+        headerHtml = `<tr><th>주자</th><th>반응(RT)</th><th>구간</th><th>누적</th></tr>`;
+        let cum = 0;
+        bodyHtml = ['1번', '2번', '3번', '4번'].map((s, idx) => {
+            const split = (parseFloat(totalTime)/4).toFixed(2);
+            cum += parseFloat(split);
+            return `<tr><td>${s}</td><td>${idx===0?reaction:'0.23'}s</td><td>${split}s</td><td>${cum.toFixed(2)}s</td></tr>`;
         }).join('');
     } else {
-        headerHtml = `<tr><th>구간 (Distance)</th><th>스트로크</th><th>호흡</th><th>구간 기록</th></tr>`;
-        bodyHtml = `<tr><td>전체 구간</td><td>${Math.floor(Math.random()*40+30)}</td><td>12</td><td>${totalTime}s</td></tr>`;
+        headerHtml = `<tr><th>구간</th><th>스트로크</th><th>호흡</th><th>기록</th></tr>`;
+        bodyHtml = `<tr><td>전체</td><td>${Math.floor(Math.random()*10+30)}</td><td>12</td><td>${totalTime}s</td></tr>`;
     }
-
     splitsHead.innerHTML = headerHtml;
     splitsBody.innerHTML = bodyHtml;
 }

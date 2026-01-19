@@ -20,10 +20,16 @@ A web-based Swimming Coach application designed to help users improve their swim
 - [x] Create "Video Analysis" section with file upload UI.
 - [x] Implement simulated video processing logic to display metrics (Breakout, Strokes, Breaths, Splits).
 
-### Goal: Advanced Coaching & Analysis
-- [ ] Implement "Multi-lane Selection" in analysis results (Lane 1-8).
-- [ ] Add "AI Coaching Solution" card providing actionable advice based on metrics.
-- [ ] Create detailed "Workout Guide Modal" with specific sets/drills when clicking the daily plan.
+### Goal: UI/UX Overhaul
+- [ ] Implement SPA-style routing (show/hide sections based on hash) to replace vertical scrolling.
+- [ ] Redesign "Workout Logger" UI with cards, emojis for mood, and better spacing.
+- [ ] Add a Bottom Navigation Bar for mobile-app-like experience.
+
+### History
+#### Goal: Advanced Coaching & Analysis
+- [x] Implement "Multi-lane Selection" in analysis results (Lane 1-8).
+- [x] Add "AI Coaching Solution" card providing actionable advice based on metrics.
+- [x] Create detailed "Workout Guide Modal" with specific sets/drills when clicking the daily plan.
 
 ### History
 #### Goal: Advanced Video Analysis
