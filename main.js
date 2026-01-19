@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadWorkouts();
     loadRecords();
     generateDailyPlan();
+    initAnalysisControls();
 });
 
 
@@ -262,42 +263,82 @@ function generateDailyPlan() {
     planText.innerHTML = `<strong>${plan}</strong><br><span style="font-size:0.9rem; color:#718096">${focus}</span>`;
 }
 
-// --- 6. Video Analysis (Click & Drag-n-Drop) ---
+// --- 6. Advanced Video Analysis (Dynamic) ---
 const uploadZone = document.getElementById('upload-zone');
 const fileInput = document.getElementById('video-upload');
 const analysisResults = document.getElementById('analysis-results');
 const loader = document.getElementById('analysis-loader');
+const splitsHead = document.getElementById('splits-head');
 const splitsBody = document.getElementById('splits-body');
 
-const resBreakout = document.getElementById('res-breakout');
-const resDps = document.getElementById('res-dps');
-const resTime = document.getElementById('res-time');
+const resTotalTime = document.getElementById('res-total-time');
+const resReaction = document.getElementById('res-reaction');
+const resEfficiency = document.getElementById('res-efficiency');
+const resBadgePool = document.getElementById('res-badge-pool');
+const resBadgeEvent = document.getElementById('res-badge-event');
 
-if (uploadZone && fileInput) {
-    uploadZone.addEventListener('click', () => fileInput.click());
+const poolSelect = document.getElementById('ana-pool-length');
+const eventSelect = document.getElementById('ana-event-type');
 
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) handleFile(e.target.files[0]);
-    });
+// Event Definitions
+const EVENTS_25M = [
+    { id: 'free50', name: '자유형 50m' },
+    { id: 'im100', name: '개인혼영 100m' },
+    { id: 'relay200f', name: '계영 200m' },
+    { id: 'relay200m', name: '혼계영 200m' }
+];
 
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        uploadZone.addEventListener(eventName, preventDefaults, false);
-    });
+const EVENTS_50M = [
+    { id: 'free50', name: '자유형 50m' },
+    { id: 'free100', name: '자유형 100m' },
+    { id: 'im200', name: '개인혼영 200m' },
+    { id: 'relay400f', name: '계영 400m' },
+    { id: 'relay200m', name: '혼계영 200m' }
+];
 
-    function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+function initAnalysisControls() {
+    if(!poolSelect || !eventSelect) return;
 
-    ['dragenter', 'dragover'].forEach(eventName => {
-        uploadZone.addEventListener(eventName, () => uploadZone.style.borderColor = '#006994', false);
-    });
+    // Populate events based on pool selection
+    poolSelect.addEventListener('change', updateEventOptions);
+    updateEventOptions(); // Initial load
 
-    ['dragleave', 'drop'].forEach(eventName => {
-        uploadZone.addEventListener(eventName, () => uploadZone.style.borderColor = '#cbd5e0', false);
-    });
+    // File Upload Listeners
+    if (uploadZone && fileInput) {
+        uploadZone.addEventListener('click', () => fileInput.click());
 
-    uploadZone.addEventListener('drop', (e) => {
-        const dt = e.dataTransfer;
-        if (dt.files.length > 0) handleFile(dt.files[0]);
-    });
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) handleFile(e.target.files[0]);
+        });
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, () => uploadZone.style.borderColor = '#006994', false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, () => uploadZone.style.borderColor = '#cbd5e0', false);
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            if (dt.files.length > 0) handleFile(dt.files[0]);
+        });
+    }
+}
+
+function updateEventOptions() {
+    const pool = poolSelect.value;
+    const events = pool === '25' ? EVENTS_25M : EVENTS_50M;
+    
+    eventSelect.innerHTML = events.map(ev => 
+        `<option value="${ev.id}">${ev.name}</option>`
+    ).join('');
 }
 
 function handleFile(file) {
@@ -319,34 +360,124 @@ function startAnalysisSimulation(file) {
     loader.classList.remove('hidden');
     document.querySelector('.result-card').classList.add('hidden');
 
+    // Simulate Delay
     setTimeout(() => {
         loader.classList.add('hidden');
         document.querySelector('.result-card').classList.remove('hidden');
-        generateMockData();
+        generateAdvancedMockData();
     }, 2500);
 }
 
-function generateMockData() {
-    const breakoutTime = (Math.random() * (7 - 4) + 4).toFixed(2);
-    const totalTime = (Math.random() * (35 - 28) + 28).toFixed(2);
-    const dps = (Math.random() * (1.8 - 1.2) + 1.2).toFixed(2);
+function generateAdvancedMockData() {
+    const pool = poolSelect.value;
+    const eventId = eventSelect.value;
+    const eventName = eventSelect.options[eventSelect.selectedIndex].text;
 
-    resBreakout.textContent = breakoutTime;
-    resTime.textContent = totalTime;
-    resDps.textContent = dps;
+    resBadgePool.textContent = `${pool}m 풀`;
+    resBadgeEvent.textContent = eventName;
 
-    const segments = [
-        { name: '브레이크아웃 (0-15m)', strokes: 6, breaths: 1, time: breakoutTime },
-        { name: '중반 가속 (15-35m)', strokes: 18, breaths: 6, time: (parseFloat(totalTime) * 0.4).toFixed(2) },
-        { name: '피니시 스퍼트 (35-50m)', strokes: 14, breaths: 4, time: (parseFloat(totalTime) - parseFloat(breakoutTime) - (parseFloat(totalTime) * 0.4)).toFixed(2) }
-    ];
+    // Default Random Stats
+    const totalTime = (Math.random() * (120 - 25) + 25).toFixed(2);
+    const efficiency = Math.floor(Math.random() * (95 - 70) + 70);
+    const reaction = (Math.random() * (0.8 - 0.6) + 0.6).toFixed(2);
 
-    splitsBody.innerHTML = segments.map(seg => `
-        <tr>
-            <td>${seg.name}</td>
-            <td>${seg.strokes}</td>
-            <td>${seg.breaths}</td>
-            <td>${seg.time}초</td>
-        </tr>
-    `).join('');
+    resTotalTime.textContent = totalTime;
+    resEfficiency.textContent = efficiency;
+    resReaction.textContent = reaction;
+
+    // Dynamic Table Generation based on Event Type
+    let headerHtml = '';
+    let bodyHtml = '';
+
+    if (eventId.includes('relay')) {
+        // Relay Logic (4 Swimmers)
+        headerHtml = `
+            <tr>
+                <th>주자</th>
+                <th>반응속도 (RT)</th>
+                <th>구간 기록</th>
+                <th>누적 기록</th>
+            </tr>
+        `;
+        let cumulative = 0;
+        const swimmers = ['1번 주자', '2번 주자', '3번 주자', '4번 주자'];
+        
+        bodyHtml = swimmers.map((s, idx) => {
+            const split = (parseFloat(totalTime) / 4 + (Math.random() - 0.5)).toFixed(2);
+            cumulative += parseFloat(split);
+            const rt = idx === 0 ? reaction : (Math.random() * 0.4 - 0.1).toFixed(2); // 1st swimmer RT is block time, others are relay takeover
+            
+            return `
+            <tr>
+                <td>${s}</td>
+                <td style="color: ${parseFloat(rt) < 0 ? 'red' : 'inherit'}">${rt}s</td>
+                <td>${split}s</td>
+                <td>${cumulative.toFixed(2)}s</td>
+            </tr>`;
+        }).join('');
+
+    } else if (eventId.includes('im')) {
+        // IM Logic (Fly-Back-Breast-Free)
+        headerHtml = `
+            <tr>
+                <th>영법</th>
+                <th>스트로크 수</th>
+                <th>턴 타임</th>
+                <th>구간 기록</th>
+            </tr>
+        `;
+        const strokes = ['접영', '배영', '평영', '자유형'];
+        bodyHtml = strokes.map(s => {
+            const split = (parseFloat(totalTime) / 4).toFixed(2);
+            return `
+            <tr>
+                <td>${s}</td>
+                <td>${Math.floor(Math.random() * 15 + 10)}</td>
+                <td>${(Math.random() + 0.8).toFixed(2)}s</td>
+                <td>${split}s</td>
+            </tr>`;
+        }).join('');
+
+    } else {
+        // Single Event (Splits by Length)
+        headerHtml = `
+            <tr>
+                <th>구간 (Distance)</th>
+                <th>스트로크</th>
+                <th>호흡</th>
+                <th>구간 기록</th>
+            </tr>
+        `;
+        const laps = pool === '25' && eventId === 'free50' ? 2 : 1; 
+        // Simplified: Just showing 2 splits for demo if multiple laps
+        if (laps > 1 || eventId === 'free100') {
+             bodyHtml = `
+                <tr>
+                    <td>0 - ${pool}m</td>
+                    <td>${Math.floor(Math.random() * 20 + 15)}</td>
+                    <td>4</td>
+                    <td>${(parseFloat(totalTime)/2).toFixed(2)}s</td>
+                </tr>
+                <tr>
+                    <td>${pool}m - ${parseInt(pool)*2}m</td>
+                    <td>${Math.floor(Math.random() * 20 + 15)}</td>
+                    <td>5</td>
+                    <td>${(parseFloat(totalTime)/2).toFixed(2)}s</td>
+                </tr>
+             `;
+        } else {
+            // Single Lap
+            bodyHtml = `
+                <tr>
+                    <td>전체 구간</td>
+                    <td>${Math.floor(Math.random() * 40 + 30)}</td>
+                    <td>12</td>
+                    <td>${totalTime}s</td>
+                </tr>
+             `;
+        }
+    }
+
+    splitsHead.innerHTML = headerHtml;
+    splitsBody.innerHTML = bodyHtml;
 }
