@@ -299,7 +299,21 @@
                       <span id="my-club-type" class="club-badge">Public</span>
                   </div>
               </div>
-              <button onclick="leaveClub()" class="small-text-btn text-danger">팀 탈퇴</button>
+              <div style="display:flex; flex-direction:column; gap:0.5rem; align-items:flex-end;">
+                  <button onclick="leaveClub()" class="small-text-btn text-danger">팀 탈퇴</button>
+                  <button id="club-admin-btn" onclick="openAdminModal()" class="small-text-btn hidden">⚙️ 운영진 설정</button>
+              </div>
+          </div>
+
+          <!-- Notices Section -->
+          <div class="feature-card notice-card hidden" id="club-notice-section">
+              <div class="card-header" style="margin-bottom:0.5rem;">
+                  <div class="icon" style="width:32px; height:32px; font-size:1rem;">📢</div>
+                  <h4 style="margin:0;">공지사항</h4>
+              </div>
+              <ul id="club-notice-list" class="notice-list">
+                  <!-- JS Populated -->
+              </ul>
           </div>
 
           <div class="lane-selector">
@@ -523,6 +537,46 @@
           <ul id="records-list" class="records-list"></ul>
       </div>
     </section>
+
+    <!-- Admin Modal -->
+    <div id="admin-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚙️ 클럽 운영진 설정</h3>
+                <button class="close-btn" onclick="closeAdminModal()">&times;</button>
+            </div>
+            
+            <div class="lane-selector" style="margin-bottom:1rem;">
+                <div class="lane-tabs">
+                    <div class="lane-tab active" onclick="switchAdminTab('notice')">📢 공지 등록</div>
+                    <div class="lane-tab" onclick="switchAdminTab('staff')">👮 운영진 관리</div>
+                </div>
+            </div>
+
+            <!-- Tab: Post Notice -->
+            <div id="admin-tab-notice">
+                <form id="admin-notice-form" class="logger-form">
+                    <div class="input-group">
+                        <label>공지 제목</label>
+                        <input type="text" id="notice-title" placeholder="예: 3월 정기 모임 안내" required>
+                    </div>
+                    <div class="input-group">
+                        <label>내용</label>
+                        <textarea id="notice-content" rows="4" placeholder="공지 내용을 입력하세요." required></textarea>
+                    </div>
+                    <button type="submit" class="primary-btn">공지사항 등록</button>
+                </form>
+            </div>
+
+            <!-- Tab: Manage Staff -->
+            <div id="admin-tab-staff" class="hidden">
+                <p class="text-muted" style="margin-bottom:1rem;">멤버를 운영진으로 임명하거나 해제할 수 있습니다.</p>
+                <ul class="activity-list" id="admin-member-list">
+                    <!-- JS Populated -->
+                </ul>
+            </div>
+        </div>
+    </div>
 
   </main>
 

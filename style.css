@@ -372,3 +372,39 @@ button { cursor: pointer; border: none; font-family: inherit; }
 }
 .term-title { color: var(--color-primary); font-weight: 700; margin-bottom: 0.25rem; }
 .term-desc { font-size: 0.8rem; color: #4a5568; }
+
+/* Notice Styles */
+.notice-card {
+    background: #fffbeb; /* Light yellow for notice */
+    border: 1px solid #fef3c7;
+}
+.notice-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.notice-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    font-size: 0.9rem;
+}
+.notice-item:last-child {
+    border-bottom: none;
+}
+.notice-title {
+    font-weight: 700;
+    color: #b45309;
+    display: block;
+    margin-bottom: 0.2rem;
+}
+.notice-meta {
+    font-size: 0.8rem;
+    color: #92400e;
+    opacity: 0.8;
+}
+
+/* Admin Modal Tabs */
+#admin-modal .lane-tab {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+}
