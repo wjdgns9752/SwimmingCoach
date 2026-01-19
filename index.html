@@ -227,47 +227,89 @@
 
       <div id="analysis-results" class="analysis-results hidden">
         <div class="loading-overlay hidden" id="analysis-loader">
-          <div class="spinner"></div>
-          <p>AI가 영상을 분석하고 있습니다...</p>
+          <div class="scanner-line"></div>
+          <p>AI가 영법을 분석하고 있습니다...</p>
+          <span class="loading-sub">Skeletal Tracking / Mechanics / Pace Analysis</span>
         </div>
 
-        <div class="result-card">
-          <div class="result-header">
-              <h3>분석 리포트</h3>
-              <div class="lane-selector">
-                  <div class="lane-tabs" id="lane-tabs"></div>
+        <div class="result-card" style="border:none; background:transparent; box-shadow:none; padding:0;">
+          
+          <!-- Video & Main Score -->
+          <div class="analysis-top-section">
+              <div class="video-wrapper">
+                  <video id="analysis-video-preview" controls playsinline></video>
+                  <div class="ai-overlay-badge">AI Analysis Ready</div>
+              </div>
+              <div class="score-card">
+                  <div class="score-header">
+                      <span class="badge" id="res-badge-event">Freestyle 50m</span>
+                      <span class="date-badge">Today</span>
+                  </div>
+                  <div class="total-time-display">
+                      <span class="label">Total Time</span>
+                      <span class="value" id="res-total-time">--</span>
+                  </div>
+                  <div class="score-summary">
+                      <div class="score-item">
+                          <span class="lbl">반응 속도</span>
+                          <strong id="res-reaction">--</strong>
+                      </div>
+                      <div class="score-item">
+                          <span class="lbl">턴 구간</span>
+                          <strong id="res-turn-time">--</strong>
+                      </div>
+                  </div>
               </div>
           </div>
 
-          <div class="video-meta">
-            <span class="badge" id="res-badge-pool">--</span>
-            <span class="badge" id="res-badge-event">--</span>
-            <span class="badge lane-badge" id="res-badge-lane">Lane 1</span>
+          <!-- Advanced Metrics Grid -->
+          <div class="metrics-dashboard">
+              <div class="metric-box">
+                  <span class="m-icon">🏊‍♀️</span>
+                  <span class="m-label">Stroke Rate</span>
+                  <strong class="m-value" id="res-stroke-rate">--</strong>
+                  <span class="m-unit">str/min</span>
+              </div>
+              <div class="metric-box">
+                  <span class="m-icon">📏</span>
+                  <span class="m-label">DPS</span>
+                  <strong class="m-value" id="res-dps">--</strong>
+                  <span class="m-unit">m/stroke</span>
+              </div>
+              <div class="metric-box">
+                  <span class="m-icon">🫧</span>
+                  <span class="m-label">Underwater</span>
+                  <strong class="m-value" id="res-uw-dist">--</strong>
+                  <span class="m-unit">m</span>
+              </div>
+              <div class="metric-box">
+                  <span class="m-icon">⚡</span>
+                  <span class="m-label">Efficiency</span>
+                  <strong class="m-value" id="res-swolf">--</strong>
+                  <span class="m-unit">SWOLF</span>
+              </div>
           </div>
 
-          <div class="metrics-grid">
-            <div class="metric-item">
-              <span class="label">기록</span>
-              <span class="value" id="res-total-time">--</span>
-            </div>
-            <div class="metric-item">
-              <span class="label">반응/턴</span>
-              <span class="value" id="res-reaction">--</span>
-            </div>
-            <div class="metric-item">
-              <span class="label">효율성</span>
-              <span class="value" id="res-efficiency">--</span>
-            </div>
-          </div>
-
+          <!-- AI Coaching -->
           <div class="ai-solution-card" id="ai-solution">
-              <h4>💡 AI 코칭 솔루션</h4>
-              <p id="ai-solution-text">...</p>
+              <h4>💡 AI 코칭 리포트</h4>
+              <div id="ai-solution-content">
+                  <!-- Populated by JS -->
+              </div>
           </div>
 
+          <!-- Section Splits -->
           <div class="table-container">
+            <h4 style="margin-bottom:0.5rem; color:#2d3748;">구간별 상세 기록</h4>
             <table class="splits-table">
-                <thead id="splits-head"></thead>
+                <thead>
+                    <tr>
+                        <th>구간</th>
+                        <th>Split</th>
+                        <th>Stroke</th>
+                        <th>Tempo</th>
+                    </tr>
+                </thead>
                 <tbody id="splits-body"></tbody>
             </table>
           </div>
