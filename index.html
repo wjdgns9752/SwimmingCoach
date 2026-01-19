@@ -281,6 +281,9 @@
 
       <!-- State 1: No Club Selected -->
       <div id="club-selection-view">
+          <div class="page-header-actions">
+              <button onclick="openCreateClubModal()" class="secondary-btn small-btn">+ 클럽 만들기</button>
+          </div>
           <div class="club-list" id="club-list">
               <!-- JS Populated -->
           </div>
@@ -294,21 +297,98 @@
                   <div>
                       <h3 id="my-club-name">Club Name</h3>
                       <p id="my-club-desc">Club Description</p>
+                      <span id="my-club-type" class="club-badge">Public</span>
                   </div>
               </div>
               <button onclick="leaveClub()" class="small-text-btn text-danger">팀 탈퇴</button>
           </div>
 
-          <div class="features">
+          <div class="lane-selector">
+              <div class="lane-tabs" id="club-tabs">
+                  <div class="lane-tab active" onclick="switchClubTab('ranking')">🏆 랭킹</div>
+                  <div class="lane-tab" onclick="switchClubTab('board')">💬 게시판</div>
+              </div>
+          </div>
+
+          <!-- Tab: Ranking -->
+          <div id="club-tab-ranking" class="club-tab-content">
+              <div class="features">
+                  <div class="feature-card">
+                      <h3>🏆 팀 랭킹 (자유형 50m)</h3>
+                      <ul class="leaderboard-list" id="team-leaderboard">
+                          <!-- JS Populated -->
+                      </ul>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Tab: Board (New) -->
+          <div id="club-tab-board" class="club-tab-content hidden">
               <div class="feature-card">
-                  <h3>🏆 팀 랭킹 (자유형 50m)</h3>
-                  <ul class="leaderboard-list" id="team-leaderboard">
+                  <div class="board-header">
+                      <h3>팀원 소식</h3>
+                      <button class="small-text-btn" onclick="postToBoard()">✏️ 기록 공유하기</button>
+                  </div>
+                  <div class="feed-list" id="club-feed">
                       <!-- JS Populated -->
-                  </ul>
+                      <div class="feed-item">
+                          <div class="feed-head">
+                              <span class="feed-user">김물개</span>
+                              <span class="feed-time">2시간 전</span>
+                          </div>
+                          <p class="feed-content">오늘 자유형 1500m 완주했습니다! 힘들네요 💦</p>
+                      </div>
+                  </div>
               </div>
           </div>
       </div>
     </section>
+
+    <!-- Create Club Modal -->
+    <div id="create-club-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>클럽 만들기</h2>
+                <button class="close-btn" onclick="closeCreateClubModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="create-club-form" class="logger-form">
+                    <div class="input-group">
+                        <label>클럽명</label>
+                        <input type="text" id="new-club-name" placeholder="멋진 클럽 이름을 지어주세요" required>
+                    </div>
+                    <div class="input-group">
+                        <label>한줄 소개</label>
+                        <input type="text" id="new-club-desc" placeholder="우리 클럽을 소개해주세요" required>
+                    </div>
+                    <div class="input-group">
+                        <label>클럽 아이콘</label>
+                        <select id="new-club-icon" class="form-select">
+                            <option value="🦈">🦈 상어</option>
+                            <option value="🐬">🐬 돌고래</option>
+                            <option value="🐳">🐳 고래</option>
+                            <option value="🦦">🦦 수달</option>
+                            <option value="🐢">🐢 거북이</option>
+                            <option value="🏊">🏊 수영인</option>
+                            <option value="🌊">🌊 파도</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>공개 설정</label>
+                        <select id="new-club-type" class="form-select" onchange="toggleClubPassword()">
+                            <option value="public">공개 (누구나 가입)</option>
+                            <option value="private">비공개 (비밀번호 필요)</option>
+                        </select>
+                    </div>
+                    <div class="input-group hidden" id="club-password-group">
+                        <label>가입 비밀번호</label>
+                        <input type="password" id="new-club-password" placeholder="4자리 숫자" maxlength="4">
+                    </div>
+                    <button type="submit" class="primary-btn" style="margin-top:1rem;">클럽 생성 완료</button>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- PAGE: PROFILE -->
     <section id="profile-page" class="page-section hidden">
