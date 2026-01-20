@@ -519,7 +519,6 @@ function displayLaneDetails(data, eventId, poolLength) {
         `;
     }
 }
-}
 
 window.changePlaybackSpeed = function(speed) {
     const video = document.getElementById('analysis-video-preview');
