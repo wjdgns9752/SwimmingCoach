@@ -390,9 +390,9 @@ function handleAnalysis(file) {
 
     // High-End Analysis Simulation Sequence
     const steps = [
-        { t: "오디오 파형 분석 중...", s: "Detecting 'Take your mark' command..." },
-        { t: "부저(Buzzer) 주파수 스캔 중...", s: "Searching for 2.5kHz Beep Signal" },
-        { t: "출발 반응 속도 계산 중...", s: "Calculating Reaction Time (Buzzer to Motion)" },
+        { t: "호루라기 소리(Whistle) 감지 중...", s: "Detecting Ready Whistle (3 short beeps)..." },
+        { t: "'Take your mark' 구령 분석 중...", s: "Aligning with starter's voice command..." },
+        { t: "출발 부저(Final Beep) 위치 확인", s: "Searching for 2.5kHz start signal after pause" },
         { t: "Skeletal Tracking 및 구간 위치 분석", s: "Joint Positioning / Lane Coordinate Mapping" },
         { t: "영법별 스트록 및 구간 기록 계산 완료", s: "Stroke Phase Analysis / Split Time Calculation" }
     ];
@@ -405,7 +405,6 @@ function handleAnalysis(file) {
             stepIdx++;
         } else {
             clearInterval(interval);
-            // Ensure metadata is loaded to get duration
             if (video.readyState >= 1) {
                 finishAnalysis();
             } else {
@@ -422,20 +421,17 @@ function handleAnalysis(file) {
         const eventName = eventSelect.options[eventSelect.selectedIndex].text;
         const poolLength = parseInt(document.getElementById('ana-pool-length').value) || 25;
         
-        // 1. Get Actual Video Duration
         const videoDuration = video.duration || 30.0;
 
         // 2. Define Common Start Signal (Buzzer)
-        // Simulate "Take your mark" pause + Beep
-        const buzzerTimestamp = 2.0 + Math.random() * 1.5; 
+        // Simulate: Whistle(0s) -> Take your mark(2s) -> Beep(4s+)
+        const buzzerTimestamp = 4.0 + Math.random() * 1.5; 
         
-        // Update Result Badge
         const badge = document.getElementById('res-badge-event');
         if(badge) badge.textContent = eventName;
 
         const userLane = Math.floor(Math.random() * 8) + 1;
         
-        // Base user performance calculation
         const estimatedTouch = Math.max(buzzerTimestamp + 5.0, videoDuration - 2.5);
         const maxRaceTime = estimatedTouch - buzzerTimestamp;
         
