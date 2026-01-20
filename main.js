@@ -416,52 +416,54 @@ function handleAnalysis(file) {
         // 1. Get Actual Video Duration
         const videoDuration = video.duration || 30.0;
 
-        // 2. Simulate Precise Detection (Start & Touch)
-        // Usually 1.5s ~ 3.5s before start buzzer in a typical user video
-        const startOffset = 1.2 + Math.random() * 1.5; 
-        // Post-race padding usually 2.0s ~ 5.0s
-        const endPadding = 1.5 + Math.random() * 2.5;
-        
-        // Calculate Touch Timestamp
-        const touchTimestamp = Math.max(videoDuration - endPadding, startOffset + 5.0);
-        
-        // Final Race Time
-        const raceTime = (touchTimestamp - startOffset).toFixed(2);
+        // 2. Define Common Start Signal (Buzzer)
+        // "Take your mark" (approx 1.5s) + reaction (approx 0.8s) into video
+        const buzzerTimestamp = 2.5 + Math.random() * 1.0; 
         
         // Update Result Badge
         const badge = document.getElementById('res-badge-event');
         if(badge) badge.textContent = eventName;
 
-        // Update Timeline UI
-        document.getElementById('res-t0').textContent = startOffset.toFixed(2) + "s";
-        document.getElementById('res-tend').textContent = touchTimestamp.toFixed(2) + "s";
-
         const userLane = Math.floor(Math.random() * 8) + 1;
         const laneData = [];
         
+        // Base user performance on video duration minus padding
+        // Ensure user finishes before video ends (e.g. 3s padding)
+        const maxRaceTime = Math.max(5.0, videoDuration - buzzerTimestamp - 3.0);
+        
         for(let l=1; l<=8; l++) {
-            // User's lane is the "Truth" (Race Time)
-            // Others are relative to User
-            const laneVariance = (l === userLane) ? 1.0 : (0.9 + Math.random() * 0.2); 
-            const laneTime = (raceTime * laneVariance).toFixed(2);
+            // Determine Race Time for this lane
+            let laneRaceTime;
+            if (l === userLane) {
+                laneRaceTime = maxRaceTime;
+            } else {
+                // Other lanes vary: +/- 15% of user's time
+                const variance = 0.85 + Math.random() * 0.3;
+                laneRaceTime = maxRaceTime * variance;
+            }
             
+            // Calculate specific Touch Time for this lane
+            const laneTouchTimestamp = buzzerTimestamp + laneRaceTime;
+
             let strokeBase = 18;
             if(eventId.includes('breast')) strokeBase = 12;
             else if(eventId.includes('fly')) strokeBase = 15;
             else if(eventId.includes('back')) strokeBase = 19;
             
-            const strokeCount = Math.floor(strokeBase * (poolLength / 25) * (1.0 + (Math.random() * 0.1)));
+            const strokeCount = Math.floor(strokeBase * (poolLength / 25) * (laneRaceTime / maxRaceTime) * (0.95 + Math.random() * 0.1));
             
             laneData.push({
                 lane: l,
-                time: laneTime,
+                time: laneRaceTime.toFixed(2),
+                t_start: buzzerTimestamp.toFixed(2),
+                t_end: laneTouchTimestamp.toFixed(2),
                 strokes: strokeCount,
                 isUser: l === userLane,
                 reaction: (0.55 + Math.random() * 0.15).toFixed(3)
             });
         }
         
-        laneData.sort((a, b) => a.time - b.time);
+        laneData.sort((a, b) => parseFloat(a.time) - parseFloat(b.time));
         
         const rankingGrid = document.getElementById('lane-ranking-list');
         if(rankingGrid) {
@@ -480,10 +482,78 @@ function handleAnalysis(file) {
         
         const aiBadge = document.querySelector('.ai-overlay-badge');
         if(aiBadge) {
-            aiBadge.textContent = "Start-to-Touch Analysis Active";
-            aiBadge.style.background = "rgba(255, 0, 100, 0.3)";
-            aiBadge.style.borderColor = "#ff0064";
+            aiBadge.textContent = "Precision Timing: Buzzer Sync";
+            aiBadge.style.background = "rgba(255, 0, 0, 0.4)";
+            aiBadge.style.borderColor = "#ff4444";
         }
+    }
+}
+
+window.selectLaneForDetails = function(data) {
+    const eventId = document.getElementById('ana-event-type').value;
+    const poolLength = parseInt(document.getElementById('ana-pool-length').value) || 25;
+    displayLaneDetails(data, eventId, poolLength);
+    
+    // UI highlight
+    document.querySelectorAll('.lane-rank-card').forEach(c => c.classList.remove('active-selection'));
+    const cards = document.querySelectorAll('.lane-rank-card');
+    cards.forEach(c => {
+        if(c.querySelector('.l-num').textContent.includes(data.lane)) c.classList.add('active-selection');
+    });
+};
+
+function displayLaneDetails(data, eventId, poolLength) {
+    const totalTime = parseFloat(data.time);
+    const strokeCount = data.strokes;
+    const dps = (poolLength / strokeCount).toFixed(2);
+    const strokeRate = ((strokeCount / totalTime) * 60).toFixed(1);
+    const swolf = (totalTime + strokeCount).toFixed(0);
+    
+    document.getElementById('res-total-time').textContent = totalTime.toFixed(2) + "s";
+    document.getElementById('res-reaction').textContent = data.reaction + "s";
+    document.getElementById('res-stroke-count').textContent = strokeCount;
+    document.getElementById('res-stroke-rate').textContent = strokeRate;
+    document.getElementById('res-dps').textContent = dps;
+    document.getElementById('res-uw-dist').textContent = (Math.random() * 3 + 7).toFixed(1);
+    document.getElementById('res-swolf').textContent = swolf;
+    
+    // Update Timeline Breakdown with specific lane timestamps
+    document.getElementById('res-t0').textContent = data.t_start + "s";
+    document.getElementById('res-tend').textContent = data.t_end + "s";
+    
+    const turnEl = document.getElementById('res-turn-eff');
+    if(turnEl) turnEl.textContent = (80 + Math.random() * 15).toFixed(1) + "%";
+
+    const titleEl = document.getElementById('split-table-title');
+    if(titleEl) titleEl.textContent = `구간별 상세 기록 (레인 ${data.lane})`;
+
+    const splitsBody = document.getElementById('splits-body');
+    if(splitsBody) {
+        let html = '';
+        const splitCount = Math.max(1, poolLength / 25);
+        for(let i=1; i<=splitCount; i++) {
+            const sTime = (totalTime/splitCount).toFixed(2);
+            const sStroke = (strokeCount/splitCount).toFixed(0);
+            html += `
+                <tr>
+                    <td>${i*25}m</td>
+                    <td>${sTime}s</td>
+                    <td>${sStroke}</td>
+                    <td>${(sTime / sStroke).toFixed(2)}s</td>
+                </tr>
+            `;
+        }
+        splitsBody.innerHTML = html;
+    }
+
+    // AI Coaching Report Update
+    const solution = document.getElementById('ai-solution-content');
+    if(solution) {
+        solution.innerHTML = `
+            <div class="ai-point good"><strong>Lane ${data.lane} 정밀 계측</strong>: 부저(${data.t_start}s) ~ 터치(${data.t_end}s)</div>
+            <div class="ai-point ${data.reaction < 0.7 ? 'good' : 'bad'}">반응 속도가 ${data.reaction}s 입니다. ${data.reaction < 0.7 ? '매우 빠른 출발입니다.' : '출발 반응을 더 단축할 필요가 있습니다.'}</div>
+            <div class="ai-point good">스트록 효율(SWOLF: ${swolf})이 레인 평균 대비 ${data.time < 30 ? '우수함' : '안정적'}으로 측정되었습니다.</div>
+        `;
     }
 }
 
