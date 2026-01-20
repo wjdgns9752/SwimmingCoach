@@ -390,9 +390,9 @@ function handleAnalysis(file) {
 
     // High-End Analysis Simulation Sequence
     const steps = [
-        { t: "영상 스트림 분석 및 프레임 슬라이싱 중...", s: "Extracting Frames (60fps) / Timecode Mapping" },
-        { t: "오디오 파형 분석 중...", s: "Buzzer Sound Frequency Detection (800Hz-1200Hz)" },
-        { t: "부저 소리 및 출발 시점 매칭 완료", s: "T0 Marker Set at Video Timestamp" },
+        { t: "오디오 파형 분석 중...", s: "Detecting 'Take your mark' command..." },
+        { t: "부저(Buzzer) 주파수 스캔 중...", s: "Searching for 2.5kHz Beep Signal" },
+        { t: "출발 반응 속도 계산 중...", s: "Calculating Reaction Time (Buzzer to Motion)" },
         { t: "Skeletal Tracking 및 구간 위치 분석", s: "Joint Positioning / Lane Coordinate Mapping" },
         { t: "영법별 스트록 및 구간 기록 계산 완료", s: "Stroke Phase Analysis / Split Time Calculation" }
     ];
@@ -426,18 +426,16 @@ function handleAnalysis(file) {
         const videoDuration = video.duration || 30.0;
 
         // 2. Define Common Start Signal (Buzzer)
-        // Assume tight clip: Buzzer usually happens 1.0s - 2.0s into the video
-        const buzzerTimestamp = 1.0 + Math.random() * 1.0; 
+        // Simulate "Take your mark" pause + Beep
+        const buzzerTimestamp = 2.0 + Math.random() * 1.5; 
         
         // Update Result Badge
         const badge = document.getElementById('res-badge-event');
         if(badge) badge.textContent = eventName;
 
         const userLane = Math.floor(Math.random() * 8) + 1;
-        const laneData = [];
         
         // Base user performance calculation
-        // Default: Race ends 2-3 seconds before video ends
         const estimatedTouch = Math.max(buzzerTimestamp + 5.0, videoDuration - 2.5);
         const maxRaceTime = estimatedTouch - buzzerTimestamp;
         
@@ -447,7 +445,8 @@ function handleAnalysis(file) {
             poolLength,
             eventId,
             videoDuration,
-            userLane
+            userLane,
+            currentRaceTime: maxRaceTime // Store current race duration
         };
         
         generateLaneData(maxRaceTime);
@@ -457,6 +456,9 @@ function handleAnalysis(file) {
 function generateLaneData(raceTime) {
     const ctx = window.currentAnalysisContext;
     if(!ctx) return;
+    
+    // Update context race time
+    ctx.currentRaceTime = raceTime;
 
     const laneData = [];
     const touchTimestamp = ctx.buzzerTimestamp + raceTime;
@@ -512,7 +514,7 @@ function generateLaneData(raceTime) {
     
     // Auto-fill the sync input for convenience
     const syncInput = document.getElementById('manual-score-time');
-    if(syncInput && syncInput.value === '') syncInput.placeholder = userData.time;
+    if(syncInput) syncInput.placeholder = userData.time;
 }
 
 window.syncOfficialTime = function() {
@@ -543,7 +545,27 @@ window.syncOfficialTime = function() {
     generateLaneData(newTime);
 };
 
-window.selectLaneForDetails = function(data) {
+window.setStartToCurrent = function() {
+    const video = document.getElementById('analysis-video-preview');
+    const ctx = window.currentAnalysisContext;
+    
+    if(!video || !ctx) return alert("분석 데이터가 없습니다.");
+    
+    const current = video.currentTime;
+    if(current >= ctx.videoDuration) return alert("영상 종료 지점입니다.");
+    
+    // Update Start Time (T0)
+    ctx.buzzerTimestamp = current;
+    
+    // Keep the current Race Time (Duration) constant if possible, shifting the end time
+    // If Start + Duration > Video Length, we warn but allow it (or user will sync time next)
+    const newTouch = current + parseFloat(ctx.currentRaceTime);
+    
+    alert(`출발 시점(T0) 설정 완료: ${current.toFixed(2)}s\n("삐!" 소리 지점)`);
+    
+    // Re-generate data with new start time, keeping duration same
+    generateLaneData(ctx.currentRaceTime);
+};
     const eventId = document.getElementById('ana-event-type').value;
     const poolLength = parseInt(document.getElementById('ana-pool-length').value) || 25;
     displayLaneDetails(data, eventId, poolLength);
@@ -981,3 +1003,4 @@ window.selectLaneForDetails = selectLaneForDetails;
 window.toggleClubPassword = toggleClubPassword;
 window.likePost = likePost;
 window.syncOfficialTime = syncOfficialTime;
+window.setStartToCurrent = setStartToCurrent;

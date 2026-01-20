@@ -328,7 +328,25 @@ button { cursor: pointer; border: none; font-family: inherit; }
 }
 .sync-btn:hover { background: var(--color-primary-dark); }
 
-/* Score Summary */
+.video-action-bar {
+    margin-bottom: 1rem;
+    text-align: center;
+}
+.action-btn {
+    background: #48bb78;
+    color: white;
+    border: none;
+    padding: 0.7rem 1.2rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(72, 187, 120, 0.3);
+    transition: transform 0.2s, background 0.2s;
+}
+.action-btn:hover { background: #38a169; transform: translateY(-2px); }
+
+/* Score Card */
 .score-card {
     flex: 1;
     background: white;
