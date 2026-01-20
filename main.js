@@ -406,70 +406,119 @@ function handleAnalysis(file) {
         const eventId = document.getElementById('ana-event-type').value;
         const poolLength = parseInt(document.getElementById('ana-pool-length').value) || 25;
         
-        // Stroke Specific Parameters
-        let strokeBase = 18; // Default freestyle
-        if(eventId.includes('breast')) strokeBase = 12;
-        else if(eventId.includes('fly')) strokeBase = 16;
-        else if(eventId.includes('back')) strokeBase = 19;
-
-        const totalTime = (24 + Math.random() * 8).toFixed(2);
-        const strokeCount = Math.floor(strokeBase + Math.random() * 4);
-        const reactionTime = (0.55 + Math.random() * 0.15).toFixed(3); // Precise reaction
-        const dps = (poolLength / strokeCount).toFixed(2);
-        const strokeRate = ((strokeCount / totalTime) * 60).toFixed(1);
-        const swolf = (parseFloat(totalTime) + strokeCount).toFixed(0);
-        const turnEff = (85 + Math.random() * 10).toFixed(1);
+        // Accurate Base Times (World Class Reference in seconds)
+        const baseTimes = {
+            'free50': 21.5, 'free100': 47.5,
+            'back50': 24.5, 'breast50': 26.5,
+            'fly50': 22.5, 'im100': 51.5, 'im200': 114.0
+        };
         
-        // Update UI
-        document.getElementById('res-total-time').textContent = totalTime + "s";
-        document.getElementById('res-reaction').textContent = reactionTime + "s";
-        document.getElementById('res-stroke-count').textContent = strokeCount;
-        document.getElementById('res-stroke-rate').textContent = strokeRate;
-        document.getElementById('res-dps').textContent = dps;
-        document.getElementById('res-uw-dist').textContent = (Math.random() * 3 + 7).toFixed(1);
-        document.getElementById('res-swolf').textContent = swolf;
-        const turnEl = document.getElementById('res-turn-eff');
-        if(turnEl) turnEl.textContent = turnEff + "%";
-
-        // Detailed Splits per 25m
-        const splitsBody = document.getElementById('splits-body');
-        if(splitsBody) {
-            let html = '';
-            const splitCount = poolLength === 50 ? 2 : 1;
-            for(let i=1; i<=splitCount; i++) {
-                const sTime = (totalTime/splitCount).toFixed(2);
-                const sStroke = (strokeCount/splitCount).toFixed(0);
-                html += `
-                    <tr>
-                        <td>${i*25}m</td>
-                        <td>${sTime}s</td>
-                        <td>${sStroke}</td>
-                        <td>${(sTime / sStroke).toFixed(2)}s</td>
-                    </tr>
-                `;
-            }
-            splitsBody.innerHTML = html;
+        const base = baseTimes[eventId] || 25.0;
+        const userLane = Math.floor(Math.random() * 8) + 1; // Randomly assign user to a lane for simulation
+        
+        // Generate Data for all 8 Lanes
+        const laneData = [];
+        for(let l=1; l<=8; l++) {
+            const laneVariance = (l === userLane) ? 1.15 : (1.05 + Math.random() * 0.3); // User is typically intermediate
+            const laneTime = (base * laneVariance).toFixed(2);
+            const strokeBase = eventId.includes('breast') ? 12 : (eventId.includes('fly') ? 16 : 18);
+            const strokeCount = Math.floor(strokeBase * (poolLength / 25) * (1 + Math.random() * 0.1));
+            
+            laneData.push({
+                lane: l,
+                time: laneTime,
+                strokes: strokeCount,
+                isUser: l === userLane,
+                reaction: (0.55 + Math.random() * 0.2).toFixed(3)
+            });
+        }
+        
+        // Sort by Time
+        laneData.sort((a, b) => a.time - b.time);
+        
+        // Update Lane Ranking UI
+        const rankingGrid = document.getElementById('lane-ranking-list');
+        if(rankingGrid) {
+            rankingGrid.innerHTML = laneData.map((d, i) => `
+                <div class="lane-rank-card ${d.isUser ? 'user-lane' : ''}" onclick="selectLaneForDetails(${JSON.stringify(d).replace(/"/g, '&quot;')})">
+                    <div class="l-rank">${i+1}</div>
+                    <div class="l-num">Lane ${d.lane}</div>
+                    <div class="l-time">${d.time}s</div>
+                    ${d.isUser ? '<span class="u-tag">ME</span>' : ''}
+                </div>
+            `).join('');
         }
 
-        // High-End AI Coaching Report
-        const solution = document.getElementById('ai-solution-content');
-        if(solution) {
-            solution.innerHTML = `
-                <div class="ai-point good"><strong>부저-푸시 반응 속도 (${reactionTime}s)</strong>: 평균 상위 10% 이내의 우수한 순발력입니다.</div>
-                <div class="ai-point good"><strong>스트록 위상 분석</strong>: Catch 동작에서의 팔꿈치 각도가 일정하게 유지되어 높은 추진력을 얻고 있습니다.</div>
-                <div class="ai-point bad"><strong>턴 이탈(Turn-out) 분석</strong>: 벽을 차고 나가는 시점에서 다리의 추진력이 분산되고 있습니다. ${poolLength === 50 ? '중간 지점' : '턴'}에서의 Streamline 자세를 더 길게 유지하세요.</div>
-                <div class="ai-point good"><strong>SWOLF 효율성 (${swolf})</strong>: 해당 레벨(${JSON.parse(localStorage.getItem(PROFILE_KEY))?.level || 'Intermediate'}) 기준 매우 효율적인 영법입니다.</div>
+        // Initially show user's lane data
+        const userData = laneData.find(d => d.isUser);
+        displayLaneDetails(userData, eventId, poolLength);
+    }
+}
+
+window.selectLaneForDetails = function(data) {
+    const eventId = document.getElementById('ana-event-type').value;
+    const poolLength = parseInt(document.getElementById('ana-pool-length').value) || 25;
+    displayLaneDetails(data, eventId, poolLength);
+    
+    // UI highlight
+    document.querySelectorAll('.lane-rank-card').forEach(c => c.classList.remove('active-selection'));
+    // Find the card by lane number (simplified for simulation)
+    const cards = document.querySelectorAll('.lane-rank-card');
+    cards.forEach(c => {
+        if(c.querySelector('.l-num').textContent.includes(data.lane)) c.classList.add('active-selection');
+    });
+};
+
+function displayLaneDetails(data, eventId, poolLength) {
+    const totalTime = parseFloat(data.time);
+    const strokeCount = data.strokes;
+    const dps = (poolLength / strokeCount).toFixed(2);
+    const strokeRate = ((strokeCount / totalTime) * 60).toFixed(1);
+    const swolf = (totalTime + strokeCount).toFixed(0);
+    
+    document.getElementById('res-total-time').textContent = totalTime.toFixed(2) + "s";
+    document.getElementById('res-reaction').textContent = data.reaction + "s";
+    document.getElementById('res-stroke-count').textContent = strokeCount;
+    document.getElementById('res-stroke-rate').textContent = strokeRate;
+    document.getElementById('res-dps').textContent = dps;
+    document.getElementById('res-uw-dist').textContent = (Math.random() * 3 + 7).toFixed(1);
+    document.getElementById('res-swolf').textContent = swolf;
+    
+    const turnEl = document.getElementById('res-turn-eff');
+    if(turnEl) turnEl.textContent = (80 + Math.random() * 15).toFixed(1) + "%";
+
+    const titleEl = document.getElementById('split-table-title');
+    if(titleEl) titleEl.textContent = `구간별 상세 기록 (레인 ${data.lane})`;
+
+    const splitsBody = document.getElementById('splits-body');
+    if(splitsBody) {
+        let html = '';
+        const splitCount = Math.max(1, poolLength / 25);
+        for(let i=1; i<=splitCount; i++) {
+            const sTime = (totalTime/splitCount).toFixed(2);
+            const sStroke = (strokeCount/splitCount).toFixed(0);
+            html += `
+                <tr>
+                    <td>${i*25}m</td>
+                    <td>${sTime}s</td>
+                    <td>${sStroke}</td>
+                    <td>${(sTime / sStroke).toFixed(2)}s</td>
+                </tr>
             `;
         }
-        
-        // Visual indicator on video
-        const badge = document.querySelector('.ai-overlay-badge');
-        if(badge) {
-            badge.textContent = "AI Analysis Active: Detailed Skeletal Data Applied";
-            badge.style.background = "rgba(0, 119, 182, 0.4)";
-            badge.style.borderColor = "var(--color-primary)";
-        }
+        splitsBody.innerHTML = html;
     }
+
+    // AI Coaching Report Update
+    const solution = document.getElementById('ai-solution-content');
+    if(solution) {
+        solution.innerHTML = `
+            <div class="ai-point good"><strong>Lane ${data.lane} 분석</strong>: ${data.isUser ? '회원님' : '해당 레인'}의 분석 결과입니다.</div>
+            <div class="ai-point ${data.reaction < 0.7 ? 'good' : 'bad'}">반응 속도가 ${data.reaction}s 입니다. ${data.reaction < 0.7 ? '매우 빠른 출발입니다.' : '출발 반응을 더 단축할 필요가 있습니다.'}</div>
+            <div class="ai-point good">스트록 효율(SWOLF: ${swolf})이 레인 평균 대비 ${data.time < 30 ? '우수함' : '안정적'}으로 측정되었습니다.</div>
+        `;
+    }
+}
 }
 
 window.changePlaybackSpeed = function(speed) {

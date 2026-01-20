@@ -342,13 +342,44 @@ button { cursor: pointer; border: none; font-family: inherit; }
 .m-value { display: block; font-size: 1.4rem; font-weight: 800; color: var(--color-primary); margin: 0.2rem 0; }
 .m-unit { font-size: 0.7rem; color: #a0aec0; }
 
-/* AI Report */
-.ai-solution-card {
-    background: linear-gradient(135deg, #ebf8ff 0%, #ffffff 100%);
-    border: 1px solid #bee3f8;
+/* Multi-Lane Styles */
+.multi-lane-container {
+    margin-bottom: 2rem;
+    background: white;
     padding: 1.25rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid #e2e8f0;
+}
+.lane-ranking-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.75rem;
+}
+.lane-rank-card {
+    background: var(--color-bg);
+    padding: 0.8rem;
     border-radius: 12px;
-    margin-bottom: 1.5rem;
+    border: 1px solid #edf2f7;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    text-align: center;
+}
+.lane-rank-card:hover { transform: translateY(-2px); border-color: var(--color-primary); }
+.lane-rank-card.user-lane { border: 2px solid var(--color-primary); background: #f0f9ff; }
+.lane-rank-card.active-selection { box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.2); border-color: var(--color-primary); }
+
+.l-rank {
+    position: absolute; top: 5px; left: 8px;
+    font-size: 0.7rem; font-weight: 800; color: #a0aec0;
+}
+.l-num { font-size: 0.85rem; font-weight: 600; color: #4a5568; margin-bottom: 0.2rem; }
+.l-time { font-size: 1.1rem; font-weight: 800; color: var(--color-primary-dark); }
+.u-tag {
+    display: block; font-size: 0.65rem; background: var(--color-primary);
+    color: white; padding: 2px 5px; border-radius: 4px;
+    margin-top: 4px; font-weight: 700;
 }
 .ai-point { margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.5; display: flex; gap: 8px; }
 .ai-point.good::before { content: '🟢'; }
