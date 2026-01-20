@@ -364,14 +364,74 @@ function handleAnalysis(file) {
     const loader = document.getElementById('analysis-loader');
     const res = document.getElementById('analysis-results');
     const zone = document.getElementById('upload-zone');
+    const video = document.getElementById('analysis-video-preview');
+    
     if(zone) zone.classList.add('hidden');
     if(res) res.classList.remove('hidden');
     if(loader) loader.classList.remove('hidden');
+
+    // Show video preview
+    if(video && file) {
+        video.src = URL.createObjectURL(file);
+        video.load();
+    }
+
+    // Simulate AI Processing
     setTimeout(() => {
         if(loader) loader.classList.add('hidden');
-        document.getElementById('res-total-time').textContent = (30 + Math.random()*5).toFixed(2) + "s";
-    }, 2000);
+        
+        const poolLength = parseInt(document.getElementById('ana-pool-length').value) || 25;
+        const totalTime = (25 + Math.random() * 10).toFixed(2);
+        const strokeCount = Math.floor(15 + Math.random() * 10);
+        const dps = (poolLength / strokeCount).toFixed(2);
+        const strokeRate = ((strokeCount / totalTime) * 60).toFixed(1);
+        const swolf = (parseFloat(totalTime) + strokeCount).toFixed(0);
+        
+        // Update UI
+        document.getElementById('res-total-time').textContent = totalTime + "s";
+        document.getElementById('res-reaction').textContent = (0.6 + Math.random() * 0.2).toFixed(2) + "s";
+        document.getElementById('res-stroke-count').textContent = strokeCount;
+        document.getElementById('res-stroke-rate').textContent = strokeRate;
+        document.getElementById('res-dps').textContent = dps;
+        document.getElementById('res-uw-dist').textContent = (Math.random() * 5 + 5).toFixed(1);
+        document.getElementById('res-swolf').textContent = swolf;
+
+        // Populate Splits
+        const splitsBody = document.getElementById('splits-body');
+        if(splitsBody) {
+            let html = '';
+            const splitCount = poolLength === 50 ? 2 : 1;
+            for(let i=1; i<=splitCount; i++) {
+                html += `
+                    <tr>
+                        <td>${i*25}m</td>
+                        <td>${(totalTime/splitCount).toFixed(2)}s</td>
+                        <td>${(strokeCount/splitCount).toFixed(0)}</td>
+                        <td>${(1.2 + Math.random()*0.3).toFixed(2)}s</td>
+                    </tr>
+                `;
+            }
+            splitsBody.innerHTML = html;
+        }
+
+        // AI Coaching Report
+        const solution = document.getElementById('ai-solution-content');
+        if(solution) {
+            solution.innerHTML = `
+                <div class="ai-point good">스타트 반응 속도가 매우 안정적입니다.</div>
+                <div class="ai-point ${dps < 1.5 ? 'bad' : 'good'}">스트록당 이동 거리(DPS)가 ${dps}m입니다. ${dps < 1.5 ? '팔을 더 멀리 뻗어 물을 잡으세요.' : '아주 효율적인 영법입니다.'}</div>
+                <div class="ai-point bad">구간 턴 이후 유선형 자세 유지가 조금 일찍 풀리는 경향이 보입니다.</div>
+            `;
+        }
+    }, 3000);
 }
+
+window.changePlaybackSpeed = function(speed) {
+    const video = document.getElementById('analysis-video-preview');
+    if(video) {
+        video.playbackRate = parseFloat(speed);
+    }
+};
 
 // --- Club Feature ---
 const DEFAULT_CLUBS = []; // Cleared per user request

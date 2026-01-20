@@ -239,6 +239,17 @@
               <div class="video-wrapper">
                   <video id="analysis-video-preview" controls playsinline></video>
                   <div class="ai-overlay-badge">AI Analysis Ready</div>
+                  <div class="video-controls-overlay">
+                      <label for="playback-speed">재생 속도:</label>
+                      <select id="playback-speed" onchange="changePlaybackSpeed(this.value)">
+                          <option value="0.25">0.25x (최대한 천천히)</option>
+                          <option value="0.5">0.5x (천천히)</option>
+                          <option value="0.75">0.75x</option>
+                          <option value="1.0" selected>1.0x (일반)</option>
+                          <option value="1.5">1.5x</option>
+                          <option value="2.0">2.0x</option>
+                      </select>
+                  </div>
               </div>
               <div class="score-card">
                   <div class="score-header">
@@ -255,8 +266,8 @@
                           <strong id="res-reaction">--</strong>
                       </div>
                       <div class="score-item">
-                          <span class="lbl">턴 구간</span>
-                          <strong id="res-turn-time">--</strong>
+                          <span class="lbl">스트록 수</span>
+                          <strong id="res-stroke-count">--</strong>
                       </div>
                   </div>
               </div>

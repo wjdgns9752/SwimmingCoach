@@ -28,7 +28,11 @@ A web-based Swimming Coach application designed to help users improve their swim
 ### Goal: Implement Core Features
 - [x] Workout Logger with LocalStorage.
 - [x] Personal Records (PR) section.
-- [x] Video Analysis simulation.
+- [x] **(Enhanced)** AI Precision Analysis:
+    - [x] Real video upload and preview.
+    - [x] Simulated YOLO metrics (Stroke Count, DPS, Split times, SWOLF).
+    - [x] Playback speed control (Slow-motion for detail analysis).
+    - [x] Dynamic AI Coaching report based on metrics.
 
 ### Goal: Community & Social Features
 - [x] Club System (Join/Leave, Public/Private).
