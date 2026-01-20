@@ -69,7 +69,7 @@ const PROFILE_KEY = 'swim_user_profile';
 const WORKOUT_KEY = 'swim_workouts';
 const RECORDS_KEY = 'swim_competition_records';
 const CLUB_KEY = 'swim_user_club';
-const CUSTOM_CLUBS_KEY = 'swim_custom_clubs_v2';
+const CUSTOM_CLUBS_KEY = 'swim_custom_clubs_v2'; // Changed to reset lists
 const CLUB_POSTS_KEY = 'swim_club_posts';
 const CLUB_NOTICES_KEY = 'swim_club_notices';
 
@@ -170,19 +170,10 @@ function setLanguage(lang) {
 function initProfile() {
     let profile = JSON.parse(localStorage.getItem(PROFILE_KEY));
     if (!profile) {
-        document.getElementById('onboarding-overlay').classList.add('active');
-    } else {
-        applyUserProfile(profile);
+        profile = { nickname: 'Swimmer', level: 'intermediate', goal: 'endurance', age: 25, gender: 'm' };
     }
-}
-
-window.completeOnboarding = function(level) {
-    const nickname = document.getElementById('onboard-nickname').value || 'Swimmer';
-    const profile = { nickname, level, goal: 'endurance', age: 25, gender: 'm' };
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-    document.getElementById('onboarding-overlay').classList.remove('active');
     applyUserProfile(profile);
-};
+}
 
 function applyUserProfile(profile) {
     if (!profile) return;
@@ -299,8 +290,15 @@ function initWorkouts() {
 }
 
 function loadWorkouts() {
+    const list = document.getElementById('recent-activity-list');
     const distDisplay = document.getElementById('total-distance-display');
     const workouts = JSON.parse(localStorage.getItem(WORKOUT_KEY)) || [];
+    if(list) {
+        list.innerHTML = workouts.length ? '' : '<li class="empty-state">No Data</li>';
+        workouts.slice(-3).reverse().forEach(w => {
+            list.innerHTML += `<li><span>${w.date}</span><strong>${w.distance}m</strong></li>`;
+        });
+    }
     if(distDisplay) {
         const total = workouts.reduce((s,w)=>s+parseInt(w.distance||0),0);
         distDisplay.textContent = `${total}m`;
@@ -366,77 +364,17 @@ function handleAnalysis(file) {
     const loader = document.getElementById('analysis-loader');
     const res = document.getElementById('analysis-results');
     const zone = document.getElementById('upload-zone');
-    const video = document.getElementById('analysis-video-preview');
-    
     if(zone) zone.classList.add('hidden');
     if(res) res.classList.remove('hidden');
     if(loader) loader.classList.remove('hidden');
-
-    if(video && file) {
-        video.src = URL.createObjectURL(file);
-        video.load();
-        video.onloadeddata = () => {
-            console.log("Video loaded successfully");
-        };
-        video.onerror = (e) => {
-            console.error("Video error:", e);
-            alert("동영상 파일을 불러오는 중 오류가 발생했습니다.");
-        };
-    }
-
     setTimeout(() => {
         if(loader) loader.classList.add('hidden');
-        
-        const poolLength = parseInt(document.getElementById('ana-pool-length').value) || 25;
-        const totalTime = (25 + Math.random() * 10).toFixed(2);
-        const strokeCount = Math.floor(15 + Math.random() * 10);
-        const dps = (poolLength / strokeCount).toFixed(2);
-        const strokeRate = ((strokeCount / totalTime) * 60).toFixed(1);
-        const swolf = (parseFloat(totalTime) + strokeCount).toFixed(0);
-        
-        document.getElementById('res-total-time').textContent = totalTime + "s";
-        document.getElementById('res-reaction').textContent = (0.6 + Math.random() * 0.2).toFixed(2) + "s";
-        document.getElementById('res-stroke-count').textContent = strokeCount;
-        document.getElementById('res-stroke-rate').textContent = strokeRate;
-        document.getElementById('res-dps').textContent = dps;
-        document.getElementById('res-uw-dist').textContent = (Math.random() * 5 + 5).toFixed(1);
-        document.getElementById('res-swolf').textContent = swolf;
-
-        const splitsBody = document.getElementById('splits-body');
-        if(splitsBody) {
-            let html = '';
-            const splitCount = poolLength === 50 ? 2 : 1;
-            for(let i=1; i<=splitCount; i++) {
-                html += `
-                    <tr>
-                        <td>${i*25}m</td>
-                        <td>${(totalTime/splitCount).toFixed(2)}s</td>
-                        <td>${(strokeCount/splitCount).toFixed(0)}</td>
-                        <td>${(1.2 + Math.random()*0.3).toFixed(2)}s</td>
-                    </tr>
-                `;
-            }
-            splitsBody.innerHTML = html;
-        }
-
-        const solution = document.getElementById('ai-solution-content');
-        if(solution) {
-            solution.innerHTML = `
-                <div class="ai-point good">스타트 반응 속도가 매우 안정적입니다.</div>
-                <div class="ai-point ${dps < 1.5 ? 'bad' : 'good'}">스트록당 이동 거리(DPS)가 ${dps}m입니다. ${dps < 1.5 ? '팔을 더 멀리 뻗어 물을 잡으세요.' : '아주 효율적인 영법입니다.'}</div>
-                <div class="ai-point bad">구간 턴 이후 유선형 자세 유지가 조금 일찍 풀리는 경향이 보입니다.</div>
-            `;
-        }
-    }, 3000);
+        document.getElementById('res-total-time').textContent = (30 + Math.random()*5).toFixed(2) + "s";
+    }, 2000);
 }
 
-window.changePlaybackSpeed = function(speed) {
-    const video = document.getElementById('analysis-video-preview');
-    if(video) video.playbackRate = parseFloat(speed);
-};
-
 // --- Club Feature ---
-const DEFAULT_CLUBS = [];
+const DEFAULT_CLUBS = []; // Cleared per user request
 
 function initClubFeature() {
     const saved = localStorage.getItem(CLUB_KEY);
@@ -452,7 +390,9 @@ function initClubFeature() {
             const fileInput = document.getElementById('new-club-logo-file');
             let icon = document.getElementById('new-club-icon-emoji').value;
             if(fileInput.files[0]) icon = await readFileAsDataURL(fileInput.files[0]);
+            
             const profile = JSON.parse(localStorage.getItem(PROFILE_KEY)) || { nickname: 'Anonymous' };
+
             const newClub = {
                 id: 'custom_' + Date.now(),
                 name: document.getElementById('new-club-name').value,
@@ -460,7 +400,7 @@ function initClubFeature() {
                 type: document.getElementById('new-club-type').value,
                 password: document.getElementById('new-club-password').value,
                 icon: icon,
-                admins: [profile.nickname]
+                admins: [profile.nickname] // Set creator as admin
             };
             const custom = JSON.parse(localStorage.getItem(CUSTOM_CLUBS_KEY)) || [];
             custom.push(newClub);
@@ -531,6 +471,7 @@ window.switchClubTab = function(tabName) {
     document.querySelectorAll('.club-tab-content').forEach(el => el.classList.add('hidden'));
     const target = document.getElementById(`club-tab-${tabName}`);
     if(target) target.classList.remove('hidden');
+    
     document.querySelectorAll('#club-tabs .lane-tab').forEach(el => {
         if(el.textContent.includes(tabName === 'ranking' ? '랭킹' : tabName === 'board' ? '게시판' : '멤버')) {
             el.classList.add('active');
@@ -545,13 +486,18 @@ function showClubDashboard(id) {
     const dash = document.getElementById('club-dashboard-view');
     const club = getClubs().find(c => c.id === id);
     if(!club) return showClubSelection();
+    
     view.classList.add('hidden');
     dash.classList.remove('hidden');
+    
     document.getElementById('my-club-name').textContent = club.name;
     document.getElementById('my-club-desc').textContent = club.desc;
+    
     const icon = document.getElementById('my-club-icon');
     if(club.icon.startsWith('data:image')) icon.innerHTML = `<img src="${club.icon}" class="club-logo-img-large">`;
     else icon.textContent = club.icon;
+    
+    // Admin Check
     const profile = JSON.parse(localStorage.getItem(PROFILE_KEY)) || { nickname: '' };
     const isAdmin = (club.admins || []).includes(profile.nickname);
     const adminBtn = document.getElementById('club-admin-btn');
@@ -559,47 +505,95 @@ function showClubDashboard(id) {
         if(isAdmin) adminBtn.classList.remove('hidden');
         else adminBtn.classList.add('hidden');
     }
+
     loadClubPosts(id);
     loadClubMembers();
     loadClubLeaderboard();
     loadClubNotices(id);
 }
 
-function loadClubPosts(clubId) {
-    const feed = document.getElementById('club-feed');
-    if(!feed) return;
-    const all = JSON.parse(localStorage.getItem(CLUB_POSTS_KEY)) || {};
-    const posts = all[clubId] || [];
-    if(posts.length === 0) {
-        feed.innerHTML = '<p class="text-muted">아직 올라온 소식이 없습니다.</p>';
+// --- Admin Features ---
+window.openAdminModal = () => document.getElementById('admin-modal').classList.remove('hidden');
+window.closeAdminModal = () => document.getElementById('admin-modal').classList.add('hidden');
+
+window.switchAdminTab = (tab) => {
+    document.getElementById('admin-tab-notice').classList.add('hidden');
+    document.getElementById('admin-tab-staff').classList.add('hidden');
+    document.getElementById(`admin-tab-${tab}`).classList.remove('hidden');
+    if(tab === 'staff') loadAdminStaffList();
+};
+
+function initAdminFeatures() {
+    const noticeForm = document.getElementById('admin-notice-form');
+    if(noticeForm) {
+        noticeForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = document.getElementById('notice-title').value;
+            const content = document.getElementById('notice-content').value;
+            const clubId = localStorage.getItem(CLUB_KEY);
+            const profile = JSON.parse(localStorage.getItem(PROFILE_KEY));
+            
+            if(!clubId || !title || !content) return;
+            
+            const notice = {
+                id: Date.now(),
+                title, content,
+                date: new Date().toISOString(),
+                author: profile.nickname
+            };
+            
+            const allNotices = JSON.parse(localStorage.getItem(CLUB_NOTICES_KEY)) || {};
+            if(!allNotices[clubId]) allNotices[clubId] = [];
+            allNotices[clubId].unshift(notice);
+            localStorage.setItem(CLUB_NOTICES_KEY, JSON.stringify(allNotices));
+            
+            alert('공지가 등록되었습니다.');
+            document.getElementById('notice-title').value = '';
+            document.getElementById('notice-content').value = '';
+            closeAdminModal();
+            loadClubNotices(clubId);
+        });
+    }
+}
+
+function loadClubNotices(clubId) {
+    const section = document.getElementById('club-notice-section');
+    const list = document.getElementById('club-notice-list');
+    if(!section || !list) return;
+    
+    const notices = (JSON.parse(localStorage.getItem(CLUB_NOTICES_KEY)) || {})[clubId] || [];
+    
+    if(notices.length === 0) {
+        section.classList.add('hidden');
         return;
     }
-    feed.innerHTML = posts.map((p, i) => `
-        <div class="feed-item">
-            <div class="feed-head">
-                <span class="feed-user">${p.author}</span>
-                <span class="feed-time">${new Date(p.date).toLocaleString()}</span>
-            </div>
-            <p class="feed-content">${p.content}</p>
-            <div class="feed-actions">
-                <button class="like-btn ${p.likedByMe ? 'liked' : ''}" onclick="likePost('${clubId}', ${i})">
-                    ❤️ ${p.likes || 0}
-                </button>
-            </div>
-        </div>
+    
+    section.classList.remove('hidden');
+    list.innerHTML = notices.map(n => `
+        <li class="notice-item">
+            <span class="notice-title">${n.title}</span>
+            <span class="notice-meta">${new Date(n.date).toLocaleDateString()} • ${n.author}</span>
+            <p style="margin-top:0.2rem; color:#4a5568;">${n.content}</p>
+        </li>
     `).join('');
 }
 
-window.likePost = function(clubId, postIndex) {
-    const allPosts = JSON.parse(localStorage.getItem(CLUB_POSTS_KEY)) || {};
-    if (!allPosts[clubId] || !allPosts[clubId][postIndex]) return;
-    const post = allPosts[clubId][postIndex];
-    if (!post.likes) post.likes = 0;
-    if (post.likedByMe) { post.likes--; post.likedByMe = false; } 
-    else { post.likes++; post.likedByMe = true; }
-    localStorage.setItem(CLUB_POSTS_KEY, JSON.stringify(allPosts));
-    loadClubPosts(clubId);
-};
+function loadAdminStaffList() {
+    const list = document.getElementById('admin-member-list');
+    if(!list) return;
+    list.innerHTML = `
+        <li>
+            <span>나 (Admin)</span>
+            <span class="status-badge">관리자</span>
+        </li>
+        <li>
+            <span>김물개</span>
+            <button class="small-text-btn" onclick="alert('기능 준비중입니다.')">관리자 임명</button>
+        </li>
+    `;
+}
+
+// ... existing helper functions (loadClubMembers, loadClubLeaderboard, updateDashboardClubCard, etc.) ...
 
 function loadClubMembers() {
     const list = document.getElementById('club-member-list');
@@ -661,65 +655,6 @@ function updateDashboardClubCard() {
         icon.textContent = '🤝';
         content.innerHTML = '<p>소속 클럽이 없습니다.</p>';
     }
-}
-
-// --- Admin Features ---
-window.openAdminModal = () => document.getElementById('admin-modal').classList.remove('hidden');
-window.closeAdminModal = () => document.getElementById('admin-modal').classList.add('hidden');
-window.switchAdminTab = (tab) => {
-    document.getElementById('admin-tab-notice').classList.add('hidden');
-    document.getElementById('admin-tab-staff').classList.add('hidden');
-    document.getElementById(`admin-tab-${tab}`).classList.remove('hidden');
-    if(tab === 'staff') loadAdminStaffList();
-};
-
-function initAdminFeatures() {
-    const noticeForm = document.getElementById('admin-notice-form');
-    if(noticeForm) {
-        noticeForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const title = document.getElementById('notice-title').value;
-            const content = document.getElementById('notice-content').value;
-            const clubId = localStorage.getItem(CLUB_KEY);
-            const profile = JSON.parse(localStorage.getItem(PROFILE_KEY));
-            if(!clubId || !title || !content) return;
-            const notice = { id: Date.now(), title, content, date: new Date().toISOString(), author: profile.nickname };
-            const allNotices = JSON.parse(localStorage.getItem(CLUB_NOTICES_KEY)) || {};
-            if(!allNotices[clubId]) allNotices[clubId] = [];
-            allNotices[clubId].unshift(notice);
-            localStorage.setItem(CLUB_NOTICES_KEY, JSON.stringify(allNotices));
-            alert('공지가 등록되었습니다.');
-            document.getElementById('notice-title').value = '';
-            document.getElementById('notice-content').value = '';
-            closeAdminModal();
-            loadClubNotices(clubId);
-        });
-    }
-}
-
-function loadClubNotices(clubId) {
-    const section = document.getElementById('club-notice-section');
-    const list = document.getElementById('club-notice-list');
-    if(!section || !list) return;
-    const notices = (JSON.parse(localStorage.getItem(CLUB_NOTICES_KEY)) || {})[clubId] || [];
-    if(notices.length === 0) {
-        section.classList.add('hidden');
-        return;
-    }
-    section.classList.remove('hidden');
-    list.innerHTML = notices.map(n => `
-        <li class="notice-item">
-            <span class="notice-title">${n.title}</span>
-            <span class="notice-meta">${new Date(n.date).toLocaleDateString()} • ${n.author}</span>
-            <p style="margin-top:0.2rem; color:#4a5568;">${n.content}</p>
-        </li>
-    `).join('');
-}
-
-function loadAdminStaffList() {
-    const list = document.getElementById('admin-member-list');
-    if(!list) return;
-    list.innerHTML = `<li><span>나 (Admin)</span><span class="status-badge">관리자</span></li><li><span>김물개</span><button class="small-text-btn" onclick="alert('기능 준비중입니다.')">관리자 임명</button></li>`;
 }
 
 // --- Modals ---
@@ -786,3 +721,14 @@ if(planCard) planCard.addEventListener('click', (e) => {
     if(e.target.classList.contains('tap-hint') && e.target.onclick) return;
     openWorkoutModal();
 });
+
+window.likePost = function(clubId, postIndex) {
+    const allPosts = JSON.parse(localStorage.getItem(CLUB_POSTS_KEY)) || {};
+    if (!allPosts[clubId] || !allPosts[clubId][postIndex]) return;
+    const post = allPosts[clubId][postIndex];
+    if (!post.likes) post.likes = 0;
+    if (post.likedByMe) { post.likes--; post.likedByMe = false; } 
+    else { post.likes++; post.likedByMe = true; }
+    localStorage.setItem(CLUB_POSTS_KEY, JSON.stringify(allPosts));
+    loadClubPosts(clubId);
+};
