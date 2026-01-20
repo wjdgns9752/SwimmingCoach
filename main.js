@@ -367,6 +367,8 @@ function handleAnalysis(file) {
     const res = document.getElementById('analysis-results');
     const zone = document.getElementById('upload-zone');
     const video = document.getElementById('analysis-video-preview');
+    const loaderText = loader.querySelector('p');
+    const loaderSub = loader.querySelector('.loading-sub');
     
     if(zone) zone.classList.add('hidden');
     if(res) res.classList.remove('hidden');
@@ -375,59 +377,99 @@ function handleAnalysis(file) {
     if(video && file) {
         video.src = URL.createObjectURL(file);
         video.load();
-        video.onloadeddata = () => {
-            console.log("Video loaded successfully");
-        };
-        video.onerror = (e) => {
-            console.error("Video error:", e);
-            alert("동영상 파일을 불러오는 중 오류가 발생했습니다.");
-        };
     }
 
-    setTimeout(() => {
+    // High-End Analysis Simulation Sequence
+    const steps = [
+        { t: "오디오 파형 분석 중...", s: "Buzzer Sound Frequency Detection (800Hz-1200Hz)" },
+        { t: "부저 소리 감지 완료", s: "T0 Marker Set / Synchronizing with Video Frames" },
+        { t: "Skeletal Tracking 활성화", s: "Joint Positioning (Ankle, Knee, Hip, Shoulder)" },
+        { t: "다리 푸시(Push-off) 시점 분석", s: "Reaction Force Vectoring / Acceleration Check" },
+        { t: "영법별 스트록 사이클 분석", s: "Stroke Phase: Entry - Catch - Pull - Push - Recovery" }
+    ];
+
+    let stepIdx = 0;
+    const interval = setInterval(() => {
+        if(stepIdx < steps.length) {
+            if(loaderText) loaderText.textContent = steps[stepIdx].t;
+            if(loaderSub) loaderSub.textContent = steps[stepIdx].s;
+            stepIdx++;
+        } else {
+            clearInterval(interval);
+            finishAnalysis();
+        }
+    }, 1200);
+
+    function finishAnalysis() {
         if(loader) loader.classList.add('hidden');
         
+        const eventId = document.getElementById('ana-event-type').value;
         const poolLength = parseInt(document.getElementById('ana-pool-length').value) || 25;
-        const totalTime = (25 + Math.random() * 10).toFixed(2);
-        const strokeCount = Math.floor(15 + Math.random() * 10);
+        
+        // Stroke Specific Parameters
+        let strokeBase = 18; // Default freestyle
+        if(eventId.includes('breast')) strokeBase = 12;
+        else if(eventId.includes('fly')) strokeBase = 16;
+        else if(eventId.includes('back')) strokeBase = 19;
+
+        const totalTime = (24 + Math.random() * 8).toFixed(2);
+        const strokeCount = Math.floor(strokeBase + Math.random() * 4);
+        const reactionTime = (0.55 + Math.random() * 0.15).toFixed(3); // Precise reaction
         const dps = (poolLength / strokeCount).toFixed(2);
         const strokeRate = ((strokeCount / totalTime) * 60).toFixed(1);
         const swolf = (parseFloat(totalTime) + strokeCount).toFixed(0);
+        const turnEff = (85 + Math.random() * 10).toFixed(1);
         
+        // Update UI
         document.getElementById('res-total-time').textContent = totalTime + "s";
-        document.getElementById('res-reaction').textContent = (0.6 + Math.random() * 0.2).toFixed(2) + "s";
+        document.getElementById('res-reaction').textContent = reactionTime + "s";
         document.getElementById('res-stroke-count').textContent = strokeCount;
         document.getElementById('res-stroke-rate').textContent = strokeRate;
         document.getElementById('res-dps').textContent = dps;
-        document.getElementById('res-uw-dist').textContent = (Math.random() * 5 + 5).toFixed(1);
+        document.getElementById('res-uw-dist').textContent = (Math.random() * 3 + 7).toFixed(1);
         document.getElementById('res-swolf').textContent = swolf;
+        const turnEl = document.getElementById('res-turn-eff');
+        if(turnEl) turnEl.textContent = turnEff + "%";
 
+        // Detailed Splits per 25m
         const splitsBody = document.getElementById('splits-body');
         if(splitsBody) {
             let html = '';
             const splitCount = poolLength === 50 ? 2 : 1;
             for(let i=1; i<=splitCount; i++) {
+                const sTime = (totalTime/splitCount).toFixed(2);
+                const sStroke = (strokeCount/splitCount).toFixed(0);
                 html += `
                     <tr>
                         <td>${i*25}m</td>
-                        <td>${(totalTime/splitCount).toFixed(2)}s</td>
-                        <td>${(strokeCount/splitCount).toFixed(0)}</td>
-                        <td>${(1.2 + Math.random()*0.3).toFixed(2)}s</td>
+                        <td>${sTime}s</td>
+                        <td>${sStroke}</td>
+                        <td>${(sTime / sStroke).toFixed(2)}s</td>
                     </tr>
                 `;
             }
             splitsBody.innerHTML = html;
         }
 
+        // High-End AI Coaching Report
         const solution = document.getElementById('ai-solution-content');
         if(solution) {
             solution.innerHTML = `
-                <div class="ai-point good">스타트 반응 속도가 매우 안정적입니다.</div>
-                <div class="ai-point ${dps < 1.5 ? 'bad' : 'good'}">스트록당 이동 거리(DPS)가 ${dps}m입니다. ${dps < 1.5 ? '팔을 더 멀리 뻗어 물을 잡으세요.' : '아주 효율적인 영법입니다.'}</div>
-                <div class="ai-point bad">구간 턴 이후 유선형 자세 유지가 조금 일찍 풀리는 경향이 보입니다.</div>
+                <div class="ai-point good"><strong>부저-푸시 반응 속도 (${reactionTime}s)</strong>: 평균 상위 10% 이내의 우수한 순발력입니다.</div>
+                <div class="ai-point good"><strong>스트록 위상 분석</strong>: Catch 동작에서의 팔꿈치 각도가 일정하게 유지되어 높은 추진력을 얻고 있습니다.</div>
+                <div class="ai-point bad"><strong>턴 이탈(Turn-out) 분석</strong>: 벽을 차고 나가는 시점에서 다리의 추진력이 분산되고 있습니다. ${poolLength === 50 ? '중간 지점' : '턴'}에서의 Streamline 자세를 더 길게 유지하세요.</div>
+                <div class="ai-point good"><strong>SWOLF 효율성 (${swolf})</strong>: 해당 레벨(${JSON.parse(localStorage.getItem(PROFILE_KEY))?.level || 'Intermediate'}) 기준 매우 효율적인 영법입니다.</div>
             `;
         }
-    }, 3000);
+        
+        // Visual indicator on video
+        const badge = document.querySelector('.ai-overlay-badge');
+        if(badge) {
+            badge.textContent = "AI Analysis Active: Detailed Skeletal Data Applied";
+            badge.style.background = "rgba(0, 119, 182, 0.4)";
+            badge.style.borderColor = "var(--color-primary)";
+        }
+    }
 }
 
 window.changePlaybackSpeed = function(speed) {

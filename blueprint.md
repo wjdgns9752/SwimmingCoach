@@ -31,6 +31,9 @@ A web-based Swimming Coach application designed to help users improve their swim
 - [x] **(Enhanced)** AI Precision Analysis:
     - [x] Real video upload and preview.
     - [x] Simulated YOLO metrics (Stroke Count, DPS, Split times, SWOLF).
+    - [x] **(Advanced)** Audio-Synchronized Start: Buzzer sound detection (800Hz) simulation.
+    - [x] **(Advanced)** Reaction Mechanics: Calculation of 'Buzzer to Leg Push-off' interval.
+    - [x] **(Advanced)** Skeletal Phase Analysis: Simulation of Catch-Pull-Push tracking.
     - [x] Playback speed control (Slow-motion for detail analysis).
     - [x] Dynamic AI Coaching report based on metrics.
 
