@@ -782,6 +782,13 @@ function loadClubPosts(clubId) {
     `).join('');
 }
 
+window.toggleClubPassword = function() {
+    const type = document.getElementById('new-club-type').value;
+    const passGroup = document.getElementById('club-password-group');
+    if (type === 'private') passGroup.classList.remove('hidden');
+    else passGroup.classList.add('hidden');
+};
+
 window.likePost = function(clubId, postIndex) {
     const allPosts = JSON.parse(localStorage.getItem(CLUB_POSTS_KEY)) || {};
     if (!allPosts[clubId] || !allPosts[clubId][postIndex]) return;
