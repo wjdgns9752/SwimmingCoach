@@ -403,40 +403,57 @@ function handleAnalysis(file) {
     function finishAnalysis() {
         if(loader) loader.classList.add('hidden');
         
-        const eventId = document.getElementById('ana-event-type').value;
+        const eventSelect = document.getElementById('ana-event-type');
+        const eventId = eventSelect.value;
+        const eventName = eventSelect.options[eventSelect.selectedIndex].text;
         const poolLength = parseInt(document.getElementById('ana-pool-length').value) || 25;
         
-        // Accurate Base Times (World Class Reference in seconds)
+        // Update Result Badge
+        const badge = document.getElementById('res-badge-event');
+        if(badge) badge.textContent = eventName;
+
+        // Realistic Base Times (seconds)
         const baseTimes = {
-            'free50': 21.5, 'free100': 47.5,
-            'back50': 24.5, 'breast50': 26.5,
-            'fly50': 22.5, 'im100': 51.5, 'im200': 114.0
+            'free50': 22.0, 'free100': 48.0,
+            'back50': 25.0, 'breast50': 27.0,
+            'fly50': 23.0, 'im100': 53.0, 'im200': 115.0
         };
         
-        const base = baseTimes[eventId] || 25.0;
-        const userLane = Math.floor(Math.random() * 8) + 1; // Randomly assign user to a lane for simulation
+        // Level-based Adjustment (Realism)
+        const profile = JSON.parse(localStorage.getItem(PROFILE_KEY)) || { level: 'intermediate' };
+        const levelMultipliers = {
+            'beginner': 2.2, 'intermediate': 1.6, 'advanced': 1.3, 'masters': 1.15, 'elite': 1.05
+        };
+        const userMult = levelMultipliers[profile.level] || 1.6;
         
-        // Generate Data for all 8 Lanes
+        const base = baseTimes[eventId] || 25.0;
+        const userLane = Math.floor(Math.random() * 8) + 1;
+        
         const laneData = [];
         for(let l=1; l<=8; l++) {
-            const laneVariance = (l === userLane) ? 1.15 : (1.05 + Math.random() * 0.3); // User is typically intermediate
-            const laneTime = (base * laneVariance).toFixed(2);
-            const strokeBase = eventId.includes('breast') ? 12 : (eventId.includes('fly') ? 16 : 18);
-            const strokeCount = Math.floor(strokeBase * (poolLength / 25) * (1 + Math.random() * 0.1));
+            // User's lane follows userMult, others vary around it
+            const variance = (l === userLane) ? userMult : (userMult * (0.9 + Math.random() * 0.4));
+            const laneTime = (base * variance).toFixed(2);
+            
+            // Stroke Base by Event
+            let strokeBase = 18;
+            if(eventId.includes('breast')) strokeBase = 12;
+            else if(eventId.includes('fly')) strokeBase = 15;
+            else if(eventId.includes('back')) strokeBase = 19;
+            
+            const strokeCount = Math.floor(strokeBase * (poolLength / 25) * (variance / userMult) * (0.95 + Math.random() * 0.1));
             
             laneData.push({
                 lane: l,
                 time: laneTime,
                 strokes: strokeCount,
                 isUser: l === userLane,
-                reaction: (0.55 + Math.random() * 0.2).toFixed(3)
+                reaction: (0.6 + Math.random() * 0.3).toFixed(3)
             });
         }
         
-        // Sort by Time
         laneData.sort((a, b) => a.time - b.time);
         
-        // Update Lane Ranking UI
         const rankingGrid = document.getElementById('lane-ranking-list');
         if(rankingGrid) {
             rankingGrid.innerHTML = laneData.map((d, i) => `
@@ -449,9 +466,14 @@ function handleAnalysis(file) {
             `).join('');
         }
 
-        // Initially show user's lane data
         const userData = laneData.find(d => d.isUser);
         displayLaneDetails(userData, eventId, poolLength);
+        
+        const aiBadge = document.querySelector('.ai-overlay-badge');
+        if(aiBadge) {
+            aiBadge.textContent = `${eventName} Analysis Complete`;
+            aiBadge.style.background = "rgba(0, 255, 204, 0.2)";
+        }
     }
 }
 
