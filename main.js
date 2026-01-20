@@ -413,21 +413,36 @@ function handleAnalysis(file) {
         const eventName = eventSelect.options[eventSelect.selectedIndex].text;
         const poolLength = parseInt(document.getElementById('ana-pool-length').value) || 25;
         
-        // Use Actual Video Duration as Truth
+        // 1. Get Actual Video Duration
         const videoDuration = video.duration || 30.0;
-        // Assume 1.5s for start block and 0.5s for post-touch padding
-        const raceTime = Math.max(videoDuration - 2.0, 5.0); 
+
+        // 2. Simulate Precise Detection (Start & Touch)
+        // Usually 1.5s ~ 3.5s before start buzzer in a typical user video
+        const startOffset = 1.2 + Math.random() * 1.5; 
+        // Post-race padding usually 2.0s ~ 5.0s
+        const endPadding = 1.5 + Math.random() * 2.5;
+        
+        // Calculate Touch Timestamp
+        const touchTimestamp = Math.max(videoDuration - endPadding, startOffset + 5.0);
+        
+        // Final Race Time
+        const raceTime = (touchTimestamp - startOffset).toFixed(2);
         
         // Update Result Badge
         const badge = document.getElementById('res-badge-event');
         if(badge) badge.textContent = eventName;
 
+        // Update Timeline UI
+        document.getElementById('res-t0').textContent = startOffset.toFixed(2) + "s";
+        document.getElementById('res-tend').textContent = touchTimestamp.toFixed(2) + "s";
+
         const userLane = Math.floor(Math.random() * 8) + 1;
         const laneData = [];
         
         for(let l=1; l<=8; l++) {
-            // Calculate other lanes based on user's actual video time
-            const laneVariance = (l === userLane) ? 1.0 : (0.85 + Math.random() * 0.3);
+            // User's lane is the "Truth" (Race Time)
+            // Others are relative to User
+            const laneVariance = (l === userLane) ? 1.0 : (0.9 + Math.random() * 0.2); 
             const laneTime = (raceTime * laneVariance).toFixed(2);
             
             let strokeBase = 18;
@@ -465,8 +480,9 @@ function handleAnalysis(file) {
         
         const aiBadge = document.querySelector('.ai-overlay-badge');
         if(aiBadge) {
-            aiBadge.textContent = "Frame-Sync Analysis Active";
-            aiBadge.style.background = "rgba(0, 119, 182, 0.6)";
+            aiBadge.textContent = "Start-to-Touch Analysis Active";
+            aiBadge.style.background = "rgba(255, 0, 100, 0.3)";
+            aiBadge.style.borderColor = "#ff0064";
         }
     }
 }

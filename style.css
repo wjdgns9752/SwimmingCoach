@@ -385,7 +385,31 @@ button { cursor: pointer; border: none; font-family: inherit; }
 .ai-point.good::before { content: '🟢'; }
 .ai-point.bad::before { content: '🔴'; }
 
-/* Splits Table */
+/* Timeline Breakdown */
+.timeline-breakdown {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f7fafc;
+    padding: 0.8rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    border: 1px solid #edf2f7;
+}
+.t-item { text-align: center; }
+.t-label { display: block; font-size: 0.7rem; color: #718096; text-transform: uppercase; font-weight: 600; margin-bottom: 0.2rem; }
+.t-val { font-size: 1.1rem; font-weight: 800; color: var(--color-primary-dark); font-family: monospace; }
+.t-line {
+    flex: 1; height: 2px; background: #cbd5e0; margin: 0 1.5rem; position: relative;
+}
+.t-line::before, .t-line::after {
+    content: ''; position: absolute; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: #cbd5e0;
+}
+.t-line::before { left: 0; }
+.t-line::after { right: 0; }
+
+/* AI Report */
+.ai-solution-card {
 .splits-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .splits-table th { text-align: left; padding: 0.5rem; color: #718096; font-size: 0.8rem; border-bottom: 2px solid #edf2f7; }
 .splits-table td { padding: 0.75rem 0.5rem; border-bottom: 1px solid #f7fafc; color: #2d3748; font-weight: 500; }
