@@ -566,6 +566,8 @@ window.setStartToCurrent = function() {
     // Re-generate data with new start time, keeping duration same
     generateLaneData(ctx.currentRaceTime);
 };
+
+window.selectLaneForDetails = function(data) {
     const eventId = document.getElementById('ana-event-type').value;
     const poolLength = parseInt(document.getElementById('ana-pool-length').value) || 25;
     displayLaneDetails(data, eventId, poolLength);
