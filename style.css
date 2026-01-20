@@ -300,7 +300,35 @@ button { cursor: pointer; border: none; font-family: inherit; }
     color: white;
 }
 
-/* Score Card */
+/* Time Sync */
+.time-sync-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+#manual-score-time {
+    width: 100px;
+    padding: 5px 8px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    text-align: center;
+}
+.sync-btn {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.sync-btn:hover { background: var(--color-primary-dark); }
+
+/* Score Summary */
 .score-card {
     flex: 1;
     background: white;

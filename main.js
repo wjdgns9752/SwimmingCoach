@@ -426,8 +426,8 @@ function handleAnalysis(file) {
         const videoDuration = video.duration || 30.0;
 
         // 2. Define Common Start Signal (Buzzer)
-        // "Take your mark" (approx 1.5s) + reaction (approx 0.8s) into video
-        const buzzerTimestamp = 2.5 + Math.random() * 1.0; 
+        // Assume tight clip: Buzzer usually happens 1.0s - 2.0s into the video
+        const buzzerTimestamp = 1.0 + Math.random() * 1.0; 
         
         // Update Result Badge
         const badge = document.getElementById('res-badge-event');
@@ -436,67 +436,112 @@ function handleAnalysis(file) {
         const userLane = Math.floor(Math.random() * 8) + 1;
         const laneData = [];
         
-        // Base user performance on video duration minus padding
-        // Ensure user finishes before video ends (e.g. 3s padding)
-        const maxRaceTime = Math.max(5.0, videoDuration - buzzerTimestamp - 3.0);
+        // Base user performance calculation
+        // Default: Race ends 2-3 seconds before video ends
+        const estimatedTouch = Math.max(buzzerTimestamp + 5.0, videoDuration - 2.5);
+        const maxRaceTime = estimatedTouch - buzzerTimestamp;
         
-        for(let l=1; l<=8; l++) {
-            // Determine Race Time for this lane
-            let laneRaceTime;
-            if (l === userLane) {
-                laneRaceTime = maxRaceTime;
-            } else {
-                // Other lanes vary: +/- 15% of user's time
-                const variance = 0.85 + Math.random() * 0.3;
-                laneRaceTime = maxRaceTime * variance;
-            }
-            
-            // Calculate specific Touch Time for this lane
-            const laneTouchTimestamp = buzzerTimestamp + laneRaceTime;
-
-            let strokeBase = 18;
-            if(eventId.includes('breast')) strokeBase = 12;
-            else if(eventId.includes('fly')) strokeBase = 15;
-            else if(eventId.includes('back')) strokeBase = 19;
-            
-            const strokeCount = Math.floor(strokeBase * (poolLength / 25) * (laneRaceTime / maxRaceTime) * (0.95 + Math.random() * 0.1));
-            
-            laneData.push({
-                lane: l,
-                time: laneRaceTime.toFixed(2),
-                t_start: buzzerTimestamp.toFixed(2),
-                t_end: laneTouchTimestamp.toFixed(2),
-                strokes: strokeCount,
-                isUser: l === userLane,
-                reaction: (0.55 + Math.random() * 0.15).toFixed(3)
-            });
-        }
+        // Save global context for sync
+        window.currentAnalysisContext = {
+            buzzerTimestamp,
+            poolLength,
+            eventId,
+            videoDuration,
+            userLane
+        };
         
-        laneData.sort((a, b) => parseFloat(a.time) - parseFloat(b.time));
-        
-        const rankingGrid = document.getElementById('lane-ranking-list');
-        if(rankingGrid) {
-            rankingGrid.innerHTML = laneData.map((d, i) => `
-                <div class="lane-rank-card ${d.isUser ? 'user-lane' : ''}" onclick="selectLaneForDetails(${JSON.stringify(d).replace(/"/g, '&quot;')})">
-                    <div class="l-rank">${i+1}</div>
-                    <div class="l-num">Lane ${d.lane}</div>
-                    <div class="l-time">${d.time}s</div>
-                    ${d.isUser ? '<span class="u-tag">ME</span>' : ''}
-                </div>
-            `).join('');
-        }
-
-        const userData = laneData.find(d => d.isUser);
-        displayLaneDetails(userData, eventId, poolLength);
-        
-        const aiBadge = document.querySelector('.ai-overlay-badge');
-        if(aiBadge) {
-            aiBadge.textContent = "Precision Timing: Buzzer Sync";
-            aiBadge.style.background = "rgba(255, 0, 0, 0.4)";
-            aiBadge.style.borderColor = "#ff4444";
-        }
+        generateLaneData(maxRaceTime);
     }
 }
+
+function generateLaneData(raceTime) {
+    const ctx = window.currentAnalysisContext;
+    if(!ctx) return;
+
+    const laneData = [];
+    const touchTimestamp = ctx.buzzerTimestamp + raceTime;
+
+    for(let l=1; l<=8; l++) {
+        let laneRaceTime;
+        if (l === ctx.userLane) {
+            laneRaceTime = raceTime;
+        } else {
+            // Variance: +/- 10%
+            const variance = 0.9 + Math.random() * 0.2;
+            laneRaceTime = raceTime * variance;
+        }
+        
+        const laneTouch = ctx.buzzerTimestamp + laneRaceTime;
+        
+        // Stroke calculation
+        let strokeBase = 18;
+        if(ctx.eventId.includes('breast')) strokeBase = 12;
+        else if(ctx.eventId.includes('fly')) strokeBase = 15;
+        else if(ctx.eventId.includes('back')) strokeBase = 19;
+        
+        const strokeCount = Math.floor(strokeBase * (ctx.poolLength / 25) * (laneRaceTime / raceTime) * (0.95 + Math.random() * 0.1));
+
+        laneData.push({
+            lane: l,
+            time: laneRaceTime.toFixed(2),
+            t_start: ctx.buzzerTimestamp.toFixed(2),
+            t_end: laneTouch.toFixed(2),
+            strokes: strokeCount,
+            isUser: l === ctx.userLane,
+            reaction: (0.55 + Math.random() * 0.15).toFixed(3)
+        });
+    }
+    
+    laneData.sort((a, b) => parseFloat(a.time) - parseFloat(b.time));
+    
+    // Update UI
+    const rankingGrid = document.getElementById('lane-ranking-list');
+    if(rankingGrid) {
+        rankingGrid.innerHTML = laneData.map((d, i) => `
+            <div class="lane-rank-card ${d.isUser ? 'user-lane' : ''}" onclick="selectLaneForDetails(${JSON.stringify(d).replace(/"/g, '&quot;')})">
+                <div class="l-rank">${i+1}</div>
+                <div class="l-num">Lane ${d.lane}</div>
+                <div class="l-time">${d.time}s</div>
+                ${d.isUser ? '<span class="u-tag">ME</span>' : ''}
+            </div>
+        `).join('');
+    }
+
+    const userData = laneData.find(d => d.isUser);
+    displayLaneDetails(userData, ctx.eventId, ctx.poolLength);
+    
+    // Auto-fill the sync input for convenience
+    const syncInput = document.getElementById('manual-score-time');
+    if(syncInput && syncInput.value === '') syncInput.placeholder = userData.time;
+}
+
+window.syncOfficialTime = function() {
+    const input = document.getElementById('manual-score-time');
+    if(!input || !input.value) return alert("전광판에 표시된 기록을 입력해주세요.");
+    
+    const newTime = parseFloat(input.value);
+    if(isNaN(newTime) || newTime <= 0) return alert("올바른 시간을 입력해주세요.");
+    
+    const ctx = window.currentAnalysisContext;
+    if(!ctx) return;
+
+    // Adjust Logic:
+    // If (Buzzer + NewTime) > VideoDuration, we must shift Buzzer earlier.
+    // If (Buzzer + NewTime) fits, we keep Buzzer and adjust Touch.
+    
+    let newBuzzer = ctx.buzzerTimestamp;
+    let newTouch = newBuzzer + newTime;
+    
+    if (newTouch > ctx.videoDuration) {
+        // Shift Buzzer earlier to fit the race
+        // Leave 0.5s padding at end if possible
+        newBuzzer = Math.max(0, ctx.videoDuration - newTime - 0.5);
+        ctx.buzzerTimestamp = newBuzzer;
+    }
+    
+    alert(`기록 동기화 완료: ${newTime}s\n(출발 시점 보정: ${newBuzzer.toFixed(2)}s)`);
+    generateLaneData(newTime);
+};
 
 window.selectLaneForDetails = function(data) {
     const eventId = document.getElementById('ana-event-type').value;
@@ -935,3 +980,4 @@ window.changePlaybackSpeed = changePlaybackSpeed;
 window.selectLaneForDetails = selectLaneForDetails;
 window.toggleClubPassword = toggleClubPassword;
 window.likePost = likePost;
+window.syncOfficialTime = syncOfficialTime;

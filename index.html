@@ -257,8 +257,12 @@
                       <span class="date-badge">Today</span>
                   </div>
                   <div class="total-time-display">
-                      <span class="label">Total Time</span>
+                      <span class="label">Total Time (Official)</span>
                       <span class="value" id="res-total-time">--</span>
+                      <div class="time-sync-wrapper">
+                          <input type="number" id="manual-score-time" placeholder="전광판 기록" step="0.01">
+                          <button onclick="syncOfficialTime()" class="sync-btn">동기화</button>
+                      </div>
                   </div>
                   <div class="score-summary">
                       <div class="score-item">
