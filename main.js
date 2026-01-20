@@ -1,3 +1,5 @@
+console.log("Main.js loaded successfully");
+
 // --- Translations ---
 const TRANSLATIONS = {
   ko: {
@@ -299,8 +301,15 @@ function initWorkouts() {
 }
 
 function loadWorkouts() {
+    const list = document.getElementById('recent-activity-list');
     const distDisplay = document.getElementById('total-distance-display');
     const workouts = JSON.parse(localStorage.getItem(WORKOUT_KEY)) || [];
+    if(list) {
+        list.innerHTML = workouts.length ? '' : '<li class="empty-state">No Data</li>';
+        workouts.slice(-3).reverse().forEach(w => {
+            list.innerHTML += `<li><span>${w.date}</span><strong>${w.distance}m</strong></li>`;
+        });
+    }
     if(distDisplay) {
         const total = workouts.reduce((s,w)=>s+parseInt(w.distance||0),0);
         distDisplay.textContent = `${total}m`;
@@ -551,71 +560,6 @@ function displayLaneDetails(data, eventId, poolLength) {
     if(solution) {
         solution.innerHTML = `
             <div class="ai-point good"><strong>Lane ${data.lane} 정밀 계측</strong>: 부저(${data.t_start}s) ~ 터치(${data.t_end}s)</div>
-            <div class="ai-point ${data.reaction < 0.7 ? 'good' : 'bad'}">반응 속도가 ${data.reaction}s 입니다. ${data.reaction < 0.7 ? '매우 빠른 출발입니다.' : '출발 반응을 더 단축할 필요가 있습니다.'}</div>
-            <div class="ai-point good">스트록 효율(SWOLF: ${swolf})이 레인 평균 대비 ${data.time < 30 ? '우수함' : '안정적'}으로 측정되었습니다.</div>
-        `;
-    }
-}
-
-window.selectLaneForDetails = function(data) {
-    const eventId = document.getElementById('ana-event-type').value;
-    const poolLength = parseInt(document.getElementById('ana-pool-length').value) || 25;
-    displayLaneDetails(data, eventId, poolLength);
-    
-    // UI highlight
-    document.querySelectorAll('.lane-rank-card').forEach(c => c.classList.remove('active-selection'));
-    // Find the card by lane number (simplified for simulation)
-    const cards = document.querySelectorAll('.lane-rank-card');
-    cards.forEach(c => {
-        if(c.querySelector('.l-num').textContent.includes(data.lane)) c.classList.add('active-selection');
-    });
-};
-
-function displayLaneDetails(data, eventId, poolLength) {
-    const totalTime = parseFloat(data.time);
-    const strokeCount = data.strokes;
-    const dps = (poolLength / strokeCount).toFixed(2);
-    const strokeRate = ((strokeCount / totalTime) * 60).toFixed(1);
-    const swolf = (totalTime + strokeCount).toFixed(0);
-    
-    document.getElementById('res-total-time').textContent = totalTime.toFixed(2) + "s";
-    document.getElementById('res-reaction').textContent = data.reaction + "s";
-    document.getElementById('res-stroke-count').textContent = strokeCount;
-    document.getElementById('res-stroke-rate').textContent = strokeRate;
-    document.getElementById('res-dps').textContent = dps;
-    document.getElementById('res-uw-dist').textContent = (Math.random() * 3 + 7).toFixed(1);
-    document.getElementById('res-swolf').textContent = swolf;
-    
-    const turnEl = document.getElementById('res-turn-eff');
-    if(turnEl) turnEl.textContent = (80 + Math.random() * 15).toFixed(1) + "%";
-
-    const titleEl = document.getElementById('split-table-title');
-    if(titleEl) titleEl.textContent = `구간별 상세 기록 (레인 ${data.lane})`;
-
-    const splitsBody = document.getElementById('splits-body');
-    if(splitsBody) {
-        let html = '';
-        const splitCount = Math.max(1, poolLength / 25);
-        for(let i=1; i<=splitCount; i++) {
-            const sTime = (totalTime/splitCount).toFixed(2);
-            const sStroke = (strokeCount/splitCount).toFixed(0);
-            html += `
-                <tr>
-                    <td>${i*25}m</td>
-                    <td>${sTime}s</td>
-                    <td>${sStroke}</td>
-                    <td>${(sTime / sStroke).toFixed(2)}s</td>
-                </tr>
-            `;
-        }
-        splitsBody.innerHTML = html;
-    }
-
-    // AI Coaching Report Update
-    const solution = document.getElementById('ai-solution-content');
-    if(solution) {
-        solution.innerHTML = `
-            <div class="ai-point good"><strong>Lane ${data.lane} 분석</strong>: ${data.isUser ? '회원님' : '해당 레인'}의 분석 결과입니다.</div>
             <div class="ai-point ${data.reaction < 0.7 ? 'good' : 'bad'}">반응 속도가 ${data.reaction}s 입니다. ${data.reaction < 0.7 ? '매우 빠른 출발입니다.' : '출발 반응을 더 단축할 필요가 있습니다.'}</div>
             <div class="ai-point good">스트록 효율(SWOLF: ${swolf})이 레인 평균 대비 ${data.time < 30 ? '우수함' : '안정적'}으로 측정되었습니다.</div>
         `;
@@ -985,3 +929,9 @@ if(planCard) planCard.addEventListener('click', (e) => {
     if(e.target.classList.contains('tap-hint') && e.target.onclick) return;
     openWorkoutModal();
 });
+
+// Explicitly assign global functions for HTML onclick attributes
+window.changePlaybackSpeed = changePlaybackSpeed;
+window.selectLaneForDetails = selectLaneForDetails;
+window.toggleClubPassword = toggleClubPassword;
+window.likePost = likePost;
