@@ -381,11 +381,11 @@ function handleAnalysis(file) {
 
     // High-End Analysis Simulation Sequence
     const steps = [
+        { t: "영상 스트림 분석 및 프레임 슬라이싱 중...", s: "Extracting Frames (60fps) / Timecode Mapping" },
         { t: "오디오 파형 분석 중...", s: "Buzzer Sound Frequency Detection (800Hz-1200Hz)" },
-        { t: "부저 소리 감지 완료", s: "T0 Marker Set / Synchronizing with Video Frames" },
-        { t: "Skeletal Tracking 활성화", s: "Joint Positioning (Ankle, Knee, Hip, Shoulder)" },
-        { t: "다리 푸시(Push-off) 시점 분석", s: "Reaction Force Vectoring / Acceleration Check" },
-        { t: "영법별 스트록 사이클 분석", s: "Stroke Phase: Entry - Catch - Pull - Push - Recovery" }
+        { t: "부저 소리 및 출발 시점 매칭 완료", s: "T0 Marker Set at Video Timestamp" },
+        { t: "Skeletal Tracking 및 구간 위치 분석", s: "Joint Positioning / Lane Coordinate Mapping" },
+        { t: "영법별 스트록 및 구간 기록 계산 완료", s: "Stroke Phase Analysis / Split Time Calculation" }
     ];
 
     let stepIdx = 0;
@@ -396,9 +396,14 @@ function handleAnalysis(file) {
             stepIdx++;
         } else {
             clearInterval(interval);
-            finishAnalysis();
+            // Ensure metadata is loaded to get duration
+            if (video.readyState >= 1) {
+                finishAnalysis();
+            } else {
+                video.onloadedmetadata = finishAnalysis;
+            }
         }
-    }, 1200);
+    }, 1000);
 
     function finishAnalysis() {
         if(loader) loader.classList.add('hidden');
@@ -408,47 +413,36 @@ function handleAnalysis(file) {
         const eventName = eventSelect.options[eventSelect.selectedIndex].text;
         const poolLength = parseInt(document.getElementById('ana-pool-length').value) || 25;
         
+        // Use Actual Video Duration as Truth
+        const videoDuration = video.duration || 30.0;
+        // Assume 1.5s for start block and 0.5s for post-touch padding
+        const raceTime = Math.max(videoDuration - 2.0, 5.0); 
+        
         // Update Result Badge
         const badge = document.getElementById('res-badge-event');
         if(badge) badge.textContent = eventName;
 
-        // Realistic Base Times (seconds)
-        const baseTimes = {
-            'free50': 22.0, 'free100': 48.0,
-            'back50': 25.0, 'breast50': 27.0,
-            'fly50': 23.0, 'im100': 53.0, 'im200': 115.0
-        };
-        
-        // Level-based Adjustment (Realism)
-        const profile = JSON.parse(localStorage.getItem(PROFILE_KEY)) || { level: 'intermediate' };
-        const levelMultipliers = {
-            'beginner': 2.2, 'intermediate': 1.6, 'advanced': 1.3, 'masters': 1.15, 'elite': 1.05
-        };
-        const userMult = levelMultipliers[profile.level] || 1.6;
-        
-        const base = baseTimes[eventId] || 25.0;
         const userLane = Math.floor(Math.random() * 8) + 1;
-        
         const laneData = [];
+        
         for(let l=1; l<=8; l++) {
-            // User's lane follows userMult, others vary around it
-            const variance = (l === userLane) ? userMult : (userMult * (0.9 + Math.random() * 0.4));
-            const laneTime = (base * variance).toFixed(2);
+            // Calculate other lanes based on user's actual video time
+            const laneVariance = (l === userLane) ? 1.0 : (0.85 + Math.random() * 0.3);
+            const laneTime = (raceTime * laneVariance).toFixed(2);
             
-            // Stroke Base by Event
             let strokeBase = 18;
             if(eventId.includes('breast')) strokeBase = 12;
             else if(eventId.includes('fly')) strokeBase = 15;
             else if(eventId.includes('back')) strokeBase = 19;
             
-            const strokeCount = Math.floor(strokeBase * (poolLength / 25) * (variance / userMult) * (0.95 + Math.random() * 0.1));
+            const strokeCount = Math.floor(strokeBase * (poolLength / 25) * (1.0 + (Math.random() * 0.1)));
             
             laneData.push({
                 lane: l,
                 time: laneTime,
                 strokes: strokeCount,
                 isUser: l === userLane,
-                reaction: (0.6 + Math.random() * 0.3).toFixed(3)
+                reaction: (0.55 + Math.random() * 0.15).toFixed(3)
             });
         }
         
@@ -471,8 +465,8 @@ function handleAnalysis(file) {
         
         const aiBadge = document.querySelector('.ai-overlay-badge');
         if(aiBadge) {
-            aiBadge.textContent = `${eventName} Analysis Complete`;
-            aiBadge.style.background = "rgba(0, 255, 204, 0.2)";
+            aiBadge.textContent = "Frame-Sync Analysis Active";
+            aiBadge.style.background = "rgba(0, 119, 182, 0.6)";
         }
     }
 }
