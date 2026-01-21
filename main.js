@@ -386,6 +386,12 @@ function handleAnalysis(file) {
     if(video && file) {
         video.src = URL.createObjectURL(file);
         video.load();
+        
+        // Add timeupdate listener for precise display
+        video.ontimeupdate = () => {
+            const timeDisplay = document.getElementById('current-video-time');
+            if(timeDisplay) timeDisplay.textContent = video.currentTime.toFixed(3) + "s";
+        };
     }
 
     // High-End Analysis Simulation Sequence
@@ -482,8 +488,8 @@ function generateLaneData(raceTime) {
         laneData.push({
             lane: l,
             time: laneRaceTime.toFixed(2),
-            t_start: ctx.buzzerTimestamp.toFixed(2),
-            t_end: laneTouch.toFixed(2),
+            t_start: ctx.buzzerTimestamp.toFixed(3),
+            t_end: laneTouch.toFixed(3),
             strokes: strokeCount,
             isUser: l === ctx.userLane,
             reaction: (0.55 + Math.random() * 0.15).toFixed(3)
@@ -537,7 +543,7 @@ window.syncOfficialTime = function() {
         ctx.buzzerTimestamp = newBuzzer;
     }
     
-    alert(`기록 동기화 완료: ${newTime}s\n(출발 시점 보정: ${newBuzzer.toFixed(2)}s)`);
+    alert(`기록 동기화 완료: ${newTime}s\n(출발 시점 보정: ${newBuzzer.toFixed(3)}s)`);
     generateLaneData(newTime);
 };
 
@@ -554,13 +560,15 @@ window.setStartToCurrent = function() {
     ctx.buzzerTimestamp = current;
     
     // Keep the current Race Time (Duration) constant if possible, shifting the end time
-    // If Start + Duration > Video Length, we warn but allow it (or user will sync time next)
-    const newTouch = current + parseFloat(ctx.currentRaceTime);
-    
-    alert(`출발 시점(T0) 설정 완료: ${current.toFixed(2)}s\n("삐!" 소리 지점)`);
+    alert(`출발 시점(T0) 설정 완료: ${current.toFixed(3)}s\n(부저 소리 지점으로 보정되었습니다)`);
     
     // Re-generate data with new start time, keeping duration same
     generateLaneData(ctx.currentRaceTime);
+};
+
+window.seekVideo = function(seconds) {
+    const video = document.getElementById('analysis-video-preview');
+    if(video) video.currentTime += seconds;
 };
 
 window.selectLaneForDetails = function(data) {

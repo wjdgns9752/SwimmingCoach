@@ -236,24 +236,45 @@
           
           <!-- Video & Main Score -->
           <div class="analysis-top-section">
-              <div class="video-wrapper">
-                  <video id="analysis-video-preview" controls playsinline></video>
-                  <div class="ai-overlay-badge">AI Analysis Ready</div>
-                  <div class="video-controls-overlay">
-                      <label for="playback-speed">재생 속도:</label>
-                      <select id="playback-speed" onchange="changePlaybackSpeed(this.value)">
-                          <option value="0.25">0.25x (최대한 천천히)</option>
-                          <option value="0.5">0.5x (천천히)</option>
-                          <option value="0.75">0.75x</option>
-                          <option value="1.0" selected>1.0x (일반)</option>
-                          <option value="1.5">1.5x</option>
-                          <option value="2.0">2.0x</option>
-                      </select>
+              <div class="video-main-container">
+                  <div class="video-wrapper">
+                      <video id="analysis-video-preview" controls playsinline></video>
+                      <div class="ai-overlay-badge">AI Analysis Ready</div>
+                      <div class="video-controls-overlay">
+                          <label for="playback-speed">재생 속도:</label>
+                          <select id="playback-speed" onchange="changePlaybackSpeed(this.value)">
+                              <option value="0.1">0.1x (초고정밀)</option>
+                              <option value="0.25">0.25x (최대한 천천히)</option>
+                              <option value="0.5">0.5x (천천히)</option>
+                              <option value="1.0" selected>1.0x (일반)</option>
+                          </select>
+                      </div>
+                  </div>
+                  
+                  <div class="video-fine-controls">
+                      <div class="time-status">
+                          <span class="time-label">현재 시점:</span>
+                          <span id="current-video-time" class="time-value">0.000s</span>
+                      </div>
+                      <div class="frame-btns">
+                          <button onclick="seekVideo(-0.033)" class="frame-btn">◁ -1F</button>
+                          <button onclick="seekVideo(-0.1)" class="frame-btn">◀ -0.1s</button>
+                          <button onclick="seekVideo(0.1)" class="frame-btn">0.1s ▶</button>
+                          <button onclick="seekVideo(0.033)" class="frame-btn">1F ▷</button>
+                      </div>
+                  </div>
+
+                  <div class="video-action-bar">
+                      <button onclick="setStartToCurrent()" class="action-btn large-btn highlight-btn">
+                          <span class="btn-icon">🔔</span>
+                          <div class="btn-text">
+                              <strong>"삐!" 소리에 맞춰 시작점 설정 (T0)</strong>
+                              <span>현재 프레임을 출발 시점으로 확정합니다.</span>
+                          </div>
+                      </button>
                   </div>
               </div>
-              <div class="video-action-bar">
-                  <button onclick="setStartToCurrent()" class="action-btn small-btn">🔊 "삐!" 소리에 맞춰 시작점 설정 (T0)</button>
-              </div>
+
               <div class="score-card">
                   <div class="score-header">
                       <span class="badge" id="res-badge-event">Freestyle 50m</span>

@@ -38,7 +38,13 @@ A web-based Swimming Coach application designed to help users improve their swim
     - [x] **(Advanced)** Accurate Recording Logic:
         - [x] Integrated world-standard reference times for each event (Free, Breast, etc.).
         - [x] Realistic variance calculation based on lane performance.
-    - [x] **(Advanced)** Audio-Synchronized Start: Buzzer sound detection (800Hz) simulation.    - [x] Playback speed control (Slow-motion for detail analysis).
+    - [x] **(Advanced)** Audio-Synchronized Start: Buzzer sound detection (800Hz) simulation.
+    - [x] **(New)** High-Precision Start Point Setting:
+        - [x] Enlarge video UI for better visibility.
+        - [x] Frame-by-frame controls (+/- 1F, +/- 0.1s).
+        - [x] Millisecond-level precision time display.
+        - [x] Manual T0 (Start Signal) confirmation button.
+    - [x] Playback speed control (Slow-motion for detail analysis).
     - [x] Dynamic AI Coaching report based on metrics.
 
 ### Goal: Community & Social Features
