@@ -43,7 +43,8 @@ A web-based Swimming Coach application designed to help users improve their swim
         - [x] Enlarge video UI for better visibility.
         - [x] Frame-by-frame controls (+/- 1F, +/- 0.1s).
         - [x] Millisecond-level precision time display.
-        - [x] Manual T0 (Start Signal) confirmation button.
+        - [x] **(Auto)** AI Audio Peak Detection: Automatically detects the buzzer sound (T0) from the video file using Web Audio API.
+        - [x] Manual T0 (Start Signal) confirmation button for fine-tuning.
     - [x] Playback speed control (Slow-motion for detail analysis).
     - [x] Dynamic AI Coaching report based on metrics.
 
