@@ -729,6 +729,26 @@ function updateRealtimeMetrics(currentSpm = 0) {
     }
 }
 
+function drawMarker(pos, label, color) {
+    canvasCtx.beginPath();
+    canvasCtx.arc(pos.x * canvasElement.width, pos.y * canvasElement.height, 8, 0, 2 * Math.PI);
+    canvasCtx.fillStyle = color;
+    canvasCtx.fill();
+    canvasCtx.fillStyle = "#FFF";
+    canvasCtx.font = "bold 12px Arial";
+    canvasCtx.fillText(label, pos.x * canvasElement.width + 10, pos.y * canvasElement.height);
+}
+
+function updateResultUI(startT, lapTime) {
+    const t0El = document.getElementById('res-t0');
+    const totalEl = document.getElementById('res-total-time');
+    const tendEl = document.getElementById('res-tend');
+    
+    if(t0El) t0El.textContent = startT.toFixed(3) + "s";
+    if(totalEl) totalEl.textContent = lapTime.toFixed(2) + "s";
+    if(tendEl) tendEl.textContent = (startT + lapTime).toFixed(3) + "s";
+}
+
 
 function finishAnalysis(autoT0) {
     const eventSelect = document.getElementById('ana-event-type');
@@ -881,24 +901,20 @@ window.syncOfficialTime = function() {
     const newTime = parseFloat(input.value);
     if(isNaN(newTime) || newTime <= 0) return alert("올바른 시간을 입력해주세요.");
     
-    const ctx = window.currentAnalysisContext;
-    if(!ctx) return;
-
-    // Adjust Logic:
-    // If (Buzzer + NewTime) > VideoDuration, we must shift Buzzer earlier.
-    // If (Buzzer + NewTime) fits, we keep Buzzer and adjust Touch.
-    
-    let newBuzzer = ctx.buzzerTimestamp;
-    let newTouch = newBuzzer + newTime;
-    
-    if (newTouch > ctx.videoDuration) {
-        // Shift Buzzer earlier to fit the race
-        // Leave 0.5s padding at end if possible
-        newBuzzer = Math.max(0, ctx.videoDuration - newTime - 0.5);
-        ctx.buzzerTimestamp = newBuzzer;
+    // Adjust based on Start Time
+    if (analysisState.startTime !== null) {
+        analysisState.endTime = analysisState.startTime + newTime;
+        analysisState.isFinished = true;
+        
+        // Visual confirmation
+        updateResultUI(analysisState.startTime, newTime);
+        alert(`기록 동기화 완료: ${newTime}s\n(T0: ${analysisState.startTime.toFixed(3)}s ~ T-End: ${analysisState.endTime.toFixed(3)}s)`);
+    } else {
+        // Fallback if no start time set yet
+        alert(`기록 동기화 완료: ${newTime}s`);
     }
     
-    alert(`기록 동기화 완료: ${newTime}s\n(출발 시점 보정: ${newBuzzer.toFixed(3)}s)`);
+    // Regenerate lanes for visual flair
     generateLaneData(newTime);
 };
 
