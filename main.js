@@ -404,19 +404,19 @@ function initAnalysisControls() {
 
     // --- Attach Event Listeners (Fix for Module Scope) ---
     const btnToggle = document.getElementById('btn-toggle-guide');
-    if(btnToggle) btnToggle.addEventListener('click', window.toggleGuide);
+    if(btnToggle) btnToggle.addEventListener('click', () => { if(window.toggleGuide) window.toggleGuide(); });
 
     const sliderOpacity = document.getElementById('guide-opacity');
-    if(sliderOpacity) sliderOpacity.addEventListener('input', (e) => window.adjustOpacity(e.target.value));
+    if(sliderOpacity) sliderOpacity.addEventListener('input', (e) => { if(window.adjustOpacity) window.adjustOpacity(e.target.value); });
 
     const btnSetStart = document.getElementById('btn-set-start');
-    if(btnSetStart) btnSetStart.addEventListener('click', window.setStartToCurrent);
+    if(btnSetStart) btnSetStart.addEventListener('click', () => { if(window.setStartToCurrent) window.setStartToCurrent(); });
 
     const btnSync = document.getElementById('btn-sync-time');
-    if(btnSync) btnSync.addEventListener('click', window.syncOfficialTime);
+    if(btnSync) btnSync.addEventListener('click', () => { if(window.syncOfficialTime) window.syncOfficialTime(); });
 
     document.querySelectorAll('.btn-seek').forEach(btn => {
-        btn.addEventListener('click', () => window.seekVideo(parseFloat(btn.dataset.seek)));
+        btn.addEventListener('click', () => { if(window.seekVideo) window.seekVideo(parseFloat(btn.dataset.seek)); });
     });
 }
 
