@@ -254,10 +254,10 @@
                   <!-- Overlay Controls -->
                   <div class="video-fine-controls" style="margin-top:10px;">
                       <div style="display:flex; align-items:center; gap:15px;">
-                          <button onclick="toggleGuide()" class="frame-btn" style="min-width:120px; background:#0077b6; color:#fff;">가이드 ON/OFF</button>
+                          <button id="btn-toggle-guide" class="frame-btn" style="min-width:120px; background:#0077b6; color:#fff;">가이드 ON/OFF</button>
                           <div style="flex:1; display:flex; align-items:center; gap:10px;">
                               <span class="time-label">가이드 투명도</span>
-                              <input type="range" id="guide-opacity" min="0" max="1" step="0.1" value="0.4" oninput="adjustOpacity(this.value)" style="width:100px;">
+                              <input type="range" id="guide-opacity" min="0" max="1" step="0.1" value="0.4" style="width:100px;">
                           </div>
                       </div>
                   </div>
@@ -268,15 +268,15 @@
                           <span id="current-video-time" class="time-value">0.000s</span>
                       </div>
                       <div class="frame-btns">
-                          <button onclick="seekVideo(-0.033)" class="frame-btn">◁ -1F</button>
-                          <button onclick="seekVideo(-0.1)" class="frame-btn">◀ -0.1s</button>
-                          <button onclick="seekVideo(0.1)" class="frame-btn">0.1s ▶</button>
-                          <button onclick="seekVideo(0.033)" class="frame-btn">1F ▷</button>
+                          <button data-seek="-0.033" class="frame-btn btn-seek">◁ -1F</button>
+                          <button data-seek="-0.1" class="frame-btn btn-seek">◀ -0.1s</button>
+                          <button data-seek="0.1" class="frame-btn btn-seek">0.1s ▶</button>
+                          <button data-seek="0.033" class="frame-btn btn-seek">1F ▷</button>
                       </div>
                   </div>
 
                   <div class="video-action-bar">
-                      <button onclick="setStartToCurrent()" class="action-btn large-btn highlight-btn">
+                      <button id="btn-set-start" class="action-btn large-btn highlight-btn">
                           <span class="btn-icon">🔔</span>
                           <div class="btn-text">
                               <strong>"삐!" 소리에 맞춰 시작점 설정 (T0)</strong>
@@ -296,7 +296,7 @@
                       <span class="value" id="res-total-time">--</span>
                       <div class="time-sync-wrapper">
                           <input type="number" id="manual-score-time" placeholder="전광판 기록" step="0.01">
-                          <button onclick="syncOfficialTime()" class="sync-btn">동기화</button>
+                          <button id="btn-sync-time" class="sync-btn">동기화</button>
                       </div>
                   </div>
                   <div class="score-summary">

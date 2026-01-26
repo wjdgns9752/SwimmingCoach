@@ -401,6 +401,23 @@ function initAnalysisControls() {
     
     canvasElement = document.getElementById('output-canvas');
     if(canvasElement) canvasCtx = canvasElement.getContext('2d');
+
+    // --- Attach Event Listeners (Fix for Module Scope) ---
+    const btnToggle = document.getElementById('btn-toggle-guide');
+    if(btnToggle) btnToggle.addEventListener('click', window.toggleGuide);
+
+    const sliderOpacity = document.getElementById('guide-opacity');
+    if(sliderOpacity) sliderOpacity.addEventListener('input', (e) => window.adjustOpacity(e.target.value));
+
+    const btnSetStart = document.getElementById('btn-set-start');
+    if(btnSetStart) btnSetStart.addEventListener('click', window.setStartToCurrent);
+
+    const btnSync = document.getElementById('btn-sync-time');
+    if(btnSync) btnSync.addEventListener('click', window.syncOfficialTime);
+
+    document.querySelectorAll('.btn-seek').forEach(btn => {
+        btn.addEventListener('click', () => window.seekVideo(parseFloat(btn.dataset.seek)));
+    });
 }
 
 // 3-Point Angle Calculation
