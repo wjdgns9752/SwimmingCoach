@@ -13,6 +13,8 @@
   <!-- MediaPipe -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -348,6 +350,14 @@
                   <span class="m-label">Efficiency</span>
                   <strong class="m-value" id="res-swolf">--</strong>
                   <span class="m-unit">SWOLF</span>
+              </div>
+          </div>
+
+          <!-- Pace Chart -->
+          <div class="feature-card" style="margin-bottom: 1.5rem;">
+              <h4 style="margin-bottom: 1rem; color: #2d3748;">⚡ 스트로크 페이스 (Stroke Rate Analysis)</h4>
+              <div style="height: 200px; position: relative;">
+                  <canvas id="pace-chart"></canvas>
               </div>
           </div>
 

@@ -355,6 +355,7 @@ function loadRecords() {
 let pose = null;
 let canvasCtx = null;
 let canvasElement = null;
+let paceChart = null;
 let analysisState = {
     isAnalyzing: false,
     strokeCount: 0,
@@ -362,7 +363,9 @@ let analysisState = {
     lastWristY: { left: 0, right: 0 },
     strokePhase: "recovery", // recovery, catch, pull
     framesProcessed: 0,
-    landmarksBuffer: []
+    landmarksBuffer: [],
+    paceData: [], // {x: time, y: rate}
+    lastStrokeTime: 0
 };
 
 function initAnalysisControls() {
@@ -390,14 +393,73 @@ function initAnalysisControls() {
             modelComplexity: 1,
             smoothLandmarks: true,
             enableSegmentation: false,
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5
+            minDetectionConfidence: 0.6, // Increased threshold as requested
+            minTrackingConfidence: 0.6
         });
         pose.onResults(onPoseResults);
     }
     
     canvasElement = document.getElementById('output-canvas');
     if(canvasElement) canvasCtx = canvasElement.getContext('2d');
+}
+
+// 3-Point Angle Calculation
+function calculateAngle(p1, p2, p3) {
+    if(!p1 || !p2 || !p3) return 0;
+    const radians = Math.atan2(p3.y - p2.y, p3.x - p2.x) - Math.atan2(p1.y - p2.y, p1.x - p2.x);
+    let angle = Math.abs(radians * 180.0 / Math.PI);
+    if (angle > 180.0) angle = 360 - angle;
+    return angle;
+}
+
+function initPaceChart() {
+    const ctx = document.getElementById('pace-chart');
+    if(!ctx) return;
+    
+    // Destroy previous chart if exists
+    if(paceChart) paceChart.destroy();
+
+    paceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Stroke Rate (SPM)',
+                data: [],
+                borderColor: '#0077b6',
+                backgroundColor: 'rgba(0, 119, 182, 0.1)',
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { display: false, title: { display: true, text: 'Time (s)' } },
+                y: { min: 0, max: 80, title: { display: true, text: 'SPM' } }
+            },
+            plugins: {
+                legend: { display: false }
+            },
+            animation: false // Disable animation for performance
+        }
+    });
+}
+
+function updatePaceChart(time, rate) {
+    if(!paceChart) return;
+    paceChart.data.labels.push(time.toFixed(1));
+    paceChart.data.datasets[0].data.push(rate);
+    
+    // Keep chart window moving (last 30 points)
+    if(paceChart.data.labels.length > 50) {
+        paceChart.data.labels.shift();
+        paceChart.data.datasets[0].data.shift();
+    }
+    paceChart.update();
 }
 
 async function handleAnalysis(file) {
@@ -428,8 +490,12 @@ async function handleAnalysis(file) {
             lastWristY: { left: 0, right: 0 },
             strokePhase: "recovery",
             framesProcessed: 0,
-            landmarksBuffer: []
+            landmarksBuffer: [],
+            paceData: [],
+            lastStrokeTime: 0
         };
+        
+        initPaceChart();
 
         // Start processing loop when video plays
         video.onplay = () => {
@@ -461,8 +527,6 @@ function processVideoFrame() {
     if (pose) {
         pose.send({image: video});
     }
-    // requestAnimationFrame(processVideoFrame) is called inside onPoseResults to sync? 
-    // actually safer to call it here to keep loop running even if detection fails occasionally
     requestAnimationFrame(processVideoFrame);
 }
 
@@ -474,98 +538,146 @@ function onPoseResults(results) {
     
     // Draw landmarks
     if (results.poseLandmarks) {
-        drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS,
-                       {color: '#00FF00', lineWidth: 2});
-        drawLandmarks(canvasCtx, results.poseLandmarks,
-                      {color: '#FF0000', lineWidth: 1});
+        const landmarks = results.poseLandmarks;
         
-        analyzeSwimmingForm(results.poseLandmarks);
+        // 1. Draw Base Skeleton (faintly)
+        drawConnectors(canvasCtx, landmarks, POSE_CONNECTIONS, {color: 'rgba(200, 200, 200, 0.5)', lineWidth: 1});
+        drawLandmarks(canvasCtx, landmarks, {color: 'rgba(200, 200, 200, 0.5)', lineWidth: 1, radius: 2});
+
+        // 2. Form Analysis & Visual Feedback Overlays
+        analyzeAndDrawFeedback(landmarks);
     }
     canvasCtx.restore();
 }
 
-function analyzeSwimmingForm(landmarks) {
-    // MediaPipe Landmarks: 11=L_Shoulder, 12=R_Shoulder, 13=L_Elbow, 14=R_Elbow, 15=L_Wrist, 16=R_Wrist
-    const leftWrist = landmarks[15];
-    const rightWrist = landmarks[16];
-    const leftShoulder = landmarks[11];
-    const rightShoulder = landmarks[12];
+function analyzeAndDrawFeedback(landmarks) {
+    // 11=L_Shoulder, 13=L_Elbow, 15=L_Wrist
+    // 12=R_Shoulder, 14=R_Elbow, 16=R_Wrist
+    const leftArm = [landmarks[11], landmarks[13], landmarks[15]];
+    const rightArm = [landmarks[12], landmarks[14], landmarks[16]];
     
-    // Visibility Threshold (0.0 ~ 1.0)
-    const VISIBILITY_THRESHOLD = 0.5;
+    // Visibility Threshold Check (0.6)
+    const VISIBILITY_THRESHOLD = 0.6;
+    const isLeftVisible = leftArm.every(p => p.visibility > VISIBILITY_THRESHOLD);
+    const isRightVisible = rightArm.every(p => p.visibility > VISIBILITY_THRESHOLD);
 
-    if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder) return;
-    if (leftWrist.visibility < VISIBILITY_THRESHOLD || rightWrist.visibility < VISIBILITY_THRESHOLD ||
-        leftShoulder.visibility < VISIBILITY_THRESHOLD || rightShoulder.visibility < VISIBILITY_THRESHOLD) {
-        return; // Skip analysis if confidence is low
+    // Calculate Angles
+    const leftAngle = isLeftVisible ? calculateAngle(landmarks[11], landmarks[13], landmarks[15]) : 0;
+    const rightAngle = isRightVisible ? calculateAngle(landmarks[12], landmarks[14], landmarks[16]) : 0;
+
+    // Draw Left Arm Overlay
+    if(isLeftVisible) {
+        // High Elbow Logic: If angle is too acute (<80) or too straight (>160) during Pull, warn?
+        // User Logic: "If < 90... High Elbow lack" -> Red
+        // But in reality, EVF (Early Vertical Forearm) is often around 90-110.
+        // Let's assume < 85 is "Too Bent/Collapsed" and > 150 is "Dropped Elbow/Straight Arm"
+        // For simplicity and user request: Red if < 90 or > 160 (Bad Form), Green if 90-160 (Good Range)
+        
+        // Dynamic Color: Green (Good) / Red (Bad)
+        const isGoodForm = leftAngle >= 90 && leftAngle <= 160; 
+        const color = isGoodForm ? '#00FF00' : '#FF0000';
+        const lineWidth = isGoodForm ? 4 : 6;
+
+        drawCustomConnector(landmarks[11], landmarks[13], color, lineWidth);
+        drawCustomConnector(landmarks[13], landmarks[15], color, lineWidth);
+        
+        // Draw Angle Text
+        drawTextAtPoint(landmarks[13], `${Math.round(leftAngle)}°`, color);
     }
 
-    // 1. Classification (Simple Heuristic)
-    // Check symmetry of arm movement
-    const leftY = leftWrist.y;
-    const rightY = rightWrist.y;
-    
-    // Buffer for smoothing
-    analysisState.landmarksBuffer.push({ly: leftY, ry: rightY});
-    if (analysisState.landmarksBuffer.length > 5) analysisState.landmarksBuffer.shift(); // Keep buffer small (5 frames) for responsiveness
+    // Draw Right Arm Overlay
+    if(isRightVisible) {
+        const isGoodForm = rightAngle >= 90 && rightAngle <= 160;
+        const color = isGoodForm ? '#00FF00' : '#FF0000';
+        const lineWidth = isGoodForm ? 4 : 6;
 
-    // Calculate Moving Average
+        drawCustomConnector(landmarks[12], landmarks[14], color, lineWidth);
+        drawCustomConnector(landmarks[14], landmarks[16], color, lineWidth);
+
+        drawTextAtPoint(landmarks[14], `${Math.round(rightAngle)}°`, color);
+    }
+
+    // Process Stroke Counting & Metrics
+    processStrokeLogic(landmarks);
+}
+
+function drawCustomConnector(p1, p2, color, width) {
+    canvasCtx.beginPath();
+    canvasCtx.moveTo(p1.x * canvasElement.width, p1.y * canvasElement.height);
+    canvasCtx.lineTo(p2.x * canvasElement.width, p2.y * canvasElement.height);
+    canvasCtx.strokeStyle = color;
+    canvasCtx.lineWidth = width;
+    canvasCtx.stroke();
+}
+
+function drawTextAtPoint(p, text, color) {
+    canvasCtx.fillStyle = color;
+    canvasCtx.font = "bold 16px Arial";
+    canvasCtx.fillText(text, p.x * canvasElement.width + 10, p.y * canvasElement.height);
+}
+
+function processStrokeLogic(landmarks) {
+    const leftWrist = landmarks[15];
+    const rightWrist = landmarks[16];
+    
+    // Smoothing Buffer
+    analysisState.landmarksBuffer.push({ly: leftWrist.y, ry: rightWrist.y});
+    if (analysisState.landmarksBuffer.length > 5) analysisState.landmarksBuffer.shift();
+
     const avgLY = analysisState.landmarksBuffer.reduce((sum, val) => sum + val.ly, 0) / analysisState.landmarksBuffer.length;
     const avgRY = analysisState.landmarksBuffer.reduce((sum, val) => sum + val.ry, 0) / analysisState.landmarksBuffer.length;
 
-    // Determine style based on symmetry (using smoothed values)
-    // If wrists move in opposite directions (one up, one down), likely Freestyle/Backstroke
+    // Style Detection
     const diff = Math.abs(avgLY - avgRY);
-    if (diff > 0.15) { 
-        // Significant difference -> Asymmetric
-        analysisState.style = "Freestyle / Back"; 
-    } else {
-        // Symmetric
-        analysisState.style = "Breast / Fly";
-    }
-    
+    if (diff > 0.15) analysisState.style = "Freestyle / Back";
+    else analysisState.style = "Breast / Fly";
+
     // Update UI Badge
     const badge = document.getElementById('res-badge-event');
-    if(badge && analysisState.framesProcessed % 30 === 0) { // Update occasionally
+    if(badge && analysisState.framesProcessed % 30 === 0) {
         badge.textContent = `Detected: ${analysisState.style}`;
     }
 
-    // 2. Stroke Counting (Zero Crossing / Peak Detection)
-    // Count cycles of the wrist passing below/above shoulder
-    // Simple logic: Trigger when wrist goes from High (low Y) to Low (high Y) (Entry phase)
-    
-    const shoulderLevel = (leftShoulder.y + rightShoulder.y) / 2;
-    // Use smoothed wrist Y
+    // Stroke Counting (Zero Crossing)
+    const shoulderY = (landmarks[11].y + landmarks[12].y) / 2;
     let trackingY = (analysisState.style.includes("Breast")) ? (avgLY + avgRY) / 2 : avgRY;
 
-    // Stroke State Machine
-    // Recovery (Above Water/Shoulder) -> y < shoulderLevel
-    // Pull (Below Water/Shoulder) -> y > shoulderLevel
-    
-    const currentState = trackingY > shoulderLevel ? "pull" : "recovery";
+    const currentState = trackingY > shoulderY ? "pull" : "recovery";
     
     if (analysisState.strokePhase === "recovery" && currentState === "pull") {
-        // Entry detected!
         analysisState.strokeCount++;
-        updateRealtimeMetrics();
+        
+        // Calculate SPM (Strokes Per Minute)
+        const video = document.getElementById('analysis-video-preview');
+        const now = video.currentTime;
+        let spm = 0;
+        
+        if (analysisState.lastStrokeTime > 0) {
+            const delta = now - analysisState.lastStrokeTime; // time per stroke
+            if (delta > 0.5) { // filter noise
+                spm = 60 / delta;
+                // Clamp unrealistic values
+                if(spm > 10 && spm < 100) updatePaceChart(now, spm);
+            }
+        }
+        analysisState.lastStrokeTime = now;
+        updateRealtimeMetrics(spm);
     }
     
     analysisState.strokePhase = currentState;
     analysisState.framesProcessed++;
 }
 
-function updateRealtimeMetrics() {
+function updateRealtimeMetrics(currentSpm = 0) {
     const el = document.getElementById('res-stroke-count');
     if(el) el.textContent = analysisState.strokeCount;
     
-    // Calculate simple stroke rate
-    const video = document.getElementById('analysis-video-preview');
-    if(video && video.currentTime > 0) {
-        const rate = (analysisState.strokeCount / (video.currentTime / 60)).toFixed(1);
+    if(currentSpm > 0) {
         const rateEl = document.getElementById('res-stroke-rate');
-        if(rateEl) rateEl.textContent = rate;
+        if(rateEl) rateEl.textContent = currentSpm.toFixed(1);
     }
 }
+
 
 function finishAnalysis(autoT0) {
     const eventSelect = document.getElementById('ana-event-type');

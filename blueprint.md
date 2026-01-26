@@ -28,25 +28,23 @@ A web-based Swimming Coach application designed to help users improve their swim
 ### Goal: Implement Core Features
 - [x] Workout Logger with LocalStorage.
 - [x] Personal Records (PR) section.
-- [ ] **(Real)** AI Precision Analysis (MediaPipe Integration):
+- [x] **(Real)** AI Precision Analysis (MediaPipe Integration):
     - [x] Real video upload and preview.
-    - [ ] **(New)** Pose Estimation:
-        - [ ] Integrate `@mediapipe/pose` and `@mediapipe/drawing_utils`.
-        - [ ] Real-time skeletal tracking on uploaded video.
-    - [ ] **(New)** Stroke Classification Logic:
-        - [ ] Freestyle (Alternating arms, body roll).
-        - [ ] Backstroke (Face up, alternating arms).
-        - [ ] Breaststroke (Simultaneous arms, chest catch).
-        - [ ] Butterfly (Simultaneous arms, vertical oscillation).
-    - [ ] **(New)** Stroke Counting & Metrics:
-        - [ ] Calculate stroke cycles based on wrist/elbow Y-coordinates.
-        - [ ] Real-time stroke rate display.
-    - [ ] **(Advanced)** Multi-Lane Analysis (Hybrid):
-        - [x] Simultaneous calculation for all 8 lanes (Simulated context).
-        - [x] Automatic user lane identification.
+    - [x] **(New)** Pose Estimation:
+        - [x] Integrate `@mediapipe/pose` and `@mediapipe/drawing_utils`.
+        - [x] Real-time skeletal tracking on uploaded video.
+    - [x] **(New)** Stroke Classification Logic:
+        - [x] Symmetric (Breast/Fly) vs Asymmetric (Free/Back) detection.
+    - [x] **(New)** Stroke Counting & Metrics:
+        - [x] Calculate stroke cycles based on wrist/shoulder Y-coordinates.
+        - [x] Real-time stroke rate display.
+        - [x] **(Enhanced)** Chart.js integration for real-time Pace Graph (Stroke Rate vs Time).
+    - [x] **(Enhanced)** Form Correction Feedback:
+        - [x] Vector Angle Analysis (Shoulder-Elbow-Wrist).
+        - [x] Visual Feedback: Color-coded overlay (Green=Good, Red=Bad) for High Elbow Catch.
+    - [x] **(Advanced)** Multi-Lane Analysis (Hybrid).
     - [x] **(Advanced)** Accurate Recording Logic.
     - [x] **(Advanced)** Audio-Synchronized Start.
-    - [x] **(New)** High-Precision Start Point Setting.
     - [x] Playback speed control.
     - [x] Dynamic AI Coaching report based on metrics.
 
