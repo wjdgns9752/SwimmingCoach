@@ -352,6 +352,19 @@ function loadRecords() {
 }
 
 // --- Analysis ---
+let pose = null;
+let canvasCtx = null;
+let canvasElement = null;
+let analysisState = {
+    isAnalyzing: false,
+    strokeCount: 0,
+    style: "Unknown",
+    lastWristY: { left: 0, right: 0 },
+    strokePhase: "recovery", // recovery, catch, pull
+    framesProcessed: 0,
+    landmarksBuffer: []
+};
+
 function initAnalysisControls() {
     const poolSel = document.getElementById('ana-pool-length');
     const eventSel = document.getElementById('ana-event-type');
@@ -369,6 +382,22 @@ function initAnalysisControls() {
         zone.addEventListener('click', () => input.click());
         input.addEventListener('change', () => { if(input.files.length) handleAnalysis(input.files[0]); });
     }
+
+    // Init MediaPipe Pose
+    if (typeof Pose !== 'undefined') {
+        pose = new Pose({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`});
+        pose.setOptions({
+            modelComplexity: 1,
+            smoothLandmarks: true,
+            enableSegmentation: false,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+        pose.onResults(onPoseResults);
+    }
+    
+    canvasElement = document.getElementById('output-canvas');
+    if(canvasElement) canvasCtx = canvasElement.getContext('2d');
 }
 
 async function handleAnalysis(file) {
@@ -377,13 +406,10 @@ async function handleAnalysis(file) {
     const zone = document.getElementById('upload-zone');
     const video = document.getElementById('analysis-video-preview');
     const loaderText = loader.querySelector('p');
-    const loaderSub = loader.querySelector('.loading-sub');
     
     if(zone) zone.classList.add('hidden');
     if(res) res.classList.remove('hidden');
     if(loader) loader.classList.remove('hidden');
-
-    let detectedT0 = 0;
 
     if(video && file) {
         video.src = URL.createObjectURL(file);
@@ -394,84 +420,190 @@ async function handleAnalysis(file) {
             if(timeDisplay) timeDisplay.textContent = video.currentTime.toFixed(3) + "s";
         };
 
-        // --- NEW: AI Audio Analysis for Auto-Detection ---
-        try {
-            if(loaderText) loaderText.textContent = "AI가 영상 오디오 파형을 정밀 분석 중...";
-            if(loaderSub) loaderSub.textContent = "Searching for Buzzer Signal (Peak Detection)...";
-            
-            detectedT0 = await autoDetectBuzzer(file);
-            
-            console.log("AI Auto-Detected T0:", detectedT0);
-        } catch (e) {
-            console.error("Audio analysis failed", e);
-            detectedT0 = 0; // Fallback
-        }
+        // Reset Analysis State
+        analysisState = {
+            isAnalyzing: true,
+            strokeCount: 0,
+            style: "Detecting...",
+            lastWristY: { left: 0, right: 0 },
+            strokePhase: "recovery",
+            framesProcessed: 0,
+            landmarksBuffer: []
+        };
+
+        // Start processing loop when video plays
+        video.onplay = () => {
+            if(canvasElement) {
+                canvasElement.width = video.videoWidth;
+                canvasElement.height = video.videoHeight;
+            }
+            requestAnimationFrame(processVideoFrame);
+        };
     }
 
-    // High-End Analysis Simulation Sequence
-    const steps = [
-        { t: "출발 신호음(Buzzer) 자동 포착 완료!", s: `Detected at ${detectedT0.toFixed(3)}s` },
-        { t: "선수별 스타트 반응 속도 측정 중...", s: "Analyzing Push-off Mechanics..." },
-        { t: "Skeletal Tracking 및 구간 위치 분석", s: "Joint Positioning / Lane Coordinate Mapping" },
-        { t: "영법별 스트록 및 구간 기록 계산 완료", s: "Stroke Phase Analysis / Split Time Calculation" }
-    ];
+    // Simulate initial loading while MediaPipe warms up
+    loaderText.textContent = "AI 엔진(MediaPipe) 초기화 중...";
+    
+    setTimeout(() => {
+        loader.classList.add('hidden');
+        // Auto-detect buzzer (keep existing logic)
+        autoDetectBuzzer(file).then(t0 => {
+            console.log("Auto T0:", t0);
+            finishAnalysis(t0);
+        });
+    }, 2000);
+}
 
-    let stepIdx = 0;
-    const interval = setInterval(() => {
-        if(stepIdx < steps.length) {
-            if(loaderText) loaderText.textContent = steps[stepIdx].t;
-            if(loaderSub) loaderSub.textContent = steps[stepIdx].s;
-            stepIdx++;
-        } else {
-            clearInterval(interval);
-            if (video.readyState >= 1) {
-                finishAnalysis(detectedT0);
-            } else {
-                video.onloadedmetadata = () => finishAnalysis(detectedT0);
-            }
-        }
-    }, 1200);
+function processVideoFrame() {
+    const video = document.getElementById('analysis-video-preview');
+    if (!video || video.paused || video.ended) return;
 
-    function finishAnalysis(autoT0) {
-        if(loader) loader.classList.add('hidden');
-        
-        const eventSelect = document.getElementById('ana-event-type');
-        const eventId = eventSelect.value;
-        const eventName = eventSelect.options[eventSelect.selectedIndex].text;
-        const poolLength = parseInt(document.getElementById('ana-pool-length').value) || 25;
-        
-        const videoDuration = video.duration || 30.0;
+    if (pose) {
+        pose.send({image: video});
+    }
+    // requestAnimationFrame(processVideoFrame) is called inside onPoseResults to sync? 
+    // actually safer to call it here to keep loop running even if detection fails occasionally
+    requestAnimationFrame(processVideoFrame);
+}
 
-        // Use the auto-detected T0
-        const buzzerTimestamp = autoT0 > 0 ? autoT0 : (Math.min(videoDuration * 0.1, 4.0));
+function onPoseResults(results) {
+    if (!canvasCtx || !canvasElement) return;
+    
+    canvasCtx.save();
+    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+    
+    // Draw landmarks
+    if (results.poseLandmarks) {
+        drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS,
+                       {color: '#00FF00', lineWidth: 2});
+        drawLandmarks(canvasCtx, results.poseLandmarks,
+                      {color: '#FF0000', lineWidth: 1});
         
-        const badge = document.getElementById('res-badge-event');
-        if(badge) badge.textContent = eventName;
+        analyzeSwimmingForm(results.poseLandmarks);
+    }
+    canvasCtx.restore();
+}
 
-        const userLane = Math.floor(Math.random() * 8) + 1;
-        
-        let baseRaceTime = 30.0;
-        if (eventId.includes('100')) baseRaceTime = 65.0;
-        if (eventId.includes('200')) baseRaceTime = 140.0;
-        if (eventId.includes('breast') || eventId.includes('im')) baseRaceTime *= 1.3;
+function analyzeSwimmingForm(landmarks) {
+    // MediaPipe Landmarks: 11=L_Shoulder, 12=R_Shoulder, 13=L_Elbow, 14=R_Elbow, 15=L_Wrist, 16=R_Wrist
+    const leftWrist = landmarks[15];
+    const rightWrist = landmarks[16];
+    const leftShoulder = landmarks[11];
+    const rightShoulder = landmarks[12];
+    
+    // Visibility Threshold (0.0 ~ 1.0)
+    const VISIBILITY_THRESHOLD = 0.5;
 
-        const maxRaceTime = Math.min(baseRaceTime, videoDuration - buzzerTimestamp - 0.5);
-        
-        window.currentAnalysisContext = {
-            buzzerTimestamp,
-            poolLength,
-            eventId,
-            videoDuration,
-            userLane,
-            currentRaceTime: maxRaceTime
-        };
-        
-        // Jump video to the detected start for user confirmation
-        video.currentTime = buzzerTimestamp;
-        
-        generateLaneData(maxRaceTime);
+    if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder) return;
+    if (leftWrist.visibility < VISIBILITY_THRESHOLD || rightWrist.visibility < VISIBILITY_THRESHOLD ||
+        leftShoulder.visibility < VISIBILITY_THRESHOLD || rightShoulder.visibility < VISIBILITY_THRESHOLD) {
+        return; // Skip analysis if confidence is low
+    }
+
+    // 1. Classification (Simple Heuristic)
+    // Check symmetry of arm movement
+    const leftY = leftWrist.y;
+    const rightY = rightWrist.y;
+    
+    // Buffer for smoothing
+    analysisState.landmarksBuffer.push({ly: leftY, ry: rightY});
+    if (analysisState.landmarksBuffer.length > 5) analysisState.landmarksBuffer.shift(); // Keep buffer small (5 frames) for responsiveness
+
+    // Calculate Moving Average
+    const avgLY = analysisState.landmarksBuffer.reduce((sum, val) => sum + val.ly, 0) / analysisState.landmarksBuffer.length;
+    const avgRY = analysisState.landmarksBuffer.reduce((sum, val) => sum + val.ry, 0) / analysisState.landmarksBuffer.length;
+
+    // Determine style based on symmetry (using smoothed values)
+    // If wrists move in opposite directions (one up, one down), likely Freestyle/Backstroke
+    const diff = Math.abs(avgLY - avgRY);
+    if (diff > 0.15) { 
+        // Significant difference -> Asymmetric
+        analysisState.style = "Freestyle / Back"; 
+    } else {
+        // Symmetric
+        analysisState.style = "Breast / Fly";
+    }
+    
+    // Update UI Badge
+    const badge = document.getElementById('res-badge-event');
+    if(badge && analysisState.framesProcessed % 30 === 0) { // Update occasionally
+        badge.textContent = `Detected: ${analysisState.style}`;
+    }
+
+    // 2. Stroke Counting (Zero Crossing / Peak Detection)
+    // Count cycles of the wrist passing below/above shoulder
+    // Simple logic: Trigger when wrist goes from High (low Y) to Low (high Y) (Entry phase)
+    
+    const shoulderLevel = (leftShoulder.y + rightShoulder.y) / 2;
+    // Use smoothed wrist Y
+    let trackingY = (analysisState.style.includes("Breast")) ? (avgLY + avgRY) / 2 : avgRY;
+
+    // Stroke State Machine
+    // Recovery (Above Water/Shoulder) -> y < shoulderLevel
+    // Pull (Below Water/Shoulder) -> y > shoulderLevel
+    
+    const currentState = trackingY > shoulderLevel ? "pull" : "recovery";
+    
+    if (analysisState.strokePhase === "recovery" && currentState === "pull") {
+        // Entry detected!
+        analysisState.strokeCount++;
+        updateRealtimeMetrics();
+    }
+    
+    analysisState.strokePhase = currentState;
+    analysisState.framesProcessed++;
+}
+
+function updateRealtimeMetrics() {
+    const el = document.getElementById('res-stroke-count');
+    if(el) el.textContent = analysisState.strokeCount;
+    
+    // Calculate simple stroke rate
+    const video = document.getElementById('analysis-video-preview');
+    if(video && video.currentTime > 0) {
+        const rate = (analysisState.strokeCount / (video.currentTime / 60)).toFixed(1);
+        const rateEl = document.getElementById('res-stroke-rate');
+        if(rateEl) rateEl.textContent = rate;
     }
 }
+
+function finishAnalysis(autoT0) {
+    const eventSelect = document.getElementById('ana-event-type');
+    const eventId = eventSelect.value;
+    const eventName = eventSelect.options[eventSelect.selectedIndex].text;
+    const poolLength = parseInt(document.getElementById('ana-pool-length').value) || 25;
+    const video = document.getElementById('analysis-video-preview');
+    
+    const videoDuration = video.duration || 30.0;
+    const buzzerTimestamp = autoT0 > 0 ? autoT0 : (Math.min(videoDuration * 0.1, 4.0));
+    
+    const badge = document.getElementById('res-badge-event');
+    if(badge) badge.textContent = `${eventName} (AI Analysis)`;
+
+    const userLane = Math.floor(Math.random() * 8) + 1;
+    
+    let baseRaceTime = 30.0;
+    if (eventId.includes('100')) baseRaceTime = 65.0;
+    if (eventId.includes('200')) baseRaceTime = 140.0;
+    if (eventId.includes('breast') || eventId.includes('im')) baseRaceTime *= 1.3;
+
+    const maxRaceTime = Math.min(baseRaceTime, videoDuration - buzzerTimestamp - 0.5);
+    
+    window.currentAnalysisContext = {
+        buzzerTimestamp,
+        poolLength,
+        eventId,
+        videoDuration,
+        userLane,
+        currentRaceTime: maxRaceTime
+    };
+    
+    video.currentTime = buzzerTimestamp;
+    generateLaneData(maxRaceTime); // Initial data generation
+}
+
+// ... (Existing autoDetectBuzzer, generateLaneData, etc. remain unchanged)
+
 
 // --- AI Engine: Web Audio Peak Detection ---
 async function autoDetectBuzzer(file) {

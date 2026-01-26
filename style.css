@@ -267,6 +267,14 @@ button { cursor: pointer; border: none; font-family: inherit; }
     height: 100%;
     object-fit: contain;
 }
+#output-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Let clicks pass through to video controls */
+}
 
 /* Fine Controls Bar */
 .video-fine-controls {

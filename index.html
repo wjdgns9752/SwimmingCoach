@@ -9,6 +9,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
+  
+  <!-- MediaPipe -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -238,7 +242,8 @@
           <div class="analysis-top-section">
               <div class="video-main-container">
                   <div class="video-wrapper">
-                      <video id="analysis-video-preview" controls playsinline></video>
+                      <video id="analysis-video-preview" controls playsinline crossorigin="anonymous"></video>
+                      <canvas id="output-canvas"></canvas>
                       <div class="ai-overlay-badge">AI Analysis Ready</div>
                       <div class="video-controls-overlay">
                           <label for="playback-speed">재생 속도:</label>

@@ -28,24 +28,26 @@ A web-based Swimming Coach application designed to help users improve their swim
 ### Goal: Implement Core Features
 - [x] Workout Logger with LocalStorage.
 - [x] Personal Records (PR) section.
-- [x] **(Enhanced)** AI Precision Analysis:
+- [ ] **(Real)** AI Precision Analysis (MediaPipe Integration):
     - [x] Real video upload and preview.
-    - [x] Simulated YOLO metrics (Stroke Count, DPS, Split times, SWOLF).
-    - [x] **(Advanced)** Multi-Lane Analysis:
-        - [x] Simultaneous calculation for all 8 lanes.
-        - [x] Automatic user lane identification (simulated).
-        - [x] Interactive lane selector to view specific details.
-    - [x] **(Advanced)** Accurate Recording Logic:
-        - [x] Integrated world-standard reference times for each event (Free, Breast, etc.).
-        - [x] Realistic variance calculation based on lane performance.
-    - [x] **(Advanced)** Audio-Synchronized Start: Buzzer sound detection (800Hz) simulation.
-    - [x] **(New)** High-Precision Start Point Setting:
-        - [x] Enlarge video UI for better visibility.
-        - [x] Frame-by-frame controls (+/- 1F, +/- 0.1s).
-        - [x] Millisecond-level precision time display.
-        - [x] **(Auto)** AI Audio Peak Detection: Automatically detects the buzzer sound (T0) from the video file using Web Audio API.
-        - [x] Manual T0 (Start Signal) confirmation button for fine-tuning.
-    - [x] Playback speed control (Slow-motion for detail analysis).
+    - [ ] **(New)** Pose Estimation:
+        - [ ] Integrate `@mediapipe/pose` and `@mediapipe/drawing_utils`.
+        - [ ] Real-time skeletal tracking on uploaded video.
+    - [ ] **(New)** Stroke Classification Logic:
+        - [ ] Freestyle (Alternating arms, body roll).
+        - [ ] Backstroke (Face up, alternating arms).
+        - [ ] Breaststroke (Simultaneous arms, chest catch).
+        - [ ] Butterfly (Simultaneous arms, vertical oscillation).
+    - [ ] **(New)** Stroke Counting & Metrics:
+        - [ ] Calculate stroke cycles based on wrist/elbow Y-coordinates.
+        - [ ] Real-time stroke rate display.
+    - [ ] **(Advanced)** Multi-Lane Analysis (Hybrid):
+        - [x] Simultaneous calculation for all 8 lanes (Simulated context).
+        - [x] Automatic user lane identification.
+    - [x] **(Advanced)** Accurate Recording Logic.
+    - [x] **(Advanced)** Audio-Synchronized Start.
+    - [x] **(New)** High-Precision Start Point Setting.
+    - [x] Playback speed control.
     - [x] Dynamic AI Coaching report based on metrics.
 
 ### Goal: Community & Social Features
