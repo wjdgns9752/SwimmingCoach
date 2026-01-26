@@ -616,7 +616,8 @@ async function handleAnalysis(file) {
             const refVideo = document.getElementById('reference-video');
             if(refVideo && !refVideo.paused) refVideo.play();
         };
-// ... (rest of sync logic) ...
+    }
+}
 
 function processVideoFrame(now, metadata) {
     const video = document.getElementById('analysis-video-preview');
@@ -673,6 +674,8 @@ document.body.addEventListener('click', (e) => {
         seekVideo(parseFloat(e.target.dataset.seek));
     }
 });
+
+function onPoseResults(results) {
     if (!canvasCtx || !canvasElement) return;
     
     canvasCtx.save();
