@@ -66,29 +66,17 @@ const TRANSLATIONS = {
 
 let currentLang = 'ko';
 
-// Constants
-const PROFILE_KEY = 'swim_user_profile';
-const WORKOUT_KEY = 'swim_workouts';
-const RECORDS_KEY = 'swim_competition_records';
-const CLUB_KEY = 'swim_user_club';
-const CUSTOM_CLUBS_KEY = 'swim_custom_clubs_v2';
-const CLUB_POSTS_KEY = 'swim_club_posts';
-const CLUB_NOTICES_KEY = 'swim_club_notices';
+// --- Constants ---
+window.PROFILE_KEY = 'swim_user_profile';
+window.WORKOUT_KEY = 'swim_workouts';
+window.RECORDS_KEY = 'swim_competition_records';
+window.CLUB_KEY = 'swim_user_club';
+window.CUSTOM_CLUBS_KEY = 'swim_custom_clubs_v2';
+window.CLUB_POSTS_KEY = 'swim_club_posts';
+window.CLUB_NOTICES_KEY = 'swim_club_notices';
 
-// Drill Database
-const DRILL_DB = {
-    "Sculling": "https://www.youtube.com/results?search_query=swimming+sculling+drill",
-    "Fist Swim": "https://www.youtube.com/results?search_query=fist+swimming+drill",
-    "Catch-Up": "https://www.youtube.com/results?search_query=catch+up+drill+freestyle",
-    "Single Arm": "https://www.youtube.com/results?search_query=single+arm+freestyle+drill",
-    "High Elbow": "https://www.youtube.com/results?search_query=high+elbow+catch+drill",
-    "Flip Turn": "https://www.youtube.com/results?search_query=swimming+flip+turn+drill",
-    "Side Kick": "https://www.youtube.com/results?search_query=side+kick+swimming+drill",
-    "6-Kick Switch": "https://www.youtube.com/results?search_query=6+kick+switch+drill"
-};
-
-// Analysis Data
-const EVENTS_DATA = {
+// Analysis Data (Global)
+window.EVENTS_DATA = {
     '25': [
         {id:'free50', name:'자유형 50m'}, {id:'free100', name:'자유형 100m'},
         {id:'back50', name:'배영 50m'}, {id:'breast50', name:'평영 50m'},
@@ -105,13 +93,14 @@ let currentDailyPlan = null;
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM Loaded. Initializing...");
     initNavigation();
     initLanguage();
     initProfile();
     initWorkouts();
     initRecords();
     initClubFeature();
-    initAnalysisControls();
+    initAnalysisControls(); // Check this
     
     const dateInput = document.getElementById('date');
     if(dateInput) dateInput.valueAsDate = new Date();
@@ -445,74 +434,67 @@ let analysisState = {
 function initAnalysisControls() {
     console.log("Initializing Analysis Controls...");
 
-    // 1. Upload Logic (Priority)
-    try {
-        const zone = document.getElementById('upload-zone');
-        const input = document.getElementById('video-upload');
-        if(zone && input) {
-            zone.addEventListener('click', () => input.click());
-            input.addEventListener('change', () => { 
-                if(input.files.length) {
-                    console.log("File selected, starting analysis...");
-                    handleAnalysis(input.files[0]); 
-                }
-            });
-        }
-    } catch(e) { console.error("Upload Init Error:", e); }
+    // 1. Upload Logic (Change Listener Only)
+    const input = document.getElementById('video-upload');
+    if(input) {
+        // Remove 'click' listener on zone because <label> handles it natively
+        input.addEventListener('change', () => { 
+            if(input.files && input.files.length) {
+                console.log("File selected:", input.files[0].name);
+                handleAnalysis(input.files[0]); 
+            }
+        });
+    }
 
     // 2. Event Selection Logic
-    try {
-        const poolSel = document.getElementById('ana-pool-length');
-        const eventSel = document.getElementById('ana-event-type');
-        if(poolSel && eventSel && typeof EVENTS_DATA !== 'undefined') {
-            const update = () => {
-                const val = poolSel.value || '25';
-                const list = EVENTS_DATA[val] || EVENTS_DATA['25'];
-                if(list) {
-                    eventSel.innerHTML = list.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
-                }
-            };
-            poolSel.addEventListener('change', update);
-            update();
-        }
-    } catch(e) { console.error("Event Sel Init Error:", e); }
+    const poolSel = document.getElementById('ana-pool-length');
+    const eventSel = document.getElementById('ana-event-type');
+    
+    if(poolSel && eventSel && window.EVENTS_DATA) {
+        const updateEvents = () => {
+            const val = poolSel.value || '25';
+            const list = window.EVENTS_DATA[val] || window.EVENTS_DATA['25'];
+            if(list) {
+                eventSel.innerHTML = list.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+            }
+        };
+        poolSel.addEventListener('change', updateEvents);
+        // Run immediately to populate
+        updateEvents();
+    }
 
     // 3. MediaPipe Init
-    try {
-        if (typeof Pose !== 'undefined') {
-            pose = new Pose({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`});
-            pose.setOptions({
-                modelComplexity: 1,
-                smoothLandmarks: true,
-                enableSegmentation: false,
-                minDetectionConfidence: 0.6,
-                minTrackingConfidence: 0.6
-            });
-            pose.onResults(onPoseResults);
-        }
-    } catch(e) { console.error("Pose Init Error:", e); }
+    if (typeof Pose !== 'undefined') {
+        pose = new Pose({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`});
+        pose.setOptions({
+            modelComplexity: 1,
+            smoothLandmarks: true,
+            enableSegmentation: false,
+            minDetectionConfidence: 0.6,
+            minTrackingConfidence: 0.6
+        });
+        pose.onResults(onPoseResults);
+    }
     
     // 4. Canvas & Controls
-    try {
-        canvasElement = document.getElementById('output-canvas');
-        if(canvasElement) canvasCtx = canvasElement.getContext('2d');
+    canvasElement = document.getElementById('output-canvas');
+    if(canvasElement) canvasCtx = canvasElement.getContext('2d');
 
-        const btnToggle = document.getElementById('btn-toggle-guide');
-        if(btnToggle) btnToggle.addEventListener('click', toggleGuide);
+    const btnToggle = document.getElementById('btn-toggle-guide');
+    if(btnToggle) btnToggle.addEventListener('click', toggleGuide);
 
-        const sliderOpacity = document.getElementById('guide-opacity');
-        if(sliderOpacity) sliderOpacity.addEventListener('input', (e) => adjustOpacity(e.target.value));
+    const sliderOpacity = document.getElementById('guide-opacity');
+    if(sliderOpacity) sliderOpacity.addEventListener('input', (e) => adjustOpacity(e.target.value));
 
-        const btnSetStart = document.getElementById('btn-set-start');
-        if(btnSetStart) btnSetStart.addEventListener('click', setStartToCurrent);
+    const btnSetStart = document.getElementById('btn-set-start');
+    if(btnSetStart) btnSetStart.addEventListener('click', setStartToCurrent);
 
-        const btnSync = document.getElementById('btn-sync-time');
-        if(btnSync) btnSync.addEventListener('click', syncOfficialTime);
+    const btnSync = document.getElementById('btn-sync-time');
+    if(btnSync) btnSync.addEventListener('click', syncOfficialTime);
 
-        document.querySelectorAll('.btn-seek').forEach(btn => {
-            btn.addEventListener('click', () => seekVideo(parseFloat(btn.dataset.seek)));
-        });
-    } catch(e) { console.error("Controls Init Error:", e); }
+    document.querySelectorAll('.btn-seek').forEach(btn => {
+        btn.addEventListener('click', () => seekVideo(parseFloat(btn.dataset.seek)));
+    });
 }
 
 // 3-Point Angle Calculation
@@ -675,6 +657,7 @@ window.setStartToCurrent = setStartToCurrent;
 window.toggleGuide = toggleGuide;
 window.adjustOpacity = adjustOpacity;
 window.seekVideo = seekVideo;
+window.EVENTS_DATA = EVENTS_DATA;
 
 // --- Global Event Delegation (Failsafe) ---
 document.body.addEventListener('click', (e) => {
@@ -695,6 +678,12 @@ document.body.addEventListener('click', (e) => {
         seekVideo(parseFloat(e.target.dataset.seek));
     }
 });
+
+// --- Final Init Check (For Module Timing) ---
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    // DOM already loaded, run init immediately
+    setTimeout(initAnalysisControls, 100);
+}
 
 function onPoseResults(results) {
     if (!canvasCtx || !canvasElement) return;

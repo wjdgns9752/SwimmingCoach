@@ -222,14 +222,17 @@
         </div>
       </div>
       
-      <div class="upload-zone" id="upload-zone">
-        <input type="file" id="video-upload" accept="video/*" hidden>
+      <!-- Hidden Input Moved Outside -->
+      <input type="file" id="video-upload" accept="video/*" hidden>
+      
+      <!-- Changed DIV to LABEL for native click handling -->
+      <label class="upload-zone" id="upload-zone" for="video-upload" style="display:block;">
         <div class="upload-content">
           <span class="upload-icon">📹</span>
           <h3 data-i18n="uploadTitle">동영상 업로드</h3>
           <p>터치 또는 드래그 (Max 500MB)</p>
         </div>
-      </div>
+      </label>
 
       <div id="analysis-results" class="analysis-results hidden">
         <div class="loading-overlay hidden" id="analysis-loader">
