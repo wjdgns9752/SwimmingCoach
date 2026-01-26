@@ -245,19 +245,24 @@
               <div class="video-main-container">
                   <div class="video-wrapper">
                       <video id="analysis-video-preview" controls playsinline crossorigin="anonymous"></video>
+                      <!-- Reference Overlay (Hidden by default, allows MP4 for sync) -->
+                      <video id="reference-video" src="" muted playsinline loop class="reference-overlay hidden"></video>
                       <canvas id="output-canvas"></canvas>
                       <div class="ai-overlay-badge">AI Analysis Ready</div>
-                      <div class="video-controls-overlay">
-                          <label for="playback-speed">재생 속도:</label>
-                          <select id="playback-speed" onchange="changePlaybackSpeed(this.value)">
-                              <option value="0.1">0.1x (초고정밀)</option>
-                              <option value="0.25">0.25x (최대한 천천히)</option>
-                              <option value="0.5">0.5x (천천히)</option>
-                              <option value="1.0" selected>1.0x (일반)</option>
-                          </select>
-                      </div>
                   </div>
                   
+                  <!-- Overlay Controls -->
+                  <div class="overlay-controls" style="margin-top: 10px; display: flex; align-items: center; gap: 10px; background: #f8fafc; padding: 10px; border-radius: 8px;">
+                      <label style="font-size: 0.85rem; font-weight: 600; color: #4a5568;">가이드(Pro) 겹치기:</label>
+                      <input type="range" id="overlay-opacity" min="0" max="1" step="0.1" value="0.5" style="width: 100px;">
+                      <button id="toggle-overlay-btn" class="secondary-btn small-btn" style="padding: 4px 8px; font-size: 0.8rem;">On/Off</button>
+                      <select id="ref-video-selector" class="form-select" style="width: auto; padding: 4px; font-size: 0.8rem;">
+                          <option value="">가이드 영상 선택</option>
+                          <option value="assets/ref_free.mp4">자유형 (Freestyle)</option>
+                          <option value="assets/ref_breast.mp4">평영 (Breaststroke)</option>
+                      </select>
+                  </div>
+
                   <div class="video-fine-controls">
                       <div class="time-status">
                           <span class="time-label">현재 시점:</span>

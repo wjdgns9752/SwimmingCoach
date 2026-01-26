@@ -412,6 +412,44 @@ function calculateAngle(p1, p2, p3) {
     return angle;
 }
 
+function initOverlayControls() {
+    const opacitySlider = document.getElementById('overlay-opacity');
+    const toggleBtn = document.getElementById('toggle-overlay-btn');
+    const refVideo = document.getElementById('reference-video');
+    const refSelector = document.getElementById('ref-video-selector');
+    const mainVideo = document.getElementById('analysis-video-preview');
+
+    if(opacitySlider && refVideo) {
+        opacitySlider.addEventListener('input', (e) => {
+            refVideo.style.opacity = e.target.value;
+        });
+    }
+
+    if(toggleBtn && refVideo) {
+        toggleBtn.addEventListener('click', () => {
+            refVideo.classList.toggle('hidden');
+            if(!refVideo.classList.contains('hidden') && mainVideo && !mainVideo.paused) {
+                refVideo.play();
+            } else {
+                refVideo.pause();
+            }
+        });
+    }
+    
+    if(refSelector && refVideo) {
+        refSelector.addEventListener('change', (e) => {
+            if(e.target.value) {
+                refVideo.src = e.target.value;
+                refVideo.classList.remove('hidden');
+                // Sync current time immediately
+                if(mainVideo) refVideo.currentTime = mainVideo.currentTime;
+            } else {
+                refVideo.classList.add('hidden');
+            }
+        });
+    }
+}
+
 function initPaceChart() {
     const ctx = document.getElementById('pace-chart');
     if(!ctx) return;
@@ -496,6 +534,7 @@ async function handleAnalysis(file) {
         };
         
         initPaceChart();
+        initOverlayControls();
 
         // Start processing loop when video plays
         video.onplay = () => {
@@ -504,6 +543,25 @@ async function handleAnalysis(file) {
                 canvasElement.height = video.videoHeight;
             }
             requestAnimationFrame(processVideoFrame);
+            
+            // Sync Reference Video
+            const refVideo = document.getElementById('reference-video');
+            if(refVideo && !refVideo.paused) refVideo.play();
+        };
+
+        video.onpause = () => {
+            const refVideo = document.getElementById('reference-video');
+            if(refVideo) refVideo.pause();
+        };
+        
+        video.onratechange = () => {
+             const refVideo = document.getElementById('reference-video');
+             if(refVideo) refVideo.playbackRate = video.playbackRate;
+        };
+
+        video.onseeked = () => {
+             const refVideo = document.getElementById('reference-video');
+             if(refVideo) refVideo.currentTime = video.currentTime;
         };
     }
 
