@@ -443,55 +443,76 @@ let analysisState = {
 };
 
 function initAnalysisControls() {
-    const poolSel = document.getElementById('ana-pool-length');
-    const eventSel = document.getElementById('ana-event-type');
-    if(poolSel && eventSel) {
-        const update = () => {
-            const list = EVENTS_DATA[poolSel.value] || EVENTS_DATA['25'];
-            eventSel.innerHTML = list.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
-        };
-        poolSel.addEventListener('change', update);
-        update();
-    }
-    const zone = document.getElementById('upload-zone');
-    const input = document.getElementById('video-upload');
-    if(zone && input) {
-        zone.addEventListener('click', () => input.click());
-        input.addEventListener('change', () => { if(input.files.length) handleAnalysis(input.files[0]); });
-    }
+    console.log("Initializing Analysis Controls...");
 
-    // Init MediaPipe Pose
-    if (typeof Pose !== 'undefined') {
-        pose = new Pose({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`});
-        pose.setOptions({
-            modelComplexity: 1,
-            smoothLandmarks: true,
-            enableSegmentation: false,
-            minDetectionConfidence: 0.6, // Increased threshold as requested
-            minTrackingConfidence: 0.6
-        });
-        pose.onResults(onPoseResults);
-    }
+    // 1. Upload Logic (Priority)
+    try {
+        const zone = document.getElementById('upload-zone');
+        const input = document.getElementById('video-upload');
+        if(zone && input) {
+            zone.addEventListener('click', () => input.click());
+            input.addEventListener('change', () => { 
+                if(input.files.length) {
+                    console.log("File selected, starting analysis...");
+                    handleAnalysis(input.files[0]); 
+                }
+            });
+        }
+    } catch(e) { console.error("Upload Init Error:", e); }
+
+    // 2. Event Selection Logic
+    try {
+        const poolSel = document.getElementById('ana-pool-length');
+        const eventSel = document.getElementById('ana-event-type');
+        if(poolSel && eventSel && typeof EVENTS_DATA !== 'undefined') {
+            const update = () => {
+                const val = poolSel.value || '25';
+                const list = EVENTS_DATA[val] || EVENTS_DATA['25'];
+                if(list) {
+                    eventSel.innerHTML = list.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+                }
+            };
+            poolSel.addEventListener('change', update);
+            update();
+        }
+    } catch(e) { console.error("Event Sel Init Error:", e); }
+
+    // 3. MediaPipe Init
+    try {
+        if (typeof Pose !== 'undefined') {
+            pose = new Pose({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`});
+            pose.setOptions({
+                modelComplexity: 1,
+                smoothLandmarks: true,
+                enableSegmentation: false,
+                minDetectionConfidence: 0.6,
+                minTrackingConfidence: 0.6
+            });
+            pose.onResults(onPoseResults);
+        }
+    } catch(e) { console.error("Pose Init Error:", e); }
     
-    canvasElement = document.getElementById('output-canvas');
-    if(canvasElement) canvasCtx = canvasElement.getContext('2d');
+    // 4. Canvas & Controls
+    try {
+        canvasElement = document.getElementById('output-canvas');
+        if(canvasElement) canvasCtx = canvasElement.getContext('2d');
 
-    // --- Attach Event Listeners (Direct Reference) ---
-    const btnToggle = document.getElementById('btn-toggle-guide');
-    if(btnToggle) btnToggle.addEventListener('click', toggleGuide);
+        const btnToggle = document.getElementById('btn-toggle-guide');
+        if(btnToggle) btnToggle.addEventListener('click', toggleGuide);
 
-    const sliderOpacity = document.getElementById('guide-opacity');
-    if(sliderOpacity) sliderOpacity.addEventListener('input', (e) => adjustOpacity(e.target.value));
+        const sliderOpacity = document.getElementById('guide-opacity');
+        if(sliderOpacity) sliderOpacity.addEventListener('input', (e) => adjustOpacity(e.target.value));
 
-    const btnSetStart = document.getElementById('btn-set-start');
-    if(btnSetStart) btnSetStart.addEventListener('click', setStartToCurrent);
+        const btnSetStart = document.getElementById('btn-set-start');
+        if(btnSetStart) btnSetStart.addEventListener('click', setStartToCurrent);
 
-    const btnSync = document.getElementById('btn-sync-time');
-    if(btnSync) btnSync.addEventListener('click', syncOfficialTime);
+        const btnSync = document.getElementById('btn-sync-time');
+        if(btnSync) btnSync.addEventListener('click', syncOfficialTime);
 
-    document.querySelectorAll('.btn-seek').forEach(btn => {
-        btn.addEventListener('click', () => seekVideo(parseFloat(btn.dataset.seek)));
-    });
+        document.querySelectorAll('.btn-seek').forEach(btn => {
+            btn.addEventListener('click', () => seekVideo(parseFloat(btn.dataset.seek)));
+        });
+    } catch(e) { console.error("Controls Init Error:", e); }
 }
 
 // 3-Point Angle Calculation
