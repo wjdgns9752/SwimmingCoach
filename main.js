@@ -351,6 +351,73 @@ function loadRecords() {
     if(prDisplay) prDisplay.textContent = records.length ? `${records[records.length-1].event}: ${records[records.length-1].time}` : 'None';
 }
 
+// --- UI Control Functions (Hoisted) ---
+function toggleGuide() {
+    const guide = document.getElementById('reference-video'); 
+    if(guide) {
+        guide.classList.toggle('hidden');
+        const mainVideo = document.getElementById('analysis-video-preview');
+        if(!guide.classList.contains('hidden') && mainVideo && !mainVideo.paused) {
+            guide.play();
+        } else {
+            guide.pause();
+        }
+    }
+}
+
+function adjustOpacity(val) {
+    const guide = document.getElementById('reference-video');
+    if(guide) guide.style.opacity = val;
+}
+
+function seekVideo(seconds) {
+    const video = document.getElementById('analysis-video-preview');
+    if(video) video.currentTime += seconds;
+}
+
+function setStartToCurrent() {
+    const video = document.getElementById('analysis-video-preview');
+    if(!video) return alert("분석 데이터가 없습니다.");
+    
+    const current = video.currentTime;
+    
+    analysisState.startTime = current;
+    analysisState.isStarted = true;
+    analysisState.isFinished = false;
+    analysisState.endTime = null;
+    analysisState.strokeCount = 0;
+    analysisState.startMarker = {x: 0.5, y: 0.5, t: current};
+    analysisState.finishMarker = null;
+    analysisState.paceData = [];
+    
+    if(paceChart) {
+        paceChart.data.labels = [];
+        paceChart.data.datasets[0].data = [];
+        paceChart.update();
+    }
+    
+    alert(`출발 시점(T0)이 ${current.toFixed(3)}s로 설정되었습니다.\n이제부터 분석이 시작됩니다.`);
+    generateLaneData(30.0);
+}
+
+function syncOfficialTime() {
+    const input = document.getElementById('manual-score-time');
+    if(!input || !input.value) return alert("전광판에 표시된 기록을 입력해주세요.");
+    
+    const newTime = parseFloat(input.value);
+    if(isNaN(newTime) || newTime <= 0) return alert("올바른 시간을 입력해주세요.");
+    
+    if (analysisState.startTime !== null) {
+        analysisState.endTime = analysisState.startTime + newTime;
+        analysisState.isFinished = true;
+        updateResultUI(analysisState.startTime, newTime);
+        alert(`기록 동기화 완료: ${newTime}s\n(T0: ${analysisState.startTime.toFixed(3)}s ~ T-End: ${analysisState.endTime.toFixed(3)}s)`);
+    } else {
+        alert(`기록 동기화 완료: ${newTime}s`);
+    }
+    generateLaneData(newTime);
+}
+
 // --- Analysis ---
 let pose = null;
 let canvasCtx = null;
@@ -365,7 +432,14 @@ let analysisState = {
     framesProcessed: 0,
     landmarksBuffer: [],
     paceData: [], // {x: time, y: rate}
-    lastStrokeTime: 0
+    lastStrokeTime: 0,
+    // Timing State
+    startTime: null, // T0 (video.currentTime)
+    endTime: null,   // T-End (video.currentTime)
+    isStarted: false,
+    isFinished: false,
+    startMarker: null, // {x, y, t}
+    finishMarker: null // {x, y, t}
 };
 
 function initAnalysisControls() {
@@ -402,21 +476,21 @@ function initAnalysisControls() {
     canvasElement = document.getElementById('output-canvas');
     if(canvasElement) canvasCtx = canvasElement.getContext('2d');
 
-    // --- Attach Event Listeners (Fix for Module Scope) ---
+    // --- Attach Event Listeners (Direct Reference) ---
     const btnToggle = document.getElementById('btn-toggle-guide');
-    if(btnToggle) btnToggle.addEventListener('click', () => { if(window.toggleGuide) window.toggleGuide(); });
+    if(btnToggle) btnToggle.addEventListener('click', toggleGuide);
 
     const sliderOpacity = document.getElementById('guide-opacity');
-    if(sliderOpacity) sliderOpacity.addEventListener('input', (e) => { if(window.adjustOpacity) window.adjustOpacity(e.target.value); });
+    if(sliderOpacity) sliderOpacity.addEventListener('input', (e) => adjustOpacity(e.target.value));
 
     const btnSetStart = document.getElementById('btn-set-start');
-    if(btnSetStart) btnSetStart.addEventListener('click', () => { if(window.setStartToCurrent) window.setStartToCurrent(); });
+    if(btnSetStart) btnSetStart.addEventListener('click', setStartToCurrent);
 
     const btnSync = document.getElementById('btn-sync-time');
-    if(btnSync) btnSync.addEventListener('click', () => { if(window.syncOfficialTime) window.syncOfficialTime(); });
+    if(btnSync) btnSync.addEventListener('click', syncOfficialTime);
 
     document.querySelectorAll('.btn-seek').forEach(btn => {
-        btn.addEventListener('click', () => { if(window.seekVideo) window.seekVideo(parseFloat(btn.dataset.seek)); });
+        btn.addEventListener('click', () => seekVideo(parseFloat(btn.dataset.seek)));
     });
 }
 
@@ -569,27 +643,16 @@ const PERFECT_ANGLES = {
     'back50': { elbow: 170, knee: 170 }       // Back: Straight arm recovery
 };
 
-// --- UI Control Functions (Global) ---
-window.toggleGuide = function() {
-    const guide = document.getElementById('reference-video'); // Using video for better sync
-    if(guide) {
-        guide.classList.toggle('hidden');
-        // Auto-play/pause sync with main video
-        const mainVideo = document.getElementById('analysis-video-preview');
-        if(!guide.classList.contains('hidden') && mainVideo && !mainVideo.paused) {
-            guide.play();
-        } else {
-            guide.pause();
-        }
-    }
-};
-
-window.adjustOpacity = function(val) {
-    const guide = document.getElementById('reference-video');
-    if(guide) guide.style.opacity = val;
-};
-
-function onPoseResults(results) {
+// Explicitly assign global functions for HTML onclick attributes (Legacy support if needed)
+window.changePlaybackSpeed = changePlaybackSpeed;
+window.selectLaneForDetails = selectLaneForDetails;
+window.toggleClubPassword = toggleClubPassword;
+window.likePost = likePost;
+window.syncOfficialTime = syncOfficialTime;
+window.setStartToCurrent = setStartToCurrent;
+window.toggleGuide = toggleGuide;
+window.adjustOpacity = adjustOpacity;
+window.seekVideo = seekVideo;
     if (!canvasCtx || !canvasElement) return;
     
     canvasCtx.save();
