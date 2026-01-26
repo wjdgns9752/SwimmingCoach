@@ -614,10 +614,17 @@ function analyzeAndDrawFeedback(landmarks) {
     const leftArm = [landmarks[11], landmarks[13], landmarks[15]];
     const rightArm = [landmarks[12], landmarks[14], landmarks[16]];
     
-    // Visibility Threshold Check (0.6)
-    const VISIBILITY_THRESHOLD = 0.6;
-    const isLeftVisible = leftArm.every(p => p.visibility > VISIBILITY_THRESHOLD);
-    const isRightVisible = rightArm.every(p => p.visibility > VISIBILITY_THRESHOLD);
+    // Strict Lane / ROI Logic (User Lane Focus)
+    // Abort if main skeletal points are not clearly visible (e.g. other lanes/underwater)
+    const STRICT_THRESHOLD = 0.65;
+    const visibleCount = [...leftArm, ...rightArm].filter(p => p.visibility > STRICT_THRESHOLD).length;
+    
+    // We need at least one full arm or majority of upper body to analyze
+    if (visibleCount < 4) return;
+
+    // Visibility Threshold Check for specific limbs
+    const isLeftVisible = leftArm.every(p => p.visibility > STRICT_THRESHOLD);
+    const isRightVisible = rightArm.every(p => p.visibility > STRICT_THRESHOLD);
 
     // Calculate Angles
     const leftAngle = isLeftVisible ? calculateAngle(landmarks[11], landmarks[13], landmarks[15]) : 0;
