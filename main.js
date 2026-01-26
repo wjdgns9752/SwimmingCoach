@@ -515,51 +515,33 @@ async function handleAnalysis(file) {
                 canvasElement.width = video.videoWidth;
                 canvasElement.height = video.videoHeight;
             }
-            requestAnimationFrame(processVideoFrame);
+            if ('requestVideoFrameCallback' in video) {
+                video.requestVideoFrameCallback(processVideoFrame);
+            } else {
+                requestAnimationFrame(processVideoFrame);
+            }
             
             // Sync Reference Video
             const refVideo = document.getElementById('reference-video');
             if(refVideo && !refVideo.paused) refVideo.play();
         };
+// ... (rest of sync logic) ...
 
-        video.onpause = () => {
-            const refVideo = document.getElementById('reference-video');
-            if(refVideo) refVideo.pause();
-        };
-        
-        video.onratechange = () => {
-             const refVideo = document.getElementById('reference-video');
-             if(refVideo) refVideo.playbackRate = video.playbackRate;
-        };
-
-        video.onseeked = () => {
-             const refVideo = document.getElementById('reference-video');
-             if(refVideo) refVideo.currentTime = video.currentTime;
-        };
-    }
-
-    // Simulate initial loading while MediaPipe warms up
-    loaderText.textContent = "AI 엔진(MediaPipe) 초기화 중...";
-    
-    setTimeout(() => {
-        loader.classList.add('hidden');
-        // Auto-detect buzzer (keep existing logic)
-        autoDetectBuzzer(file).then(t0 => {
-            console.log("Auto T0:", t0);
-            finishAnalysis(t0);
-        });
-    }, 2000);
-}
-
-function processVideoFrame() {
+function processVideoFrame(now, metadata) {
     const video = document.getElementById('analysis-video-preview');
     if (!video || video.paused || video.ended) return;
 
     if (pose) {
-        pose.send({image: video});
+        // Send current frame to MediaPipe
+        pose.send({image: video}).then(() => {
+            // Loop for next frame
+            if ('requestVideoFrameCallback' in video) {
+                video.requestVideoFrameCallback(processVideoFrame);
+            }
+        });
     }
-    requestAnimationFrame(processVideoFrame);
 }
+
 
 // --- Constants for Analysis ---
 const PERFECT_ANGLES = {
@@ -922,21 +904,30 @@ window.syncOfficialTime = function() {
 
 window.setStartToCurrent = function() {
     const video = document.getElementById('analysis-video-preview');
-    const ctx = window.currentAnalysisContext;
-    
-    if(!video || !ctx) return alert("분석 데이터가 없습니다.");
+    if(!video) return alert("분석 데이터가 없습니다.");
     
     const current = video.currentTime;
-    if(current >= ctx.videoDuration) return alert("영상 종료 지점입니다.");
     
-    // Update Start Time (T0)
-    ctx.buzzerTimestamp = current;
+    // Reset and Set Start
+    analysisState.startTime = current;
+    analysisState.isStarted = true;
+    analysisState.isFinished = false;
+    analysisState.endTime = null;
+    analysisState.strokeCount = 0;
+    analysisState.startMarker = {x: 0.5, y: 0.5, t: current}; // Default center marker if no pose
+    analysisState.finishMarker = null;
+    analysisState.paceData = [];
     
-    // Keep the current Race Time (Duration) constant if possible, shifting the end time
-    alert(`출발 시점(T0) 설정 완료: ${current.toFixed(3)}s\n(부저 소리 지점으로 보정되었습니다)`);
+    if(paceChart) {
+        paceChart.data.labels = [];
+        paceChart.data.datasets[0].data = [];
+        paceChart.update();
+    }
     
-    // Re-generate data with new start time, keeping duration same
-    generateLaneData(ctx.currentRaceTime);
+    alert(`출발 시점(T0)이 ${current.toFixed(3)}s로 설정되었습니다.\n이제부터 분석이 시작됩니다.`);
+    
+    // Re-generate basic lane data structure with new T0 (simulated lanes adjust to new T0)
+    generateLaneData(30.0); // Resetting estimation
 };
 
 window.seekVideo = function(seconds) {
