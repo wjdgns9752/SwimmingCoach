@@ -252,15 +252,14 @@
                   </div>
                   
                   <!-- Overlay Controls -->
-                  <div class="overlay-controls" style="margin-top: 10px; display: flex; align-items: center; gap: 10px; background: #f8fafc; padding: 10px; border-radius: 8px;">
-                      <label style="font-size: 0.85rem; font-weight: 600; color: #4a5568;">가이드(Pro) 겹치기:</label>
-                      <input type="range" id="overlay-opacity" min="0" max="1" step="0.1" value="0.5" style="width: 100px;">
-                      <button id="toggle-overlay-btn" class="secondary-btn small-btn" style="padding: 4px 8px; font-size: 0.8rem;">On/Off</button>
-                      <select id="ref-video-selector" class="form-select" style="width: auto; padding: 4px; font-size: 0.8rem;">
-                          <option value="">가이드 영상 선택</option>
-                          <option value="assets/ref_free.mp4">자유형 (Freestyle)</option>
-                          <option value="assets/ref_breast.mp4">평영 (Breaststroke)</option>
-                      </select>
+                  <div class="video-fine-controls" style="margin-top:10px;">
+                      <div style="display:flex; align-items:center; gap:15px;">
+                          <button onclick="toggleGuide()" class="frame-btn" style="min-width:120px; background:#0077b6; color:#fff;">가이드 ON/OFF</button>
+                          <div style="flex:1; display:flex; align-items:center; gap:10px;">
+                              <span class="time-label">가이드 투명도</span>
+                              <input type="range" id="guide-opacity" min="0" max="1" step="0.1" value="0.4" oninput="adjustOpacity(this.value)" style="width:100px;">
+                          </div>
+                      </div>
                   </div>
 
                   <div class="video-fine-controls">

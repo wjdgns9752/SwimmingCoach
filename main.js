@@ -413,40 +413,13 @@ function calculateAngle(p1, p2, p3) {
 }
 
 function initOverlayControls() {
-    const opacitySlider = document.getElementById('overlay-opacity');
-    const toggleBtn = document.getElementById('toggle-overlay-btn');
+    // Controls are now handled via global window.toggleGuide and oninput events
     const refVideo = document.getElementById('reference-video');
-    const refSelector = document.getElementById('ref-video-selector');
     const mainVideo = document.getElementById('analysis-video-preview');
-
-    if(opacitySlider && refVideo) {
-        opacitySlider.addEventListener('input', (e) => {
-            refVideo.style.opacity = e.target.value;
-        });
-    }
-
-    if(toggleBtn && refVideo) {
-        toggleBtn.addEventListener('click', () => {
-            refVideo.classList.toggle('hidden');
-            if(!refVideo.classList.contains('hidden') && mainVideo && !mainVideo.paused) {
-                refVideo.play();
-            } else {
-                refVideo.pause();
-            }
-        });
-    }
     
-    if(refSelector && refVideo) {
-        refSelector.addEventListener('change', (e) => {
-            if(e.target.value) {
-                refVideo.src = e.target.value;
-                refVideo.classList.remove('hidden');
-                // Sync current time immediately
-                if(mainVideo) refVideo.currentTime = mainVideo.currentTime;
-            } else {
-                refVideo.classList.add('hidden');
-            }
-        });
+    // Sync logic remains needed
+    if(mainVideo && refVideo) {
+         // (Sync listeners are already added in handleAnalysis -> onplay)
     }
 }
 
@@ -588,6 +561,35 @@ function processVideoFrame() {
     requestAnimationFrame(processVideoFrame);
 }
 
+// --- Constants for Analysis ---
+const PERFECT_ANGLES = {
+    'free50': { elbow: 115, knee: 170 },      // Free: High Elbow
+    'free100': { elbow: 115, knee: 170 },
+    'breast50': { elbow: 45, knee: 90 },      // Breast: Compression
+    'fly50': { elbow: 140, knee: 160 },       // Fly: Recovery
+    'back50': { elbow: 170, knee: 170 }       // Back: Straight arm recovery
+};
+
+// --- UI Control Functions (Global) ---
+window.toggleGuide = function() {
+    const guide = document.getElementById('reference-video'); // Using video for better sync
+    if(guide) {
+        guide.classList.toggle('hidden');
+        // Auto-play/pause sync with main video
+        const mainVideo = document.getElementById('analysis-video-preview');
+        if(!guide.classList.contains('hidden') && mainVideo && !mainVideo.paused) {
+            guide.play();
+        } else {
+            guide.pause();
+        }
+    }
+};
+
+window.adjustOpacity = function(val) {
+    const guide = document.getElementById('reference-video');
+    if(guide) guide.style.opacity = val;
+};
+
 function onPoseResults(results) {
     if (!canvasCtx || !canvasElement) return;
     
@@ -598,10 +600,9 @@ function onPoseResults(results) {
     if (results.poseLandmarks) {
         const landmarks = results.poseLandmarks;
         
-        // 1. Draw Base Skeleton (faintly)
-        drawConnectors(canvasCtx, landmarks, POSE_CONNECTIONS, {color: 'rgba(200, 200, 200, 0.5)', lineWidth: 1});
-        drawLandmarks(canvasCtx, landmarks, {color: 'rgba(200, 200, 200, 0.5)', lineWidth: 1, radius: 2});
-
+        // 1. Draw Base Skeleton (White, thin)
+        drawConnectors(canvasCtx, landmarks, POSE_CONNECTIONS, {color: 'rgba(255, 255, 255, 0.6)', lineWidth: 1});
+        
         // 2. Form Analysis & Visual Feedback Overlays
         analyzeAndDrawFeedback(landmarks);
     }
@@ -615,70 +616,73 @@ function analyzeAndDrawFeedback(landmarks) {
     const rightArm = [landmarks[12], landmarks[14], landmarks[16]];
     
     // Strict Lane / ROI Logic (User Lane Focus)
-    // Abort if main skeletal points are not clearly visible (e.g. other lanes/underwater)
     const STRICT_THRESHOLD = 0.65;
     const visibleCount = [...leftArm, ...rightArm].filter(p => p.visibility > STRICT_THRESHOLD).length;
     
-    // We need at least one full arm or majority of upper body to analyze
-    if (visibleCount < 4) return;
+    if (visibleCount < 3) return; // Not enough data
 
-    // Visibility Threshold Check for specific limbs
     const isLeftVisible = leftArm.every(p => p.visibility > STRICT_THRESHOLD);
     const isRightVisible = rightArm.every(p => p.visibility > STRICT_THRESHOLD);
 
-    // Calculate Angles
-    const leftAngle = isLeftVisible ? calculateAngle(landmarks[11], landmarks[13], landmarks[15]) : 0;
-    const rightAngle = isRightVisible ? calculateAngle(landmarks[12], landmarks[14], landmarks[16]) : 0;
+    // Get Target Angles based on selected event
+    const eventId = document.getElementById('ana-event-type').value || 'free50';
+    const targetConfig = PERFECT_ANGLES[eventId] || PERFECT_ANGLES['free50'];
 
     // Draw Left Arm Overlay
     if(isLeftVisible) {
-        // High Elbow Logic: If angle is too acute (<80) or too straight (>160) during Pull, warn?
-        // User Logic: "If < 90... High Elbow lack" -> Red
-        // But in reality, EVF (Early Vertical Forearm) is often around 90-110.
-        // Let's assume < 85 is "Too Bent/Collapsed" and > 150 is "Dropped Elbow/Straight Arm"
-        // For simplicity and user request: Red if < 90 or > 160 (Bad Form), Green if 90-160 (Good Range)
-        
-        // Dynamic Color: Green (Good) / Red (Bad)
-        const isGoodForm = leftAngle >= 90 && leftAngle <= 160; 
-        const color = isGoodForm ? '#00FF00' : '#FF0000';
-        const lineWidth = isGoodForm ? 4 : 6;
-
-        drawCustomConnector(landmarks[11], landmarks[13], color, lineWidth);
-        drawCustomConnector(landmarks[13], landmarks[15], color, lineWidth);
-        
-        // Draw Angle Text
-        drawTextAtPoint(landmarks[13], `${Math.round(leftAngle)}°`, color);
+        const leftAngle = calculateAngle(landmarks[11], landmarks[13], landmarks[15]);
+        drawArmFeedback(landmarks[11], landmarks[13], landmarks[15], leftAngle, targetConfig.elbow, "Left");
     }
 
     // Draw Right Arm Overlay
     if(isRightVisible) {
-        const isGoodForm = rightAngle >= 90 && rightAngle <= 160;
-        const color = isGoodForm ? '#00FF00' : '#FF0000';
-        const lineWidth = isGoodForm ? 4 : 6;
-
-        drawCustomConnector(landmarks[12], landmarks[14], color, lineWidth);
-        drawCustomConnector(landmarks[14], landmarks[16], color, lineWidth);
-
-        drawTextAtPoint(landmarks[14], `${Math.round(rightAngle)}°`, color);
+        const rightAngle = calculateAngle(landmarks[12], landmarks[14], landmarks[16]);
+        drawArmFeedback(landmarks[12], landmarks[14], landmarks[16], rightAngle, targetConfig.elbow, "Right");
     }
 
     // Process Stroke Counting & Metrics
     processStrokeLogic(landmarks);
 }
 
-function drawCustomConnector(p1, p2, color, width) {
+function drawArmFeedback(shoulder, elbow, wrist, currentAngle, targetAngle, sideLabel) {
+    const angleDiff = Math.abs(currentAngle - targetAngle);
+    
+    // Color Logic: Green (<20 diff), Yellow (<35 diff), Red (>35 diff)
+    let color = '#00FF00'; // Good
+    let status = '';
+    
+    if (angleDiff > 35) {
+        color = '#FF0000'; // Bad
+        status = '⚠️ Fix!';
+    } else if (angleDiff > 20) {
+        color = '#FFFF00'; // Warning
+        status = 'Checking';
+    }
+
+    // Draw Thick Arm Lines
     canvasCtx.beginPath();
-    canvasCtx.moveTo(p1.x * canvasElement.width, p1.y * canvasElement.height);
-    canvasCtx.lineTo(p2.x * canvasElement.width, p2.y * canvasElement.height);
+    canvasCtx.lineWidth = 6;
     canvasCtx.strokeStyle = color;
-    canvasCtx.lineWidth = width;
+    canvasCtx.lineCap = 'round';
+    canvasCtx.moveTo(shoulder.x * canvasElement.width, shoulder.y * canvasElement.height);
+    canvasCtx.lineTo(elbow.x * canvasElement.width, elbow.y * canvasElement.height);
+    canvasCtx.lineTo(wrist.x * canvasElement.width, wrist.y * canvasElement.height);
     canvasCtx.stroke();
+
+    // Draw Angle Text
+    canvasCtx.fillStyle = color;
+    canvasCtx.font = "bold 18px Pretendard";
+    canvasCtx.fillText(`${Math.round(currentAngle)}°`, elbow.x * canvasElement.width + 10, elbow.y * canvasElement.height);
+    
+    if (status) {
+        canvasCtx.fillStyle = "#FFFFFF";
+        canvasCtx.font = "bold 14px Pretendard";
+        canvasCtx.fillText(status, elbow.x * canvasElement.width + 10, elbow.y * canvasElement.height + 20);
+    }
 }
 
 function drawTextAtPoint(p, text, color) {
-    canvasCtx.fillStyle = color;
-    canvasCtx.font = "bold 16px Arial";
-    canvasCtx.fillText(text, p.x * canvasElement.width + 10, p.y * canvasElement.height);
+    // Deprecated in favor of drawArmFeedback
 }
 
 function processStrokeLogic(landmarks) {
@@ -756,6 +760,15 @@ function finishAnalysis(autoT0) {
     
     const badge = document.getElementById('res-badge-event');
     if(badge) badge.textContent = `${eventName} (AI Analysis)`;
+
+    // Update Reference Video Source based on event
+    const refVideo = document.getElementById('reference-video');
+    if(refVideo) {
+        if(eventId.includes('breast')) refVideo.src = 'assets/ref_breast.mp4';
+        else if(eventId.includes('fly')) refVideo.src = 'assets/ref_fly.mp4';
+        else if(eventId.includes('back')) refVideo.src = 'assets/ref_back.mp4';
+        else refVideo.src = 'assets/ref_free.mp4'; // Default to Freestyle
+    }
 
     const userLane = Math.floor(Math.random() * 8) + 1;
     
