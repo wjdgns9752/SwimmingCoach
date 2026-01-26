@@ -653,6 +653,26 @@ window.setStartToCurrent = setStartToCurrent;
 window.toggleGuide = toggleGuide;
 window.adjustOpacity = adjustOpacity;
 window.seekVideo = seekVideo;
+
+// --- Global Event Delegation (Failsafe) ---
+document.body.addEventListener('click', (e) => {
+    // Handle Guide Toggle
+    if (e.target.id === 'btn-toggle-guide') {
+        toggleGuide();
+    }
+    // Handle Start Button (including icon click)
+    if (e.target.id === 'btn-set-start' || e.target.closest('#btn-set-start')) {
+        setStartToCurrent();
+    }
+    // Handle Sync Button
+    if (e.target.id === 'btn-sync-time') {
+        syncOfficialTime();
+    }
+    // Handle Seek Buttons
+    if (e.target.classList.contains('btn-seek')) {
+        seekVideo(parseFloat(e.target.dataset.seek));
+    }
+});
     if (!canvasCtx || !canvasElement) return;
     
     canvasCtx.save();
